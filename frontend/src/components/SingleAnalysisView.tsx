@@ -118,12 +118,10 @@ export const SingleAnalysisView = () => {
     const pos = label === "POSITIVE" ? score : 0;
     const neg = label === "NEGATIVE" ? score : 0;
     const neu = label === "NEUTRAL" ? score : 0;
-    const sarc = label === "NEGATIVE (SARCASTIC)" ? score : 0;
     return [
       { name: "Positive", value: pos, color: "#16a34a" },
       { name: "Neutral", value: neu, color: "#a8a29e" },
       { name: "Negative", value: neg, color: "#dc2626" },
-      { name: "Sarcastic", value: sarc, color: "#8b5cf6" },
     ];
   };
 
@@ -141,13 +139,10 @@ export const SingleAnalysisView = () => {
       {/* Input Section (Top) */}
       <div className="flex flex-col gap-6">
         <div>
-          <div className="flex items-center justify-between border-b border-hairline pb-2 mb-4">
+          <div className="border-b border-hairline pb-2 mb-4">
             <h2 className="font-serif text-[32px] text-ink">
               Analysis Input
             </h2>
-            <span className="bg-surface-strong text-ink text-[12px] font-semibold tracking-[0.96px] uppercase rounded-full px-[10px] py-[4px]">
-              Sarcasm Engine Active
-            </span>
           </div>
           <textarea
             className="w-full h-32 bg-surface-card rounded-md p-4 text-ink font-sans text-[15px] border border-hairline-strong focus:border-ink focus:outline-none focus:ring-1 focus:ring-ink transition-all resize-none shadow-sm"

@@ -55,7 +55,6 @@ export const TechStackGrid = () => {
 ├── engine/
 │   ├── nlp_engine.py      # Transformer models, occlusion, and inference logic
 │   ├── train_intent.py    # Train custom Intent Classifier head
-│   ├── train_sentiment.py # Fine-tune HF RoBERTa Sentiment Model
 │   └── evaluation.py      # Business heuristics (Urgency, Tone, Actions)
 └── data/
     └── data_handler.py    # High-throughput CSV/Batch processing generator`}

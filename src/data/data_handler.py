@@ -1,18 +1,13 @@
 import csv
 import io
-from src.engine import nlp_engine
-
-
 from typing import Generator
-import codecs
 
-
-from src.engine import evaluation
+from src.engine import evaluation, nlp_engine
 
 
 def stream_csv(file_obj, target_column="text") -> Generator[str, None, None]:
     try:
-        decoded_file = codecs.iterdecode(file_obj, "utf-8", errors="replace")
+        decoded_file = io.TextIOWrapper(file_obj, encoding="utf-8", errors="replace")
         reader = csv.DictReader(decoded_file)
     except Exception as e:
         yield f"Error: Failed to decode file. {e!s}\n"
@@ -22,22 +17,23 @@ def stream_csv(file_obj, target_column="text") -> Generator[str, None, None]:
         yield "Error: Invalid CSV format or empty file.\n"
         return
 
-    if target_column not in reader.fieldnames:
+    target_column_upper = target_column.upper()
+    fieldnames_upper = [f.upper() for f in reader.fieldnames]
+    if target_column_upper not in fieldnames_upper:
         yield f"Error: CSV must contain a '{target_column}' column. Found: {', '.join(reader.fieldnames)}\n"
         return
 
-    original_fieldnames_upper = [f.upper() for f in reader.fieldnames]
-    reader.fieldnames = original_fieldnames_upper
-    target_column_upper = target_column.upper()
+    reader.fieldnames = fieldnames_upper
 
     output = io.StringIO()
-    new_fields = original_fieldnames_upper + ["INTENT", "CONFIDENCE", "SENTIMENT", "SENTIMENT_SCORE", "TONE", "URGENCY", "RECOMMENDED_ACTION"]
-    writer = csv.DictWriter(output, fieldnames=new_fields)
+    new_fields = fieldnames_upper + ["INTENT", "CONFIDENCE", "SENTIMENT", "SENTIMENT_SCORE", "TONE", "URGENCY", "RECOMMENDED_ACTION"]
+    writer = csv.DictWriter(output, fieldnames=new_fields, extrasaction="ignore")
     writer.writeheader()
     yield output.getvalue()
     
     chunk = []
     for row in reader:
+        row.pop(None, None)
         chunk.append(row)
         if len(chunk) == 32:
             yield _process_chunk(chunk, target_column_upper, writer, output)
