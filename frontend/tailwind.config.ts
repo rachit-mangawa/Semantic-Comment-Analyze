@@ -47,7 +47,8 @@ const config: Config = {
       },
       fontFamily: {
         serif: ["var(--font-garamond)", "Times New Roman", "serif"],
-        sans: ["var(--font-inter)", "sans-serif"],
+        sans: ["var(--font-inter)", "-apple-system", "sans-serif"],
+        mono: ["var(--font-mono)", "JetBrains Mono", "ui-monospace", "monospace"],
       },
       borderRadius: {
         xs: "4px",

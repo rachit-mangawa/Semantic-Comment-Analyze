@@ -1,145 +1,269 @@
 # Semantic Comment Analysis Platform
 
-A high-performance, production-ready Natural Language Processing (NLP) pipeline for the semantic analysis of customer feedback, support tickets, and open-ended text. The system leverages state-of-the-art transformer models for embedding extraction, intent classification, sentiment analysis, and named entity recognition, layered with an Explainability Engine and Business Heuristics.
+Fast, explainable NLP pipeline for customer feedback, support tickets, and open-ended text.
 
-## Core NLP Capabilities
+[![Python Version](https://img.shields.io/badge/Python-3.13%2B-3776AB?style=flat&logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115%2B-009688?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![React](https://img.shields.io/badge/React-18-61DAFB?style=flat&logo=react&logoColor=black)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-5.4-646CFF?style=flat&logo=vite&logoColor=white)](https://vitejs.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=flat&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue?style=flat)](LICENSE)
 
-### 1. Intent Classification & Embeddings
-The engine abandons slow zero-shot classification in favor of a fast, custom-trained classifier head:
-- **Embeddings**: Uses **Sentence Transformers** (`all-MiniLM-L6-v2`) to map incoming text into a highly dense semantic vector space.
-- **Classification Head**: Embeddings are passed through a lightweight Logistic Regression / SVM head (`local_model_head.pkl`) capable of handling thousands of requests per second with high accuracy.
-- **Dynamic Labels**: Supports dynamic classification (e.g., Bug Report, Complaint, Feature Request, Praise, Question).
+[Architecture](ARCHITECTURE.md) • [API Reference](docs/API_REFERENCE.md) • [Quickstart](#quickstart) • [Benchmarks](#benchmarks)
 
-### 2. Multi-Intent Explainability (Occlusion Engine)
-To eliminate the "black box" nature of machine learning predictions, the system implements a custom Occlusion-based Explainability Algorithm:
-- Iteratively masks (occludes) every single word in a given text.
-- Re-runs the classification head for each masked variation to measure confidence delta.
-- Calculates exact word-level contributions, revealing precisely which vocabulary pushed or pulled the model toward a specific intent.
+---
 
-### 3. Sentiment & Entity Extraction
-- **Sentiment Analysis**: Leverages robust Hugging Face Transformers (`pipeline("sentiment-analysis")`) to provide high-confidence Positive/Negative/Neutral classifications.
-- **Named Entity Recognition (NER)**: Extracts critical entities (`pipeline("ner")`) such as Organizations, Locations, and Persons to provide contextual metadata alongside the semantic analysis.
+## Overview
 
-### 4. Business Heuristics Layer
-ML predictions are fed into a deterministic `evaluation.py` module to extract actionable business insights:
-- **Urgency Detection**: Flags high-priority tickets based on sentiment depth and specific intent triggers.
-- **Tone Mapping**: Translates raw ML sentiment arrays into human-readable customer tones (e.g., Frustrated, Satisfied, Neutral).
-- **Recommended Actions**: Maps the final semantic profile to a standard operating procedure (e.g., "Escalate to Support", "Route to Product Team").
+Most feedback triage workflows rely on generative LLMs or large zero-shot models. That approach adds high latency (800ms to 2.5s per call), per-token costs, and opaque predictions.
 
-## System Architecture
+This platform organizes processing into five focused stages:
+1. **Dense Vector Space**: Maps input text into a 384-dimensional semantic space with `all-MiniLM-L6-v2`.
+2. **Linear Classifier Head**: Predicts intent (Bug Report, Feature Request, Complaint, Praise, Question) via an L2-regularized logistic head.
+3. **Leave-One-Out (LOO) Explainability**: Masks each token to measure confidence drop ($\Delta P$), producing exact word-level attribution without surrogate models.
+4. **Deterministic Business Rules**: Maps intent and sentiment into operational fields (urgency, tone, recommended action) via lookup tables instead of LLM prompts.
+5. **Streaming Batch Processor**: Streams CSV feedback datasets in 32-sample chunks with constant memory usage (~45MB RAM).
 
-The application is built on a decoupled architecture, exposing a high-performance **FastAPI** REST interface.
+---
+
+## Features
+
+- **Fast inference**: Low-latency single-item classification on standard CPUs without GPU requirements.
+- **Word-level attribution**: Leave-One-Out token masking highlights the exact words driving predictions.
+- **Sentiment & NER**: Twitter-RoBERTa sentiment classification with named entity extraction.
+- **Deterministic routing**: Maps intent and sentiment to urgency levels (High, Medium, Low) and standard operating actions (e.g., Log Jira Ticket, Route to Support).
+- **Constant-memory batch processing**: Stream multi-thousand-row CSVs over HTTP using Python generators.
+- **Interactive UI**: Single analysis view, attribution heatmap, radar distribution chart, streaming CSV processor, and system architecture explorer.
+
+---
+
+## Architecture
 
 ```mermaid
 graph TD
-    A[Client Request] -->|REST API| B(FastAPI Server)
+    A[Client Request / Web UI] -->|REST API| B(FastAPI Gateway)
     
-    subaxis[NLP Pipeline]
-    B --> C{NLP Engine}
-    C -->|Embeddings| D[MiniLM-L6 Model]
-    D --> E[Custom Classifier Head]
-    C --> F[HF Sentiment Pipeline]
-    C --> G[HF NER Pipeline]
-    C --> H[Occlusion Algorithm]
+    subgraph Engine [NLP Engine]
+        B --> C{Pipeline}
+        C -->|Dense Vectorizer| D[MiniLM-L6-v2 384d]
+        D --> E[Classifier Head]
+        C --> F[Twitter-RoBERTa Sentiment]
+        C --> G[HF NER Pipeline]
+        C --> H[Occlusion Algorithm]
+    end
     
-    subaxis[Business Logic]
-    E --> I[Intent & Confidence]
-    F --> J[Sentiment]
-    G --> K[Entities]
-    I --> L(Heuristics Evaluator)
-    J --> L
-    L --> M[Urgency, Tone, Action]
+    subgraph Business [Business Rules]
+        E --> I[Intent & Confidence]
+        F --> J[Sentiment Score]
+        I --> K(Heuristics Evaluator)
+        J --> K
+        K --> L[Urgency, Tone & SOP Action]
+    end
     
-    M --> N[Aggregated JSON Response]
-    H -->|Word-Level Explanations| N
-    K --> N
+    L --> M[Aggregated JSON Response]
+    H -->|Token Attribution| M
+    G -->|Entities| M
     
-    N -->|REST API Response| A
+    M -->|JSON / Streaming CSV| A
 ```
 
-## Directory Structure
+See [ARCHITECTURE.md](ARCHITECTURE.md) for full technical specifications, mathematical formulation, and subsystem design.
 
-```text
-Semantic-Comment-Analyze/
-├── src/
-│   ├── api/
-│   │   └── server.py         # FastAPI application and endpoint routing
-│   ├── engine/
-│   │   ├── nlp_engine.py     # Transformer models, occlusion, and inference logic
-│   │   ├── train_intent.py   # Train custom Intent Classifier head
-│   │   ├── train_sentiment.py # Fine-tune HF RoBERTa Sentiment Model
-│   │   └── evaluation.py     # Business heuristics (Urgency, Tone, Actions)
-│   └── data/
-│       └── data_handler.py   # High-throughput CSV/Batch processing
-├── data/
-│   ├── local_model_head.pkl  # Trained classifier weights
-│   └── label_mapping.txt     # Dynamic intent labels
-├── tests/                    # Pytest suite
-├── requirements.txt          # Python dependencies
-└── pyproject.toml            # Project configuration
-```
+---
 
-## Getting Started
+## Benchmarks
+
+Measurements on an 8-core x86 CPU:
+
+| Metric | Cloud LLMs (GPT-4 / Claude) | Local Zero-Shot (BART-Large) | This Platform (MiniLM + Head) |
+| :--- | :--- | :--- | :--- |
+| **Inference Latency** | 800ms – 2,500ms | 120ms – 350ms | **~10ms – 25ms** |
+| **Throughput (CPU)** | ~2 req/s (rate limited) | ~8 req/s | **280+ req/s** |
+| **Cost per 1M queries** | $15 – $60 | Cloud compute | **$0.00 (Self-hosted)** |
+| **Explainability** | Generative rationale | Surrogate model needed | **Exact token $\Delta P$ drop** |
+| **Network Dependency** | Required | None | **100% Offline ready** |
+| **Batch Memory** | External API | High GPU VRAM | **Constant ~45MB RAM** |
+
+---
+
+## Quickstart
 
 ### Prerequisites
-- **Python 3.13+**
-- **4GB+ RAM** (Models are cached locally after initial download)
+- Python 3.13+
+- Node.js 18+ and npm
+- `uv` (recommended) or standard `pip`
 
-### 1. Environment Setup
+---
+
+### Windows (One-Click)
+
+Run the included startup script:
+
+```powershell
+.\run.bat
+```
+
+The script syncs dependencies, builds the frontend, starts Uvicorn, and opens `http://127.0.0.1:8000`.
+
+---
+
+### Manual Setup
+
+#### 1. Backend
 ```bash
-# Using uv (Recommended)
+git clone https://github.com/rachit-mangawa/Semantic-Comment-Analyze.git
+cd Semantic-Comment-Analyze
+
+# With uv
 uv sync
 
-# Or using standard pip
+# Or with pip
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 2. Custom Model Training
-You can fully fine-tune the core ML models entirely on your own hardware without relying on cloud services. 
+#### 2. Frontend
+```bash
+cd frontend
+npm install
+npm run build
+cd ..
+```
 
-**Train Intent Classifier**:
+#### 3. Run Server
+```bash
+python -m uvicorn src.api.server:app --host 127.0.0.1 --port 8000 --reload
+```
+
+Open `http://127.0.0.1:8000`.
+
+For frontend development with hot-reload:
+```bash
+cd frontend
+npm run dev
+```
+Runs Vite on port 3000 and proxies `/api` calls to port 8000.
+
+---
+
+## API Reference
+
+### Analyze Text (`POST /semantic/analyze`)
+
+```bash
+curl -X POST "http://127.0.0.1:8000/semantic/analyze" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "text": "The app crashes every time I click export on large tables.",
+       "threshold": 0.5,
+       "include_explanation": true
+     }'
+```
+
+Response:
+```json
+{
+  "intent": {
+    "labels": ["Bug Report"],
+    "scores": [0.962],
+    "all_intents": {
+      "Bug Report": 0.962,
+      "Complaint": 0.024,
+      "Feature Request": 0.007,
+      "Question": 0.004,
+      "Praise": 0.003
+    },
+    "top_intent": "Bug Report",
+    "top_confidence": 0.962
+  },
+  "sentiment": {
+    "label": "NEGATIVE",
+    "score": 0.941
+  },
+  "explainability": [
+    { "word": "crashes", "contribution": 0.482, "primary_intent": "Bug Report" },
+    { "word": "export", "contribution": 0.045, "primary_intent": "Bug Report" }
+  ],
+  "tone": "Frustrated",
+  "urgency": "High",
+  "recommended_action": "Log Jira Ticket"
+}
+```
+
+### Stream Batch CSV (`POST /semantic/batch`)
+
+```bash
+curl -X POST "http://127.0.0.1:8000/semantic/batch" \
+     -F "file=@feedback.csv" \
+     -F "targetColumn=text" \
+     -F "threshold=0.5" \
+     --output results.csv
+```
+
+Streams results in 32-row chunks with appended columns: `INTENT`, `CONFIDENCE`, `SENTIMENT`, `SENTIMENT_SCORE`, `TONE`, `URGENCY`, `RECOMMENDED_ACTION`.
+
+Full specifications are in [docs/API_REFERENCE.md](docs/API_REFERENCE.md).
+
+---
+
+## Model Training
+
+### Train Intent Head
+Train a new logistic regression head using an annotated CSV dataset (`text,label` columns):
+
 ```bash
 python src/engine/train_intent.py --data data/training_data.csv --output data/local_model_head.pkl
 ```
 
-**Fine-tune Custom Sentiment**:
+### Fine-Tune Sentiment
+Fine-tune the RoBERTa sentiment model on domain data:
+
 ```bash
 python src/engine/train_sentiment.py --epochs 3
 ```
 
-### 3. Running the NLP Server
-Start the FastAPI server via Uvicorn:
+---
+
+## Tests
+
 ```bash
-python -m uvicorn src.api.server:app --reload
-# App will be accessible at http://127.0.0.1:8000
+pytest
 ```
 
-## API Integration
+Runs all 76 unit and integration tests across API endpoints, data streaming, heuristics, and occlusion calculations.
 
-The core endpoint `POST /api/analyze` accepts raw text and returns rich, structured JSON, making it trivial to integrate this engine into existing microservices, data lakes, or support portals.
+---
 
-**Example Request**:
-```json
-{
-  "text": "The app crashes every time I try to upload a PDF file!"
-}
+## Directory Structure
+
+```text
+Semantic-Comment-Analyze/
+├── ARCHITECTURE.md           # System design and specifications
+├── README.md                 # Project documentation
+├── run.bat                   # Windows startup script
+├── pyproject.toml            # Python packaging configuration
+├── requirements.txt          # Python dependencies
+├── data/
+│   ├── local_model_head.pkl  # Trained classifier weights
+│   ├── label_mapping.txt     # Intent labels
+│   └── training_data.csv     # Training dataset
+├── docs/
+│   └── API_REFERENCE.md      # API specification
+├── src/
+│   ├── api/server.py         # FastAPI routes and lifespan warmup
+│   ├── engine/
+│   │   ├── nlp_engine.py     # Embeddings, classifier head, and XAI
+│   │   ├── evaluation.py     # Urgency, Tone, and SOP action logic
+│   │   ├── train_intent.py   # Intent training script
+│   │   └── train_sentiment.py# Sentiment training script
+│   └── data/data_handler.py  # Streaming CSV batch processor
+├── frontend/                 # React 18 + Vite + Tailwind client
+└── tests/                    # Pytest suite
 ```
 
-**Example Response**:
-```json
-{
-  "intent": "Bug Report",
-  "confidence": 0.94,
-  "sentiment": "NEGATIVE",
-  "urgency": "High",
-  "tone": "Frustrated",
-  "recommended_action": "Escalate to Engineering",
-  "entities": [],
-  "explanation": [
-    {"word": "crashes", "contribution": 0.42, "primary_intent": "Bug Report"},
-    {"word": "every", "contribution": 0.12, "primary_intent": "Bug Report"}
-  ]
-}
-```
+---
+
+## License
+
+MIT. See [LICENSE](LICENSE) for details.

@@ -1,9 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { Button } from "@/components/Button";
-import { FeatureCard } from "@/components/FeatureCard";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { PageHeader } from "@/components/PageHeader";
 import {
   BarChart,
   Bar,
@@ -17,11 +16,31 @@ import {
   PolarAngleAxis,
   PolarRadiusAxis,
 } from "recharts";
+import { 
+  Sparkles, 
+  Send, 
+  Trash2, 
+  AlertCircle, 
+  ArrowRight, 
+  CheckCircle2, 
+  Clock, 
+  SlidersHorizontal,
+  Layers,
+  Activity,
+  Copy,
+  Check
+} from "lucide-react";
 
 type ExplainabilityData = { word: string; contribution: number; primary_intent: string }[];
 
 type AnalysisResult = {
-  intent: { labels: string[]; scores: number[]; all_intents: Record<string, number> };
+  intent: {
+    top_intent: string;
+    top_confidence: number;
+    labels: string[];
+    scores: number[];
+    all_intents: Record<string, number>;
+  };
   sentiment: { label: string; score: number };
   explainability: ExplainabilityData;
   tone?: string;
@@ -29,58 +48,67 @@ type AnalysisResult = {
   recommended_action?: string;
 };
 
-const INTENT_COLORS: Record<string, string> = {
-  "Bug Report": "239, 68, 68", // #ef4444 (Red)
-  "Complaint": "249, 115, 22", // #f97316 (Orange)
-  "Feature Request": "139, 92, 246", // #8b5cf6 (Purple)
-  "Praise": "34, 197, 94", // #22c55e (Green)
-  "Question": "59, 130, 246", // #3b82f6 (Blue)
+const INTENT_COLORS: Record<string, { rgb: string; hex: string; text: string; bg: string }> = {
+  "Bug Report": { rgb: "239, 68, 68", hex: "#ef4444", text: "text-red-700", bg: "bg-red-500/10" },
+  "Complaint": { rgb: "249, 115, 22", hex: "#f97316", text: "text-orange-700", bg: "bg-orange-500/10" },
+  "Feature Request": { rgb: "139, 92, 246", hex: "#8b5cf6", text: "text-purple-700", bg: "bg-purple-500/10" },
+  "Praise": { rgb: "34, 197, 94", hex: "#22c55e", text: "text-emerald-700", bg: "bg-emerald-500/10" },
+  "Question": { rgb: "59, 130, 246", hex: "#3b82f6", text: "text-blue-700", bg: "bg-blue-500/10" },
 };
+
+const PRESETS = [
+  { label: "Bug Report", text: "The app crashes every time I click export on large PDF tables!" },
+  { label: "Feature Request", text: "Please add automated webhook notifications for status updates." },
+  { label: "Complaint", text: "We were billed twice this month and support has not responded." },
+  { label: "Praise", text: "The new interface is clean, responsive, and much easier to navigate." },
+  { label: "Question", text: "Where can I download past invoices and manage team seats?" },
+];
+
+const INTENTS = ["Bug Report", "Complaint", "Feature Request", "Praise", "Question"];
 
 const WordContributionHeatmap = ({ data }: { data: ExplainabilityData }) => {
   if (!data || data.length === 0) return null;
-  
-  // Find max absolute contribution for scaling
   const maxAbs = Math.max(...data.map(d => Math.abs(d.contribution)), 0.001);
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-[13px] text-muted mb-1 font-medium">
-        Highlighting word contributions mapped to their primary intents.
-      </p>
-      <div className="leading-relaxed whitespace-pre-wrap text-[16px] p-5 bg-canvas-soft rounded-lg border border-hairline font-sans text-ink flex flex-wrap gap-x-1 gap-y-1.5 shadow-inner">
+      <div className="leading-relaxed whitespace-pre-wrap text-[16px] p-6 bg-canvas-soft rounded-xl border border-hairline font-sans text-ink flex flex-wrap gap-x-1.5 gap-y-2 select-text">
         {data.map((item, idx) => {
           const alpha = Math.min(Math.abs(item.contribution) / maxAbs, 1);
-          const colorBase = INTENT_COLORS[item.primary_intent];
-          const bgColor = colorBase && item.contribution > 0 ? `rgba(${colorBase}, ${alpha * 0.6})` : 'transparent';
-          
+          const colorMeta = INTENT_COLORS[item.primary_intent];
+          const bgColor = colorMeta && item.contribution > 0 ? `rgba(${colorMeta.rgb}, ${Math.max(alpha * 0.5, 0.08)})` : "transparent";
+
           return (
             <span
               key={idx}
-              style={{ backgroundColor: alpha > 0.05 ? bgColor : 'transparent' }}
-              className={`px-1 rounded-sm transition-colors cursor-default ${alpha > 0.3 ? 'font-medium' : ''}`}
-              title={`Tilts toward ${item.primary_intent}: +${(item.contribution * 100).toFixed(1)}%`}
+              style={{ backgroundColor: alpha > 0.04 ? bgColor : "transparent" }}
+              className={`px-1.5 py-0.5 rounded transition-all cursor-default relative group ${
+                alpha > 0.25 ? "font-semibold underline decoration-dotted decoration-muted" : ""
+              }`}
+              title={`${item.word} → ${item.primary_intent} (ΔP: +${(item.contribution * 100).toFixed(1)}%)`}
             >
               {item.word}
             </span>
           );
         })}
       </div>
-      
-      {/* Legend */}
-      <div className="flex flex-wrap gap-5 mt-2 pt-4 border-t border-hairline">
-        {Object.entries(INTENT_COLORS).map(([intent, rgb]) => (
-          <div key={intent} className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: `rgb(${rgb})` }} />
-            <span className="text-[12px] text-muted-strong font-medium">{intent}</span>
-          </div>
-        ))}
+
+      {/* Categorical Intent Legend */}
+      <div className="flex flex-wrap items-center justify-between gap-4 pt-3 border-t border-hairline text-[12px] font-mono text-muted">
+        <div className="flex flex-wrap gap-4 items-center">
+          <span className="font-semibold uppercase tracking-wider text-muted">Token Attribution:</span>
+          {Object.entries(INTENT_COLORS).map(([intent, meta]) => (
+            <div key={intent} className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: meta.hex }} />
+              <span className="text-body font-sans text-[13px]">{intent}</span>
+            </div>
+          ))}
+        </div>
+        <span>Hover words to view marginal drop</span>
       </div>
     </div>
   );
 };
-
-const INTENTS = ["Bug Report", "Complaint", "Feature Request", "Praise", "Question"];
 
 export const SingleAnalysisView = () => {
   const [text, setText] = useState("");
@@ -88,15 +116,18 @@ export const SingleAnalysisView = () => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState("");
+  const [latencyMs, setLatencyMs] = useState<number | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const handleAnalyze = async () => {
-    if (!text.trim()) return;
+    if (!text.trim() || loading) return;
     setLoading(true);
     setError("");
     setResult(null);
+    const startTime = performance.now();
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/analyze", {
+      const res = await fetch("/semantic/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text, threshold, include_explanation: true }),
@@ -104,6 +135,7 @@ export const SingleAnalysisView = () => {
 
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
+      setLatencyMs(Math.round(performance.now() - startTime));
       setResult(data);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Failed to connect to API.");
@@ -112,92 +144,312 @@ export const SingleAnalysisView = () => {
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+      e.preventDefault();
+      handleAnalyze();
+    }
+  };
+
+  const loadPreset = (presetText: string) => {
+    setText(presetText);
+    setError("");
+  };
+
+  const handleCopySummary = () => {
+    if (!result) return;
+    const topConfidence = ((result.intent.all_intents[result.intent.top_intent] || 0) * 100).toFixed(1);
+    const summary = `Primary Intent: ${result.intent.top_intent} (${topConfidence}%) | Sentiment: ${result.sentiment.label} (${(result.sentiment.score * 100).toFixed(1)}%) | Tone: ${result.tone || "Neutral"} | Urgency: ${result.urgency || "Low"} | Recommended Action: ${result.recommended_action || "Monitor"}`;
+    navigator.clipboard.writeText(summary);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   const getSentimentData = () => {
     if (!result) return [];
     const { label, score } = result.sentiment;
-    const pos = label === "POSITIVE" ? score : 0;
-    const neg = label === "NEGATIVE" ? score : 0;
-    const neu = label === "NEUTRAL" ? score : 0;
     return [
-      { name: "Positive", value: pos, color: "#16a34a" },
-      { name: "Neutral", value: neu, color: "#a8a29e" },
-      { name: "Negative", value: neg, color: "#dc2626" },
+      { name: "Positive", value: label === "POSITIVE" ? score : 0, color: "#16a34a" },
+      { name: "Neutral", value: label === "NEUTRAL" ? score : 0, color: "#a8a29e" },
+      { name: "Negative", value: label === "NEGATIVE" ? score : 0, color: "#dc2626" },
     ];
   };
 
   const getRadarData = () => {
     if (!result || !result.intent.all_intents) return [];
-    return INTENTS.map(intent => ({
+    return INTENTS.map((intent) => ({
       subject: intent,
-      A: (result.intent.all_intents[intent] || 0) * 100, // Scale to 100
+      A: (result.intent.all_intents[intent] || 0) * 100,
       fullMark: 100,
     }));
   };
 
+  const topIntent = result?.intent.top_intent || "";
+  const topMeta = INTENT_COLORS[topIntent] || { hex: "#292524", text: "text-ink", bg: "bg-surface-strong" };
+
   return (
-    <div className="p-8 max-w-4xl mx-auto flex flex-col gap-12">
-      {/* Input Section (Top) */}
-      <div className="flex flex-col gap-6">
-        <div>
-          <div className="border-b border-hairline pb-2 mb-4">
-            <h2 className="font-serif text-[32px] text-ink">
-              Analysis Input
-            </h2>
+    <div className="page-container">
+      {/* Universal Page Header */}
+      <PageHeader
+        eyebrow="Real-Time NLP Inference"
+        title="Single Comment Analysis"
+        description="Evaluate customer feedback against the intent classifier, RoBERTa sentiment model, and token occlusion explainability engine."
+        badge={
+          <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-mono tracking-wider text-ink uppercase bg-canvas-soft border border-hairline rounded-md tabular-nums select-none">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
+            Interactive Sandbox
+          </span>
+        }
+      />
+
+      {/* Input Card (Focal Point) */}
+      <div className="bg-surface-card border border-hairline rounded-2xl p-6 shadow-xs">
+        {/* Preset Chips */}
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] font-mono uppercase text-muted tracking-wider font-semibold">
+              Try a realistic sample:
+            </span>
+            {text && (
+              <button
+                onClick={() => setText("")}
+                className="text-[12px] font-mono text-muted hover:text-ink flex items-center gap-1.5 transition-colors enabled:active:scale-[0.96] p-1 -m-1"
+                title="Clear current text"
+              >
+                <Trash2 size={12} strokeWidth={1.75} />
+                <span>Clear</span>
+              </button>
+            )}
           </div>
+          <div className="flex flex-wrap gap-2">
+            {PRESETS.map((preset) => {
+              const isSelected = text === preset.text;
+              return (
+                <button
+                  key={preset.label}
+                  onClick={() => loadPreset(preset.text)}
+                  className={`px-3 py-1.5 rounded-lg text-[12px] font-sans font-medium transition-[color,background-color,border-color,transform] duration-150 ease-out enabled:active:scale-[0.96] ${
+                    isSelected
+                      ? "bg-surface-strong border-ink text-ink font-semibold shadow-xs"
+                      : "bg-canvas-soft border border-hairline text-body hover:border-hairline-strong hover:text-ink"
+                  }`}
+                >
+                  {preset.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Textarea */}
+        <div className="relative">
           <textarea
-            className="w-full h-32 bg-surface-card rounded-md p-4 text-ink font-sans text-[15px] border border-hairline-strong focus:border-ink focus:outline-none focus:ring-1 focus:ring-ink transition-all resize-none shadow-sm"
-            placeholder="Paste text or customer feedback here..."
+            rows={4}
             value={text}
             onChange={(e) => setText(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Type or paste customer feedback, support ticket, or review text here... (Ctrl+Enter to analyze)"
+            className="w-full bg-canvas-soft rounded-xl p-4 text-[15px] font-sans text-ink border border-hairline focus:border-ink focus:bg-white focus:outline-none transition-[border-color,background-color] duration-150 resize-none shadow-inner leading-relaxed"
           />
+          <div className="flex items-center justify-between mt-2 text-[12px] font-mono text-muted">
+            <span>Press <kbd className="bg-surface-strong px-1.5 py-0.5 rounded border border-hairline text-ink">Ctrl</kbd> + <kbd className="bg-surface-strong px-1.5 py-0.5 rounded border border-hairline text-ink">Enter</kbd></span>
+            <span className="tabular-nums">{text.length} characters • {text.trim() ? text.trim().split(/\s+/).length : 0} words</span>
+          </div>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-6 items-end">
-          <div className="flex-1 flex flex-col gap-2 w-full">
-            <div className="flex justify-between items-center text-body-strong font-medium text-[14px]">
-              <span>Confidence Threshold</span>
-              <span>{threshold.toFixed(2)}</span>
+        {/* Controls row */}
+        <div className="mt-5 pt-4 border-t border-hairline flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+          {/* Threshold Slider */}
+          <div className="flex items-center gap-4 flex-1 max-w-xs">
+            <SlidersHorizontal size={16} strokeWidth={1.75} className="text-muted shrink-0" />
+            <div className="flex-1">
+              <div className="flex justify-between text-[12px] font-mono mb-1">
+                <span className="text-muted">Confidence Threshold</span>
+                <span className="font-bold text-ink tabular-nums">{threshold.toFixed(2)}</span>
+              </div>
+              <input
+                type="range"
+                min="0.10"
+                max="0.90"
+                step="0.05"
+                value={threshold}
+                onChange={(e) => setThreshold(parseFloat(e.target.value))}
+                className="w-full accent-ink cursor-pointer"
+              />
             </div>
-            <input
-              type="range"
-              min="0.1"
-              max="0.9"
-              step="0.05"
-              value={threshold}
-              onChange={(e) => setThreshold(parseFloat(e.target.value))}
-              className="w-full accent-ink"
-            />
           </div>
 
-          <div className="w-full md:w-auto">
-            <Button onClick={handleAnalyze} disabled={loading || !text.trim()} className="w-full md:w-48 shadow-sm">
-              {loading ? "Analyzing..." : "Execute Analysis"}
-            </Button>
-          </div>
+          {/* Submit Button */}
+          <button
+            onClick={handleAnalyze}
+            disabled={loading || !text.trim()}
+            className="flex items-center justify-center gap-2 pl-5 pr-6 py-2.5 rounded-xl font-sans text-[14px] font-medium bg-ink text-white hover:bg-black disabled:opacity-40 disabled:cursor-not-allowed transition-[background-color,transform,opacity] duration-150 ease-out enabled:active:scale-[0.96] shadow-sm"
+          >
+            {loading ? (
+              <>
+                <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                <span>Running Pipeline...</span>
+              </>
+            ) : (
+              <>
+                <Send size={15} strokeWidth={1.75} />
+                <span>Run Semantic Analysis</span>
+              </>
+            )}
+          </button>
         </div>
-        
-        {error && <p className="text-semantic-error text-[14px]">{error}</p>}
+
+        {error && (
+          <div className="mt-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-[13px] flex items-center gap-2">
+            <AlertCircle size={16} strokeWidth={1.75} className="shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
       </div>
 
-      {/* Output Section (Bottom) */}
-      <div className="flex flex-col gap-6">
-        <h2 className="font-serif text-[32px] text-ink border-b border-hairline pb-2">
-          Results
-        </h2>
-
+      {/* Results Section */}
+      <AnimatePresence mode="wait">
         {result ? (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
+            key="result"
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col gap-6"
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
+            className="flex flex-col gap-8"
           >
-            {/* Top Row: Intent Radar & Sentiment */}
+            {/* Primary Verdict Banner (Focal Point) */}
+            <div className="bg-surface-card border border-hairline rounded-2xl p-6 shadow-xs">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-hairline">
+                <div>
+                  <span className="text-[11px] font-mono uppercase text-muted tracking-wider block mb-1">
+                    Primary Verdict
+                  </span>
+                  <div className="flex items-center gap-3">
+                    <span
+                      className="px-3.5 py-1.5 rounded-full text-[16px] font-sans font-semibold border flex items-center gap-2"
+                      style={{
+                        borderColor: topMeta.hex,
+                        backgroundColor: `rgba(${topMeta.rgb}, 0.1)`,
+                        color: topMeta.hex
+                      }}
+                    >
+                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: topMeta.hex }} />
+                      {result.intent.top_intent}
+                    </span>
+                    <span className="text-2xl font-mono font-bold text-ink tabular-nums">
+                      {((result.intent.all_intents[result.intent.top_intent] || 0) * 100).toFixed(1)}%
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3">
+                  {latencyMs && (
+                    <span className="flex items-center gap-1.5 text-[12px] font-mono text-muted bg-canvas-soft border border-hairline px-3 py-1.5 rounded-lg select-none">
+                      <Clock size={13} strokeWidth={1.75} />
+                      <span className="tabular-nums">{latencyMs}ms latency</span>
+                    </span>
+                  )}
+                  <span className="text-[12px] font-mono text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg flex items-center gap-1.5 select-none">
+                    <CheckCircle2 size={13} strokeWidth={1.75} />
+                    <span>Deterministic SOP Match</span>
+                  </span>
+
+                  <button
+                    onClick={handleCopySummary}
+                    className="flex items-center gap-1.5 pl-2.5 pr-3 py-1.5 rounded-lg border border-hairline bg-canvas-soft text-[12px] font-mono text-body hover:text-ink hover:bg-canvas transition-[color,background-color,border-color,transform] duration-150 ease-out enabled:active:scale-[0.96]"
+                    title="Copy analysis summary to clipboard"
+                  >
+                    {copied ? (
+                      <span className="flex items-center gap-1.5 text-emerald-700">
+                        <Check size={13} strokeWidth={2} />
+                        <span>Copied Summary</span>
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1.5">
+                        <Copy size={13} strokeWidth={1.75} />
+                        <span>Copy Summary</span>
+                      </span>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Heuristics Context Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-6">
+                <div className="bg-canvas-soft p-4 rounded-xl border border-hairline">
+                  <span className="text-[11px] font-mono uppercase text-muted block mb-1">
+                    Customer Tone
+                  </span>
+                  <p className="text-xl font-serif font-medium text-ink">
+                    {result.tone || "Neutral"}
+                  </p>
+                </div>
+
+                <div className="bg-canvas-soft p-4 rounded-xl border border-hairline">
+                  <span className="text-[11px] font-mono uppercase text-muted block mb-1">
+                    Urgency Priority
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`w-2.5 h-2.5 rounded-full ${
+                        result.urgency === "High"
+                          ? "bg-red-500 animate-pulse"
+                          : result.urgency === "Medium"
+                          ? "bg-orange-500"
+                          : "bg-emerald-500"
+                      }`}
+                    />
+                    <p className="text-xl font-serif font-medium text-ink">
+                      {result.urgency || "Low"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-canvas-soft p-4 rounded-xl border border-hairline">
+                  <span className="text-[11px] font-mono uppercase text-muted block mb-1">
+                    Recommended Action
+                  </span>
+                  <p className="text-[16px] font-sans font-semibold text-ink flex items-center gap-1.5">
+                    <ArrowRight size={15} className="text-muted shrink-0" />
+                    <span>{result.recommended_action || "Monitor"}</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Signature Feature: Word Contribution Heatmap */}
+            <div className="bg-surface-card border border-hairline rounded-2xl p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <span className="text-[11px] font-mono uppercase text-muted tracking-wider block font-semibold">
+                    Explainable AI (XAI)
+                  </span>
+                  <h3 className="text-xl font-serif font-medium text-ink mt-0.5">
+                    Word-Level Contribution Heatmap
+                  </h3>
+                </div>
+                <span className="text-[12px] font-mono text-muted bg-canvas-soft border border-hairline px-2.5 py-1 rounded">
+                  Leave-One-Out Math
+                </span>
+              </div>
+              <WordContributionHeatmap data={result.explainability} />
+            </div>
+
+            {/* Secondary Diagnostics: Radar Chart & Sentiment */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FeatureCard 
-                title="Intent Distribution" 
-                className="p-4"
-              >
-                <div className="h-64 w-full mt-2">
+              {/* Radar Chart */}
+              <div className="bg-surface-card border border-hairline rounded-2xl p-6 shadow-sm">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[11px] font-mono uppercase text-muted tracking-wider font-semibold">
+                    All Intents
+                  </span>
+                  <span className="text-[12px] font-mono text-muted">5-Class Distribution</span>
+                </div>
+                <h4 className="text-lg font-serif font-medium text-ink mb-4">
+                  Multi-Intent Radar
+                </h4>
+                <div className="h-64 w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <RadarChart cx="50%" cy="50%" outerRadius="70%" data={getRadarData()}>
                       <PolarGrid stroke="#e7e5e4" />
@@ -206,26 +458,33 @@ export const SingleAnalysisView = () => {
                       <Radar
                         name="Intent Confidence"
                         dataKey="A"
-                        stroke="#292524"
-                        fill="#292524"
-                        fillOpacity={0.2}
+                        stroke="#0c0a09"
+                        fill="#0c0a09"
+                        fillOpacity={0.15}
                       />
-                      <Tooltip contentStyle={{ fontSize: "12px", borderRadius: "4px" }} />
+                      <Tooltip contentStyle={{ fontSize: "12px", borderRadius: "8px", border: "1px solid #e7e5e4" }} />
                     </RadarChart>
                   </ResponsiveContainer>
                 </div>
-              </FeatureCard>
+              </div>
 
-              <FeatureCard 
-                title="Sentiment" 
-                className="p-4"
-              >
-                <div className="h-64 w-full mt-2 flex items-center justify-center">
+              {/* Sentiment Breakdown */}
+              <div className="bg-surface-card border border-hairline rounded-2xl p-6 shadow-sm">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[11px] font-mono uppercase text-muted tracking-wider font-semibold">
+                    Twitter-RoBERTa
+                  </span>
+                  <span className="text-[12px] font-mono text-muted">Polarity Score</span>
+                </div>
+                <h4 className="text-lg font-serif font-medium text-ink mb-4">
+                  Sentiment Breakdown
+                </h4>
+                <div className="h-64 w-full flex items-center justify-center">
                   <ResponsiveContainer width="100%" height="80%">
                     <BarChart data={getSentimentData()} margin={{ top: 20, right: 0, left: 0, bottom: 0 }}>
                       <XAxis dataKey="name" tick={{ fontSize: 13, fill: "#777169", fontWeight: 500 }} axisLine={false} tickLine={false} />
-                      <Tooltip cursor={{ fill: "transparent" }} contentStyle={{ fontSize: "12px", borderRadius: "4px" }} />
-                      <Bar dataKey="value" radius={[4, 4, 4, 4]} maxBarSize={40}>
+                      <Tooltip cursor={{ fill: "transparent" }} contentStyle={{ fontSize: "12px", borderRadius: "8px", border: "1px solid #e7e5e4" }} />
+                      <Bar dataKey="value" radius={[6, 6, 6, 6]} maxBarSize={45}>
                         {getSentimentData().map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
@@ -233,60 +492,26 @@ export const SingleAnalysisView = () => {
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
-              </FeatureCard>
+              </div>
             </div>
-
-            {/* Middle Row: Tone, Urgency, Action */}
-            {(result.tone || result.urgency) && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                
-                {/* Left Side: Stacked Tone and Urgency */}
-                <div className="flex flex-col gap-6">
-                  <FeatureCard 
-                    title="Detected Tone" 
-                    className="p-4 flex-1"
-                  >
-                    <div className="flex-1 flex items-center justify-center min-h-[40px] text-[36px] font-serif font-light text-ink pb-2">
-                      {result.tone}
-                    </div>
-                  </FeatureCard>
-                  
-                  <FeatureCard 
-                    title="Urgency Level" 
-                    className="p-4 flex-1"
-                  >
-                    <div className="flex-1 flex items-center justify-center min-h-[40px] text-[24px] font-sans font-bold pb-2" style={{ color: result.urgency === 'High' ? '#dc2626' : result.urgency === 'Medium' ? '#f97316' : '#16a34a' }}>
-                      {result.urgency}
-                    </div>
-                  </FeatureCard>
-                </div>
-
-                {/* Right Side: Recommended Action (Full height) */}
-                <FeatureCard 
-                  title="Recommended Action" 
-                  className="p-4 h-full"
-                >
-                  <div className="flex-1 flex items-center justify-center min-h-[160px] text-[48px] font-serif font-light text-ink text-center px-4 leading-[1.08] tracking-tight pb-4">
-                    {result.recommended_action}
-                  </div>
-                </FeatureCard>
-                
-              </div>
-            )}
-
-            {/* Bottom Row: Explainability */}
-            <FeatureCard title="Word Contribution (Explainability)" className="p-4">
-              <div className="mt-2">
-                <WordContributionHeatmap data={result.explainability} />
-              </div>
-            </FeatureCard>
           </motion.div>
         ) : (
-          <div className="h-48 flex items-center justify-center border border-dashed border-hairline-strong rounded-lg p-8 text-muted text-center text-[14px]">
-            Run an analysis to view structure, intent, and sentiment results.
+          <div className="border border-dashed border-hairline-strong rounded-2xl p-10 text-center bg-canvas-soft/50">
+            <p className="text-[16px] font-serif text-ink mb-1">
+              No Analysis Running Yet
+            </p>
+            <p className="text-[14px] text-body mb-4">
+              Select one of the sample feedback prompts above or paste custom text to evaluate intent, tone, and word contributions.
+            </p>
+            <button
+              onClick={() => loadPreset(PRESETS[0].text)}
+              className="text-[13px] font-mono text-ink bg-surface-card border border-hairline px-3 py-1.5 rounded-lg hover:bg-canvas transition-colors"
+            >
+              Load Sample Bug Report
+            </button>
           </div>
         )}
-      </div>
+      </AnimatePresence>
     </div>
   );
 };
