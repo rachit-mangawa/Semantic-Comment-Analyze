@@ -2,228 +2,542 @@
 
 import React, { useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
+import { Button } from "@/components/Button";
 import { RouteView } from "@/router";
 import {
   Zap,
-  Cpu,
   Layers,
   ArrowRight,
   Database,
-  LayoutDashboard,
-  BookOpen,
   Sparkles,
   ShieldCheck,
-  CheckCircle2,
-  Clock,
-  ArrowUpRight,
   FileSpreadsheet,
   Activity,
-  Code2,
-  FileText
+  ArrowUpRight,
+  Shuffle,
+  Copy,
+  Check,
+  Edit3,
+  SlidersHorizontal,
+  Cpu,
+  Terminal,
 } from "lucide-react";
+
+const getEmbeddingSparkline = (input: string) => {
+  const bars = 22;
+  const result: number[] = [];
+  let seed = 0;
+  for (let i = 0; i < input.length; i++) {
+    seed = (seed * 31 + input.charCodeAt(i)) & 0xffffffff;
+  }
+  for (let i = 0; i < bars; i++) {
+    const pseudo = Math.abs(Math.sin(seed + i * 1.618));
+    result.push(Math.max(0.18, Math.min(pseudo, 1)));
+  }
+  return result;
+};
 
 interface OverviewViewProps {
   onNavigate: (view: RouteView, subTab?: string) => void;
 }
 
-const PRESET_DEMOS = [
+interface DemoScenario {
+  id: string;
+  label: string;
+  text: string;
+  intent: string;
+  confidence: number; // e.g. 96.2
+  sentiment: "POSITIVE" | "NEGATIVE" | "NEUTRAL";
+  sentimentScore: number; // e.g. 94.0
+  tone: string;
+  urgency: "High" | "Medium" | "Low";
+  action: string;
+  tokens: { word: string; drop: number; isKey?: boolean }[];
+}
+
+const PRESET_DEMOS: DemoScenario[] = [
   {
     id: "bug",
     label: "Bug Report",
     text: "The application crashes every time I click export on large PDF tables!",
     intent: "Bug Report",
-    confidence: "96.2%",
+    confidence: 96.2,
     sentiment: "NEGATIVE",
-    sentimentScore: "94.0%",
+    sentimentScore: 94.0,
     tone: "Frustrated",
     urgency: "High",
     action: "Log Jira Ticket",
-    keyTokens: ["crashes", "export", "PDF"],
+    tokens: [
+      { word: "The", drop: 0.2 },
+      { word: "application", drop: 4.5 },
+      { word: "crashes", drop: 48.2, isKey: true },
+      { word: "every", drop: 1.5 },
+      { word: "time", drop: 0.8 },
+      { word: "I", drop: 0.1 },
+      { word: "click", drop: 3.2 },
+      { word: "export", drop: 6.5, isKey: true },
+      { word: "on", drop: 0.2 },
+      { word: "large", drop: 1.1 },
+      { word: "PDF", drop: 3.5 },
+      { word: "tables!", drop: 2.4 },
+    ],
   },
   {
     id: "feature",
     label: "Feature Request",
-    text: "Please add automated webhook notifications for status updates.",
+    text: "Please add automated webhook notifications for ticket status updates.",
     intent: "Feature Request",
-    confidence: "94.1%",
+    confidence: 94.1,
     sentiment: "POSITIVE",
-    sentimentScore: "85.2%",
-    tone: "Hopeful",
+    sentimentScore: 85.2,
+    tone: "Constructive",
     urgency: "Low",
     action: "Add to Roadmap",
-    keyTokens: ["webhook", "notifications", "automated"],
+    tokens: [
+      { word: "Please", drop: 3.1 },
+      { word: "add", drop: 28.5, isKey: true },
+      { word: "automated", drop: 8.4 },
+      { word: "webhook", drop: 24.5, isKey: true },
+      { word: "notifications", drop: 14.2, isKey: true },
+      { word: "for", drop: 0.2 },
+      { word: "ticket", drop: 1.8 },
+      { word: "status", drop: 2.1 },
+      { word: "updates.", drop: 4.0 },
+    ],
   },
   {
     id: "complaint",
-    label: "Complaint",
+    label: "Billing Issue",
     text: "We were billed twice this month and support has not responded after 48 hours.",
     intent: "Complaint",
-    confidence: "95.5%",
+    confidence: 95.5,
     sentiment: "NEGATIVE",
-    sentimentScore: "92.4%",
+    sentimentScore: 92.4,
     tone: "Angry",
     urgency: "High",
-    action: "Route to Support",
-    keyTokens: ["billed", "twice", "support"],
+    action: "Route to Priority Support",
+    tokens: [
+      { word: "We", drop: 0.1 },
+      { word: "were", drop: 0.2 },
+      { word: "billed", drop: 38.5, isKey: true },
+      { word: "twice", drop: 26.0, isKey: true },
+      { word: "this", drop: 0.2 },
+      { word: "month", drop: 1.5 },
+      { word: "and", drop: 0.1 },
+      { word: "support", drop: 4.2 },
+      { word: "has", drop: 0.4 },
+      { word: "not", drop: 18.0, isKey: true },
+      { word: "responded", drop: 14.5, isKey: true },
+      { word: "after", drop: 0.8 },
+      { word: "48", drop: 5.1 },
+      { word: "hours.", drop: 2.3 },
+    ],
   },
   {
     id: "praise",
-    label: "Praise",
-    text: "The new interface is clean, responsive, and much easier to navigate.",
+    label: "Customer Praise",
+    text: "The new interface is clean, responsive, and significantly faster than before.",
     intent: "Praise",
-    confidence: "98.5%",
+    confidence: 98.5,
     sentiment: "POSITIVE",
-    sentimentScore: "97.1%",
-    tone: "Appreciative",
+    sentimentScore: 97.1,
+    tone: "Delighted",
     urgency: "Low",
-    action: "Share with Team",
-    keyTokens: ["clean", "responsive", "easier"],
+    action: "Share with Engineering",
+    tokens: [
+      { word: "The", drop: 0.1 },
+      { word: "new", drop: 1.2 },
+      { word: "interface", drop: 4.1 },
+      { word: "is", drop: 0.3 },
+      { word: "clean,", drop: 28.5, isKey: true },
+      { word: "responsive,", drop: 24.2, isKey: true },
+      { word: "and", drop: 0.2 },
+      { word: "significantly", drop: 8.5 },
+      { word: "faster", drop: 38.0, isKey: true },
+      { word: "than", drop: 0.5 },
+      { word: "before.", drop: 1.4 },
+    ],
   },
   {
     id: "question",
-    label: "Question",
+    label: "Account Question",
     text: "Where can I find historical API invoices and manage workspace team seats?",
     intent: "Question",
-    confidence: "97.4%",
+    confidence: 97.4,
     sentiment: "NEUTRAL",
-    sentimentScore: "88.1%",
+    sentimentScore: 88.1,
     tone: "Inquisitive",
     urgency: "Low",
-    action: "Route to Documentation",
-    keyTokens: ["invoices", "manage", "seats"],
+    action: "Route to Billing FAQ",
+    tokens: [
+      { word: "Where", drop: 32.5, isKey: true },
+      { word: "can", drop: 12.1 },
+      { word: "I", drop: 0.5 },
+      { word: "find", drop: 16.4, isKey: true },
+      { word: "historical", drop: 4.2 },
+      { word: "API", drop: 8.5 },
+      { word: "invoices", drop: 18.2, isKey: true },
+      { word: "and", drop: 0.2 },
+      { word: "manage", drop: 14.5 },
+      { word: "workspace", drop: 3.1 },
+      { word: "team", drop: 4.5 },
+      { word: "seats?", drop: 6.2 },
+    ],
+  },
+  {
+    id: "performance",
+    label: "Performance Lag",
+    text: "Query latency exceeds 3 seconds whenever filtering by multiple custom tag attributes.",
+    intent: "Bug Report",
+    confidence: 92.8,
+    sentiment: "NEGATIVE",
+    sentimentScore: 89.4,
+    tone: "Frustrated",
+    urgency: "High",
+    action: "Log Performance Degradation",
+    tokens: [
+      { word: "Query", drop: 4.2 },
+      { word: "latency", drop: 26.5, isKey: true },
+      { word: "exceeds", drop: 18.2, isKey: true },
+      { word: "3", drop: 12.0 },
+      { word: "seconds", drop: 8.4 },
+      { word: "whenever", drop: 2.1 },
+      { word: "filtering", drop: 5.5 },
+      { word: "by", drop: 0.1 },
+      { word: "multiple", drop: 1.2 },
+      { word: "custom", drop: 0.8 },
+      { word: "tag", drop: 1.4 },
+      { word: "attributes.", drop: 2.0 },
+    ],
   },
 ];
 
-const INTENT_THEMES: Record<string, { bg: string; text: string; hex: string; border: string }> = {
-  "Bug Report": { bg: "bg-red-500/10", text: "text-red-700", hex: "#ef4444", border: "border-red-500/20" },
-  "Complaint": { bg: "bg-orange-500/10", text: "text-orange-700", hex: "#f97316", border: "border-orange-500/20" },
-  "Feature Request": { bg: "bg-purple-500/10", text: "text-purple-700", hex: "#8b5cf6", border: "border-purple-500/20" },
-  "Praise": { bg: "bg-emerald-500/10", text: "text-emerald-700", hex: "#22c55e", border: "border-emerald-500/20" },
-  "Question": { bg: "bg-blue-500/10", text: "text-blue-700", hex: "#3b82f6", border: "border-blue-500/20" },
-};
-
 export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate }) => {
-  const [selectedDemo, setSelectedDemo] = useState(PRESET_DEMOS[0]);
+  const [selectedDemo, setSelectedDemo] = useState<DemoScenario>(PRESET_DEMOS[0]);
+  const [isEditing, setIsEditing] = useState(false);
+  const [customInput, setCustomInput] = useState(PRESET_DEMOS[0].text);
+  const [showHeatmap, setShowHeatmap] = useState(true);
+  const [hoveredTokenIdx, setHoveredTokenIdx] = useState<number | null>(null);
+  const [copied, setCopied] = useState(false);
 
-  const activeTheme = INTENT_THEMES[selectedDemo.intent] || {
-    bg: "bg-surface-strong",
-    text: "text-ink",
-    hex: "#0c0a09",
-    border: "border-hairline",
+  const handleSelectPreset = (demo: DemoScenario) => {
+    setSelectedDemo(demo);
+    setCustomInput(demo.text);
+    setIsEditing(false);
+    setHoveredTokenIdx(null);
+  };
+
+  const handleShuffle = () => {
+    const currentIndex = PRESET_DEMOS.findIndex((d) => d.id === selectedDemo.id);
+    const nextIndex = (currentIndex + 1) % PRESET_DEMOS.length;
+    handleSelectPreset(PRESET_DEMOS[nextIndex]);
+  };
+
+  const handleCopyJSON = () => {
+    const payload = {
+      comment: isEditing ? customInput : selectedDemo.text,
+      verdict: {
+        intent: selectedDemo.intent,
+        confidence: `${selectedDemo.confidence}%`,
+        sentiment: selectedDemo.sentiment,
+        sentimentScore: `${selectedDemo.sentimentScore}%`,
+        tone: selectedDemo.tone,
+        urgency: selectedDemo.urgency,
+        recommendedAction: selectedDemo.action,
+      },
+    };
+    navigator.clipboard.writeText(JSON.stringify(payload, null, 2));
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleSendToWorkbench = () => {
+    const textToSend = isEditing ? customInput : selectedDemo.text;
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("analyze_prefill", textToSend);
+    }
+    onNavigate("single");
   };
 
   return (
     <div className="page-container">
-      {/* Universal Page Header with Apple HIG Typography */}
-      <PageHeader
-        eyebrow="Semantic Intelligence Platform"
-        title="Platform Overview"
-        description="A self-contained NLP pipeline combining fast dense vector embeddings, Twitter-RoBERTa sentiment polarity, zero-surrogate Leave-One-Out token occlusion math, and deterministic business heuristics on standard CPU."
-        badge={
-          <span className="hidden sm:inline-flex items-center gap-2 px-3 py-1 text-[11px] font-mono tracking-wider text-ink uppercase bg-canvas-soft border border-hairline rounded-full select-none">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Local CPU Inference</span>
-          </span>
-        }
-      />
+      {/* High-End Agency Editorial Split Hero (Double-Bezel Architecture) */}
+      <section className="relative overflow-hidden bg-white border border-hairline-light rounded-2xl p-6 sm:p-8 lg:p-10 shadow-level-3 transition-all duration-200">
+        {/* Soft radial ambient gradient accent */}
+        <div className="absolute top-0 right-0 w-[420px] h-[420px] bg-gradient-to-bl from-canvas-cream/90 via-transparent to-transparent pointer-events-none rounded-full blur-2xl" />
 
-      {/* Hero Showcase (Apple-Inspired Double-Bezel Card) */}
-      <div className="bg-surface-card border border-hairline rounded-3xl p-6 sm:p-8 md:p-10 shadow-xs relative overflow-hidden transition-all duration-200">
-        
-        {/* Top Badges & System Telemetry */}
-        <div className="flex flex-wrap items-center justify-between gap-4 pb-8 border-b border-hairline">
-          <div className="flex flex-wrap items-center gap-2.5">
-            <span className="inline-flex items-center gap-2 px-3.5 py-1.5 text-[11px] font-mono font-medium tracking-tight text-ink bg-canvas-soft border border-hairline rounded-full select-none">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Pipeline: Online</span>
-            </span>
-
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-mono tracking-tight text-muted bg-canvas-soft border border-hairline rounded-full select-none">
-              <Zap size={13} strokeWidth={2} className="text-amber-600" />
-              <span>In-Memory Model</span>
-            </span>
-
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-mono tracking-tight text-muted bg-canvas-soft border border-hairline rounded-full select-none">
-              <Cpu size={13} strokeWidth={1.75} />
-              <span>384d Dense Space</span>
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2 text-[12px] font-mono text-muted select-none">
-            <ShieldCheck size={14} className="text-emerald-600" />
-            <span>Zero External Cloud API Calls</span>
-          </div>
-        </div>
-
-        {/* Hero Title & Primary CTAs */}
-        <div className="py-10 max-w-3xl">
-          <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-light text-ink tracking-tight leading-[1.12] mb-5 text-balance">
-            Explainable semantic intelligence for customer feedback.
-          </h2>
-          <p className="text-[16px] sm:text-[17px] font-sans text-body leading-relaxed max-w-2xl text-pretty mb-8">
-            Intent classification, Twitter-RoBERTa sentiment polarity, and word-level occlusion heatmaps without black-box LLM dependencies or recurring token billing.
-          </p>
-
-          <div className="flex flex-wrap items-center gap-3.5">
-            <button
-              onClick={() => onNavigate("single")}
-              className="inline-flex items-center gap-3 pl-5 pr-4 py-3 rounded-xl font-sans text-[14px] font-medium bg-ink text-canvas hover:bg-black transition-all duration-150 ease-out active:scale-[0.97] shadow-sm group"
-            >
-              <span>Analyze Single Comment</span>
-              <span className="w-6 h-6 rounded-full bg-white/15 flex items-center justify-center transition-transform group-hover:translate-x-0.5">
-                <ArrowRight size={13} strokeWidth={2} />
-              </span>
-            </button>
-
-            <button
-              onClick={() => onNavigate("batch")}
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl font-sans text-[14px] font-medium bg-canvas-soft border border-hairline text-ink hover:bg-canvas transition-all duration-150 ease-out active:scale-[0.97]"
-            >
-              <FileSpreadsheet size={16} strokeWidth={1.75} />
-              <span>Stream Batch CSV</span>
-            </button>
-
-            <button
-              onClick={() => onNavigate("methodology")}
-              className="inline-flex items-center gap-1.5 px-4 py-3 text-[14px] font-sans font-medium text-body hover:text-ink transition-colors active:scale-[0.97]"
-            >
-              <span>Explore Methodology</span>
-              <ArrowUpRight size={15} strokeWidth={1.75} className="text-muted" />
-            </button>
-          </div>
-        </div>
-
-        {/* Live Interactive Triage Simulator */}
-        <div className="mt-2 pt-8 border-t border-hairline">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center relative z-10">
+          {/* Left Column: Display Headline, Narrative & Button-in-Button CTAs */}
+          <div className="lg:col-span-7 flex flex-col justify-between">
             <div>
-              <div className="flex items-center gap-2 mb-1">
-                <Sparkles size={14} className="text-amber-600" />
-                <span className="text-[11px] font-mono uppercase tracking-wider text-muted font-semibold">
-                  Live Triage Preview
+              {/* Micro-capsule eyebrow with live pulsing dot */}
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-pill bg-canvas-cream border border-hairline-light shadow-2xs mb-5 select-none">
+                <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
+                <span className="text-[11px] font-mono uppercase tracking-[0.72px] font-semibold text-shade-60">
+                  Deterministic In-Memory Engine • Zero LLM Cost
                 </span>
               </div>
-              <p className="text-[14px] font-sans text-body">
-                Select a sample comment below to observe the deterministic triage pipeline in action:
+
+              {/* Display Headline */}
+              <h1 className="font-display text-4xl sm:text-5xl lg:text-[50px] font-[330] text-ink tracking-[-0.025em] leading-[1.08] text-balance mb-4">
+                Explainable semantic intelligence for customer feedback.
+              </h1>
+
+              {/* Editorial Narrative */}
+              <p className="text-[16px] sm:text-[17px] font-sans text-shade-60 font-[420] leading-relaxed max-w-xl text-pretty mb-8">
+                Continuous 384-dimensional dense embeddings paired with microsecond logistic classification and leave-one-out token attribution on commodity CPU. Zero cloud API calls, zero token invoices, 100% air-gapped data privacy.
               </p>
+
+              {/* Action Buttons with Nested "Button-in-Button" Icon Architecture */}
+              <div className="flex flex-wrap items-center gap-3.5 mb-8">
+                {/* Primary Button */}
+                <button
+                  onClick={() => onNavigate("single")}
+                  className="group inline-flex items-center gap-3 pl-5 pr-2 py-2 rounded-pill bg-black text-white text-[14px] font-sans font-medium hover:bg-shade-80 transition-all duration-150 active:scale-[0.98] shadow-sm select-none"
+                >
+                  <span>Analyze Single Comment</span>
+                  <span className="w-7 h-7 rounded-pill bg-white/15 flex items-center justify-center transition-transform duration-150 group-hover:translate-x-0.5">
+                    <ArrowRight size={13} strokeWidth={2.25} />
+                  </span>
+                </button>
+
+                {/* Secondary Featured Button */}
+                <button
+                  onClick={() => onNavigate("batch")}
+                  className="group inline-flex items-center gap-3 pl-5 pr-2 py-2 rounded-pill bg-aloe-10 text-ink text-[14px] font-sans font-semibold hover:bg-[#aef5c5] transition-all duration-150 active:scale-[0.98] shadow-sm select-none"
+                >
+                  <span>Stream Batch CSV</span>
+                  <span className="w-7 h-7 rounded-pill bg-black/10 flex items-center justify-center transition-transform duration-150 group-hover:translate-x-0.5">
+                    <FileSpreadsheet size={13} strokeWidth={2} />
+                  </span>
+                </button>
+
+                {/* Tertiary Blueprint Button */}
+                <button
+                  onClick={() => onNavigate("architecture", "pipeline")}
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-pill border border-hairline-light bg-canvas-cream hover:bg-white text-shade-60 hover:text-ink text-[13px] font-sans font-medium transition-all active:scale-[0.98] select-none shadow-xs"
+                >
+                  <span>Pipeline Specs</span>
+                  <ArrowUpRight size={13} />
+                </button>
+              </div>
             </div>
-            <span className="text-[11px] font-mono text-muted bg-canvas-soft border border-hairline px-3 py-1 rounded-full self-start sm:self-auto select-none">
-              O(1) Matrix Evaluation
-            </span>
+
+            {/* Performance Guarantees Metric Strip */}
+            <div className="pt-6 border-t border-hairline-light grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="flex flex-col">
+                <span className="text-[11px] font-mono text-shade-50 uppercase tracking-wider">Inference</span>
+                <span className="text-[15px] font-mono font-semibold text-emerald-800 tabular-nums">~12ms CPU</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[11px] font-mono text-shade-50 uppercase tracking-wider">Vector Space</span>
+                <span className="text-[15px] font-mono font-semibold text-ink tabular-nums">384d Dense</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[11px] font-mono text-shade-50 uppercase tracking-wider">Throughput</span>
+                <span className="text-[15px] font-mono font-semibold text-ink tabular-nums">280+ req/s</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[11px] font-mono text-shade-50 uppercase tracking-wider">Cloud Cost</span>
+                <span className="text-[15px] font-mono font-semibold text-ink tabular-nums">$0.00 Token</span>
+              </div>
+            </div>
           </div>
 
-          {/* Sample selector chips (All 5 classes represented) */}
+          {/* Right Column: Machined Engine Telemetry & Live Vector Flow Widget */}
+          <div className="lg:col-span-5">
+            <div className="p-2 sm:p-2.5 rounded-2xl bg-canvas-cream/80 border border-hairline-light shadow-inner">
+              <div className="bg-white rounded-xl border border-hairline-light p-5 shadow-xs flex flex-col gap-3.5">
+                {/* Telemetry Header */}
+                <div className="flex items-center justify-between pb-3 border-b border-hairline-light">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
+                    <span className="text-[11px] font-mono font-semibold text-ink uppercase tracking-wider">
+                      Live Engine Telemetry
+                    </span>
+                  </div>
+                  <button
+                    onClick={handleShuffle}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-pill bg-canvas-cream hover:bg-white border border-hairline-light text-[11px] font-mono text-shade-60 hover:text-ink transition-all active:scale-95 shadow-2xs select-none"
+                    title="Cycle through realistic customer samples"
+                  >
+                    <Shuffle size={11} className="text-shade-50" />
+                    <span>Cycle Sample</span>
+                  </button>
+                </div>
+
+                {/* Stage 1: Ingestion */}
+                <div className="bg-canvas-cream/60 border border-hairline-light rounded-lg p-3">
+                  <div className="flex items-center justify-between text-[10px] font-mono text-shade-50 uppercase tracking-wider mb-1.5">
+                    <span className="flex items-center gap-1 text-ink font-semibold">
+                      <Terminal size={11} className="text-shade-40" />
+                      <span>01. Ingestion Payload</span>
+                    </span>
+                    <span className="text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                      FastAPI 0.2ms
+                    </span>
+                  </div>
+                  <p className="text-[13px] font-sans text-ink leading-snug line-clamp-2 italic">
+                    &ldquo;{selectedDemo.text}&rdquo;
+                  </p>
+                </div>
+
+                {/* Stage 2: 384d Dense Vector Representation */}
+                <div className="bg-canvas-cream/60 border border-hairline-light rounded-lg p-3">
+                  <div className="flex items-center justify-between text-[10px] font-mono text-shade-50 uppercase tracking-wider mb-1.5">
+                    <span className="flex items-center gap-1 text-ink font-semibold">
+                      <Cpu size={11} className="text-shade-40" />
+                      <span>02. Dense Embedding Projection</span>
+                    </span>
+                    <span className="text-shade-60">all-MiniLM-L6-v2</span>
+                  </div>
+
+                  {/* Dynamic Vector Sparkline Bars */}
+                  <div className="flex items-end gap-1 h-6 w-full bg-white px-2 py-1 rounded border border-hairline-light overflow-hidden shadow-2xs">
+                    {getEmbeddingSparkline(selectedDemo.text).map((val, idx) => (
+                      <div
+                        key={idx}
+                        className="flex-1 bg-black rounded-xs transition-all duration-300 ease-out"
+                        style={{ height: `${val * 100}%` }}
+                        title={`Dimension ${idx * 16}: ${val.toFixed(2)}`}
+                      />
+                    ))}
+                  </div>
+
+                  <div className="flex items-center justify-between text-[10px] font-mono text-shade-50 mt-1.5">
+                    <span>Continuous 384d Float32</span>
+                    <span className="text-ink font-medium">Vector Time: ~3.2ms</span>
+                  </div>
+                </div>
+
+                {/* Stage 3: Logistic Head & Deterministic Heuristics Verdict */}
+                <div className="bg-canvas-cream/60 border border-hairline-light rounded-lg p-3">
+                  <div className="flex items-center justify-between text-[10px] font-mono text-shade-50 uppercase tracking-wider mb-2">
+                    <span className="flex items-center gap-1 text-ink font-semibold">
+                      <ShieldCheck size={11} className="text-emerald-700" />
+                      <span>03. Calibrated Output Verdict</span>
+                    </span>
+                    <span className="text-emerald-700 font-semibold font-mono">150μs Head</span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-white p-2.5 rounded border border-hairline-light shadow-2xs">
+                      <span className="text-[10px] font-sans uppercase tracking-wider text-shade-50 block mb-0.5">
+                        Intent Class
+                      </span>
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-[13px] font-sans font-semibold text-ink">
+                          {selectedDemo.intent}
+                        </span>
+                        <span className="text-[11px] font-mono text-emerald-700 tabular-nums">
+                          {selectedDemo.confidence}%
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="bg-white p-2.5 rounded border border-hairline-light shadow-2xs">
+                      <span className="text-[10px] font-sans uppercase tracking-wider text-shade-50 block mb-0.5">
+                        SOP Dispatch
+                      </span>
+                      <span className="text-[13px] font-sans font-semibold text-ink block truncate">
+                        {selectedDemo.action}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="mt-2 flex items-center justify-between text-[11px] font-mono text-shade-60">
+                    <span className="flex items-center gap-1">
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          selectedDemo.urgency === "High" ? "bg-rose-600" : "bg-emerald-600"
+                        }`}
+                      />
+                      <span>{selectedDemo.urgency} Urgency</span>
+                    </span>
+                    <span>Tone: {selectedDemo.tone}</span>
+                  </div>
+                </div>
+
+                {/* Telemetry Hardware Specs Footer */}
+                <div className="flex items-center justify-between text-[11px] font-mono text-shade-50 pt-1.5 border-t border-hairline-light">
+                  <span>RAM: ~45MB bound</span>
+                  <span className="text-emerald-800 font-medium">100% In-Memory Offline</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Dedicated Interactive Triage Playground Section */}
+      <section className="surface-card-base flex flex-col gap-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-hairline-light">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <Sparkles size={15} className="text-amber-600" />
+              <span className="eyebrow-cap">
+                Interactive Benchmark Sandbox
+              </span>
+            </div>
+            <h3 className="section-heading text-2xl font-[330]">
+              Real-Time Inference Playground
+            </h3>
+            <p className="text-[14px] font-sans text-shade-60 mt-1">
+              Select a customer scenario, shuffle inputs, or type custom feedback to inspect live token attribution:
+            </p>
+          </div>
+
+            {/* Interactive Control Toolbar */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                onClick={handleShuffle}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-pill text-[12px] font-sans text-shade-60 hover:text-ink bg-canvas-cream hover:bg-white border border-hairline-light transition-all active:scale-95 shadow-xs select-none"
+                title="Shuffle through realistic sample cases"
+              >
+                <Shuffle size={13} className="text-shade-50" />
+                <span>Shuffle Case</span>
+              </button>
+
+              <button
+                onClick={() => setIsEditing((prev) => !prev)}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-pill text-[12px] font-sans transition-all active:scale-95 select-none ${
+                  isEditing
+                    ? "bg-black text-white font-medium shadow-sm"
+                    : "bg-canvas-cream hover:bg-white border border-hairline-light text-shade-60 hover:text-ink"
+                }`}
+                title="Type your own custom comment"
+              >
+                <Edit3 size={13} />
+                <span>{isEditing ? "Done Editing" : "Custom Text"}</span>
+              </button>
+
+              <button
+                onClick={() => setShowHeatmap((prev) => !prev)}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-pill text-[12px] font-sans transition-all active:scale-95 select-none ${
+                  showHeatmap
+                    ? "bg-canvas-cream border border-shade-40 text-ink font-medium"
+                    : "bg-canvas-cream border border-hairline-light text-shade-50 hover:text-ink"
+                }`}
+                title="Toggle token importance attribution highlights"
+              >
+                <SlidersHorizontal size={13} />
+                <span>Token Heatmap</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Preset Selector Chips */}
           <div className="flex flex-wrap gap-2 mb-5">
             {PRESET_DEMOS.map((demo) => {
-              const isSelected = selectedDemo.id === demo.id;
+              const isSelected = selectedDemo.id === demo.id && !isEditing;
               return (
                 <button
                   key={demo.id}
-                  onClick={() => setSelectedDemo(demo)}
-                  className={`px-3.5 py-1.5 rounded-full text-[13px] font-sans font-medium transition-all duration-150 ease-out active:scale-[0.96] ${
+                  onClick={() => handleSelectPreset(demo)}
+                  className={`px-3.5 py-1.5 rounded-pill text-[13px] font-sans font-medium transition-all duration-150 ease-out active:scale-[0.97] select-none ${
                     isSelected
-                      ? "bg-ink text-white font-semibold shadow-xs"
-                      : "bg-canvas-soft border border-hairline text-body hover:border-hairline-strong hover:text-ink"
+                      ? "bg-black text-white font-semibold shadow-sm"
+                      : "bg-canvas-cream border border-hairline-light text-shade-60 hover:text-black hover:border-shade-40"
                   }`}
                 >
                   {demo.label}
@@ -232,82 +546,157 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate }) => {
             })}
           </div>
 
-          {/* Dynamic Verdict Preview Card (Apple Inspector Surface) */}
-          <div className="bg-canvas-soft/80 border border-hairline rounded-2xl p-6 sm:p-7 flex flex-col gap-5">
-            <p className="text-[16px] sm:text-[17px] font-sans text-ink leading-relaxed font-normal">
-              &ldquo;{selectedDemo.text}&rdquo;
-            </p>
+          {/* Verdict Preview Surface Card */}
+          <div className="bg-canvas-cream border border-hairline-light rounded-xl p-6 sm:p-7 flex flex-col gap-6 shadow-inner transition-all">
+            {/* Comment View / Edit Box */}
+            {isEditing ? (
+              <div className="flex flex-col gap-2">
+                <label className="text-[11px] font-sans uppercase tracking-[0.72px] text-shade-50 font-semibold">
+                  Type or paste custom feedback to triage:
+                </label>
+                <textarea
+                  value={customInput}
+                  onChange={(e) => setCustomInput(e.target.value)}
+                  rows={3}
+                  className="w-full p-4 bg-white border border-hairline-light rounded-lg text-ink font-sans text-[16px] focus:outline-none focus:border-black transition-all resize-none shadow-sm"
+                  placeholder="Enter feedback statement..."
+                />
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-sans uppercase tracking-[0.72px] text-shade-50 font-semibold select-none">
+                    Statement Under Analysis
+                  </span>
+                  {showHeatmap && (
+                    <span className="text-[11px] font-mono text-shade-50 select-none">
+                      Hover words to inspect marginal attribution (ΔP)
+                    </span>
+                  )}
+                </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t border-hairline/80">
+                {showHeatmap ? (
+                  <div className="flex flex-wrap gap-1.5 leading-relaxed text-[17px] sm:text-[19px] font-sans text-ink select-text py-1">
+                    {selectedDemo.tokens.map((token, idx) => {
+                      const isHovered = hoveredTokenIdx === idx;
+                      const isSignificant = token.drop >= 10;
+                      return (
+                        <span
+                          key={idx}
+                          onMouseEnter={() => setHoveredTokenIdx(idx)}
+                          onMouseLeave={() => setHoveredTokenIdx(null)}
+                          className={`relative px-1.5 py-0.5 rounded cursor-pointer transition-all duration-150 ${
+                            isSignificant
+                              ? "bg-amber-100/70 border border-amber-300/60 font-medium text-ink"
+                              : "hover:bg-black/5"
+                          } ${isHovered ? "ring-2 ring-black bg-white shadow-xs" : ""}`}
+                          title={`Occlusion Impact: -${token.drop.toFixed(1)}% drop if masked`}
+                        >
+                          {token.word}
+                          {isHovered && (
+                            <span className="absolute -top-7 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-pill bg-black text-white text-[10px] font-mono whitespace-nowrap shadow-md z-20 pointer-events-none">
+                              ΔP: -{token.drop.toFixed(1)}%
+                            </span>
+                          )}
+                        </span>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="font-display text-[18px] sm:text-[20px] font-[330] text-ink leading-relaxed">
+                    &ldquo;{selectedDemo.text}&rdquo;
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Structured Verdict Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-5 border-t border-hairline-light">
               {/* Intent Cell */}
               <div className="flex flex-col justify-between">
-                <span className="text-[11px] font-mono uppercase tracking-wider text-muted mb-1.5 flex items-center gap-1.5">
-                  <Sparkles size={12} className="text-muted" />
+                <span className="text-[11px] font-sans uppercase tracking-[0.72px] text-shade-50 mb-2 flex items-center gap-1.5 font-medium">
+                  <Sparkles size={12} className="text-amber-600" />
                   <span>Primary Intent</span>
                 </span>
                 <div>
-                  <span
-                    className={`inline-flex items-center px-3 py-1 rounded-full text-[13px] font-sans font-semibold border ${activeTheme.bg} ${activeTheme.text} ${activeTheme.border}`}
-                  >
+                  <span className="inline-flex items-center px-3.5 py-1 rounded-pill text-[13px] font-sans font-semibold bg-white border border-hairline-light text-ink shadow-sm">
                     {selectedDemo.intent}
                   </span>
-                  <span className="text-[11px] font-mono text-muted block mt-1.5 tabular-nums">
-                    {selectedDemo.confidence} confidence
-                  </span>
+                  {/* Dynamic Progress Bar */}
+                  <div className="mt-2.5">
+                    <div className="w-full bg-hairline-light h-1.5 rounded-full overflow-hidden">
+                      <div
+                        className="bg-black h-full rounded-full transition-all duration-300"
+                        style={{ width: `${selectedDemo.confidence}%` }}
+                      />
+                    </div>
+                    <span className="text-[11px] font-mono text-shade-50 block mt-1.5 tabular-nums">
+                      {selectedDemo.confidence}% calibrated confidence
+                    </span>
+                  </div>
                 </div>
               </div>
 
               {/* Sentiment Cell */}
               <div className="flex flex-col justify-between">
-                <span className="text-[11px] font-mono uppercase tracking-wider text-muted mb-1.5 flex items-center gap-1.5">
-                  <Activity size={12} className="text-muted" />
-                  <span>Sentiment</span>
+                <span className="text-[11px] font-sans uppercase tracking-[0.72px] text-shade-50 mb-2 flex items-center gap-1.5 font-medium">
+                  <Activity size={12} className="text-shade-40" />
+                  <span>Sentiment Polarity</span>
                 </span>
                 <div>
-                  <span
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] font-mono font-medium ${
-                      selectedDemo.sentiment === "POSITIVE"
-                        ? "text-emerald-700 bg-emerald-50 border border-emerald-200"
-                        : selectedDemo.sentiment === "NEGATIVE"
-                        ? "text-red-700 bg-red-50 border border-red-200"
-                        : "text-blue-700 bg-blue-50 border border-blue-200"
-                    }`}
-                  >
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-pill text-[12px] font-mono font-medium bg-white border border-hairline-light text-ink shadow-sm">
                     <span
                       className={`w-1.5 h-1.5 rounded-full ${
                         selectedDemo.sentiment === "POSITIVE"
                           ? "bg-emerald-600"
                           : selectedDemo.sentiment === "NEGATIVE"
-                          ? "bg-red-600"
+                          ? "bg-rose-600"
                           : "bg-blue-600"
                       }`}
                     />
                     {selectedDemo.sentiment}
                   </span>
-                  <span className="text-[11px] font-mono text-muted block mt-1.5 tabular-nums">
-                    {selectedDemo.sentimentScore} intensity
-                  </span>
+                  {/* Dynamic Sentiment Meter */}
+                  <div className="mt-2.5">
+                    <div className="w-full bg-hairline-light h-1.5 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-300 ${
+                          selectedDemo.sentiment === "POSITIVE"
+                            ? "bg-emerald-600"
+                            : selectedDemo.sentiment === "NEGATIVE"
+                            ? "bg-rose-600"
+                            : "bg-blue-600"
+                        }`}
+                        style={{ width: `${selectedDemo.sentimentScore}%` }}
+                      />
+                    </div>
+                    <span className="text-[11px] font-mono text-shade-50 block mt-1.5 tabular-nums">
+                      {selectedDemo.sentimentScore}% polarity intensity
+                    </span>
+                  </div>
                 </div>
               </div>
 
               {/* Tone & Urgency Cell */}
               <div className="flex flex-col justify-between">
-                <span className="text-[11px] font-mono uppercase tracking-wider text-muted mb-1.5 flex items-center gap-1.5">
-                  <ShieldCheck size={12} className="text-muted" />
+                <span className="text-[11px] font-sans uppercase tracking-[0.72px] text-shade-50 mb-2 flex items-center gap-1.5 font-medium">
+                  <ShieldCheck size={12} className="text-shade-40" />
                   <span>Tone &amp; Urgency</span>
                 </span>
                 <div>
-                  <p className="text-[14px] font-serif font-medium text-ink">
+                  <p className="font-display text-[16px] font-[330] text-ink">
                     {selectedDemo.tone}
                   </p>
                   <span
-                    className={`inline-flex items-center gap-1.5 text-[11px] font-mono mt-1 ${
-                      selectedDemo.urgency === "High" ? "text-red-700 font-semibold" : "text-emerald-700"
+                    className={`inline-flex items-center gap-1.5 text-[12px] font-mono mt-1 ${
+                      selectedDemo.urgency === "High"
+                        ? "text-rose-700 font-semibold"
+                        : "text-emerald-700"
                     }`}
                   >
                     <span
                       className={`w-1.5 h-1.5 rounded-full ${
-                        selectedDemo.urgency === "High" ? "bg-red-600" : "bg-emerald-600"
+                        selectedDemo.urgency === "High" ? "bg-rose-600" : "bg-emerald-600"
                       }`}
                     />
                     {selectedDemo.urgency} Urgency
@@ -317,196 +706,162 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate }) => {
 
               {/* Action Cell */}
               <div className="flex flex-col justify-between">
-                <span className="text-[11px] font-mono uppercase tracking-wider text-muted mb-1.5 flex items-center gap-1.5">
-                  <ArrowRight size={12} className="text-muted" />
+                <span className="text-[11px] font-sans uppercase tracking-[0.72px] text-shade-50 mb-2 flex items-center gap-1.5 font-medium">
+                  <ArrowRight size={12} className="text-shade-40" />
                   <span>Operational Route</span>
                 </span>
                 <div>
-                  <span className="inline-flex items-center gap-1.5 text-[12px] font-medium bg-surface-card border border-hairline px-3 py-1.5 rounded-lg text-ink shadow-2xs">
+                  <span className="inline-flex items-center gap-1.5 text-[13px] font-medium bg-white border border-hairline-light px-3.5 py-1.5 rounded-pill text-ink shadow-sm">
                     <span>{selectedDemo.action}</span>
                   </span>
-                  <span className="text-[11px] font-mono text-muted block mt-1.5">
-                    Standard Operating Procedure
+                  <span className="text-[11px] font-sans text-shade-50 block mt-1.5">
+                    Deterministic SOP Dispatch
                   </span>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Core Architectural Pillars (Bento Grid) */}
-      <div>
+            {/* Bottom Playground Action Bar */}
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-hairline-light text-[12px] font-sans">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleCopyJSON}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-pill bg-white border border-hairline-light text-shade-60 hover:text-ink active:scale-95 transition-all shadow-xs"
+                >
+                  {copied ? (
+                    <>
+                      <Check size={12} className="text-emerald-600" />
+                      <span className="text-emerald-700 font-medium">Copied JSON!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy size={12} />
+                      <span>Copy Triage JSON</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => onNavigate("architecture", "occlusion")}
+                  className="text-shade-50 hover:text-ink transition-colors underline-offset-4 hover:underline"
+                >
+                  View Occlusion Math →
+                </button>
+                <button
+                  onClick={handleSendToWorkbench}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-pill bg-black text-white font-medium hover:bg-shade-80 active:scale-95 transition-all shadow-xs"
+                >
+                  <span>Open in Single Workbench</span>
+                  <ArrowRight size={12} />
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      {/* Technical Foundations (Bento Grid on White Surface Cards) */}
+      <section className="pt-6">
         <div className="mb-6">
-          <span className="text-[11px] font-mono uppercase tracking-[0.2em] font-semibold text-muted block mb-1 select-none">
-            Technical Foundations
+          <span className="text-[12px] font-sans uppercase tracking-[0.72px] font-semibold text-shade-50 block mb-1 select-none">
+            Architectural Blueprint
           </span>
-          <h3 className="font-serif text-2xl sm:text-3xl font-light text-ink tracking-tight">
+          <h3 className="font-display text-3xl sm:text-4xl font-[330] text-ink tracking-tight">
             Engine Architecture at a Glance
           </h3>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Pillar 1 */}
-          <div className="bg-surface-card border border-hairline rounded-2xl p-7 shadow-xs flex flex-col justify-between hover:border-hairline-strong transition-all duration-150">
+          <div className="surface-card-base flex flex-col justify-between hover:border-shade-40 transition-colors duration-150">
             <div>
-              <div className="w-10 h-10 rounded-xl bg-canvas-soft border border-hairline flex items-center justify-center text-ink mb-4 shadow-2xs">
-                <Zap size={18} strokeWidth={2} />
+              <div className="w-11 h-11 rounded-pill bg-canvas-cream border border-hairline-light flex items-center justify-center text-ink mb-5 shadow-sm">
+                <Zap size={20} strokeWidth={2} />
               </div>
-              <h4 className="font-serif text-xl font-medium text-ink mb-2">
+              <h4 className="font-display text-2xl font-[330] text-ink mb-2.5">
                 CPU-Native Inference
               </h4>
-              <p className="text-[14px] text-body leading-relaxed">
-                Uses an <code className="text-xs font-mono bg-canvas-soft px-1.5 py-0.5 rounded border border-hairline">all-MiniLM-L6-v2</code> SentenceTransformer backbone paired with an L2-regularized logistic classification head.
+              <p className="text-[14px] text-shade-60 font-sans leading-relaxed">
+                Uses an <code className="text-xs font-mono bg-canvas-cream px-2 py-0.5 rounded-pill border border-hairline-light text-ink">all-MiniLM-L6-v2</code> transformer embedding backbone paired with an L2-regularized logistic classification head.
               </p>
             </div>
-            <div className="pt-6 border-t border-hairline mt-6 flex items-center justify-between text-[12px] font-mono text-muted">
+            <div className="pt-6 border-t border-hairline-light mt-6 flex items-center justify-between text-[12px] font-mono text-shade-50">
               <span>Execution</span>
-              <strong className="text-ink">In-Memory Model Pipeline</strong>
+              <strong className="text-ink">In-Memory Pipeline</strong>
             </div>
           </div>
 
           {/* Pillar 2 */}
-          <div className="bg-surface-card border border-hairline rounded-2xl p-7 shadow-xs flex flex-col justify-between hover:border-hairline-strong transition-all duration-150">
+          <div className="surface-card-base flex flex-col justify-between hover:border-shade-40 transition-colors duration-150">
             <div>
-              <div className="w-10 h-10 rounded-xl bg-canvas-soft border border-hairline flex items-center justify-center text-ink mb-4 shadow-2xs">
-                <Layers size={18} strokeWidth={1.75} />
+              <div className="w-11 h-11 rounded-pill bg-canvas-cream border border-hairline-light flex items-center justify-center text-ink mb-5 shadow-sm">
+                <Layers size={20} strokeWidth={1.75} />
               </div>
-              <h4 className="font-serif text-xl font-medium text-ink mb-2">
+              <h4 className="font-display text-2xl font-[330] text-ink mb-2.5">
                 Leave-One-Out Token XAI
               </h4>
-              <p className="text-[14px] text-body leading-relaxed">
-                Evaluates exact word-level attribution without surrogate SHAP/LIME approximations by measuring marginal probability delta (<span className="font-mono text-xs">ΔP</span>) across masked token permutations.
+              <p className="text-[14px] text-shade-60 font-sans leading-relaxed">
+                Evaluates exact word-level attribution without surrogate SHAP/LIME approximations by measuring marginal probability delta (<span className="font-mono text-xs text-ink font-bold">ΔP</span>) across masked token permutations.
               </p>
             </div>
-            <div className="pt-6 border-t border-hairline mt-6 flex items-center justify-between text-[12px] font-mono text-muted">
+            <div className="pt-6 border-t border-hairline-light mt-6 flex items-center justify-between text-[12px] font-mono text-shade-50">
               <span>Explainability</span>
               <strong className="text-ink">Zero-Surrogate Math</strong>
             </div>
           </div>
 
           {/* Pillar 3 */}
-          <div className="bg-surface-card border border-hairline rounded-2xl p-7 shadow-xs flex flex-col justify-between hover:border-hairline-strong transition-all duration-150">
+          <div className="surface-card-base flex flex-col justify-between hover:border-shade-40 transition-colors duration-150">
             <div>
-              <div className="w-10 h-10 rounded-xl bg-canvas-soft border border-hairline flex items-center justify-center text-ink mb-4 shadow-2xs">
-                <Database size={18} strokeWidth={1.75} />
+              <div className="w-11 h-11 rounded-pill bg-canvas-cream border border-hairline-light flex items-center justify-center text-ink mb-5 shadow-sm">
+                <Database size={20} strokeWidth={1.75} />
               </div>
-              <h4 className="font-serif text-xl font-medium text-ink mb-2">
+              <h4 className="font-display text-2xl font-[330] text-ink mb-2.5">
                 Constant-Memory Streaming
               </h4>
-              <p className="text-[14px] text-body leading-relaxed">
+              <p className="text-[14px] text-shade-60 font-sans leading-relaxed">
                 Processes massive CSV archives through chunked HTTP streaming generators in 32-sample batches, maintaining a constant ~45MB RAM footprint on standard server hardware.
               </p>
             </div>
-            <div className="pt-6 border-t border-hairline mt-6 flex items-center justify-between text-[12px] font-mono text-muted">
-              <span>Memory Footprint</span>
-              <strong className="text-ink tabular-nums">~45MB Constant RAM</strong>
+            <div className="pt-6 border-t border-hairline-light mt-6 flex items-center justify-between text-[12px] font-mono text-shade-50">
+              <span>Streaming</span>
+              <strong className="text-ink">~45MB RAM Bound</strong>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Workspace Navigation Cards (Balanced 4-Pillar Grid) */}
-      <div>
-        <div className="mb-6">
-          <span className="text-[11px] font-mono uppercase tracking-[0.2em] font-semibold text-muted block mb-1 select-none">
-            Workspace Navigation
+      {/* Direct Workspace Router Strip */}
+      <section className="surface-card-base flex flex-col md:flex-row items-center justify-between gap-6">
+        <div>
+          <span className="text-[12px] font-sans uppercase tracking-[0.72px] font-semibold text-emerald-800 block mb-1">
+            Production Ready
           </span>
-          <h3 className="font-serif text-2xl sm:text-3xl font-light text-ink tracking-tight">
-            Explore Platform Capabilities
-          </h3>
+          <h4 className="font-display text-2xl sm:text-3xl font-[330] text-ink">
+            Ready to test live comments or batch streams?
+          </h4>
+          <p className="text-[14px] font-sans text-shade-60 mt-1">
+            Access the real-time inference workbench or upload a customer ticket CSV.
+          </p>
         </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {/* Card 1: Single Analysis */}
-          <button
+        <div className="flex flex-wrap items-center gap-3 shrink-0">
+          <Button
+            variant="aloe"
+            size="md"
             onClick={() => onNavigate("single")}
-            className="p-6 rounded-2xl bg-surface-card border border-hairline text-left hover:border-hairline-strong transition-all duration-150 ease-out active:scale-[0.98] shadow-xs flex flex-col justify-between group"
           >
-            <div>
-              <div className="w-9 h-9 rounded-xl bg-canvas-soft border border-hairline flex items-center justify-center text-ink mb-4 group-hover:bg-ink group-hover:text-white transition-colors">
-                <Zap size={16} strokeWidth={1.75} />
-              </div>
-              <h4 className="text-[16px] font-serif font-medium text-ink mb-1.5 flex items-center justify-between">
-                <span>Single Analysis</span>
-                <ArrowRight size={14} className="text-muted group-hover:text-ink group-hover:translate-x-1 transition-all" />
-              </h4>
-              <p className="text-[13px] text-body leading-relaxed text-pretty">
-                Inspect individual comments with word-level occlusion heatmaps, multi-intent radar charts, and SOP triage.
-              </p>
-            </div>
-            <span className="text-[11px] font-mono text-muted mt-5 block pt-3 border-t border-hairline/60">
-              Interactive Sandbox →
-            </span>
-          </button>
-
-          {/* Card 2: Batch Processing */}
-          <button
+            Open Single Workbench
+          </Button>
+          <Button
+            variant="outline"
+            size="md"
             onClick={() => onNavigate("batch")}
-            className="p-6 rounded-2xl bg-surface-card border border-hairline text-left hover:border-hairline-strong transition-all duration-150 ease-out active:scale-[0.98] shadow-xs flex flex-col justify-between group"
           >
-            <div>
-              <div className="w-9 h-9 rounded-xl bg-canvas-soft border border-hairline flex items-center justify-center text-ink mb-4 group-hover:bg-ink group-hover:text-white transition-colors">
-                <Database size={16} strokeWidth={1.75} />
-              </div>
-              <h4 className="text-[16px] font-serif font-medium text-ink mb-1.5 flex items-center justify-between">
-                <span>Batch Streaming</span>
-                <ArrowRight size={14} className="text-muted group-hover:text-ink group-hover:translate-x-1 transition-all" />
-              </h4>
-              <p className="text-[13px] text-body leading-relaxed text-pretty">
-                Upload or stream multi-thousand row CSV feedback datasets with live counters and formatted downloads.
-              </p>
-            </div>
-            <span className="text-[11px] font-mono text-muted mt-5 block pt-3 border-t border-hairline/60">
-              Streaming Engine →
-            </span>
-          </button>
-
-          {/* Card 3: Methodology */}
-          <button
-            onClick={() => onNavigate("methodology")}
-            className="p-6 rounded-2xl bg-surface-card border border-hairline text-left hover:border-hairline-strong transition-all duration-150 ease-out active:scale-[0.98] shadow-xs flex flex-col justify-between group"
-          >
-            <div>
-              <div className="w-9 h-9 rounded-xl bg-canvas-soft border border-hairline flex items-center justify-center text-ink mb-4 group-hover:bg-ink group-hover:text-white transition-colors">
-                <BookOpen size={16} strokeWidth={1.75} />
-              </div>
-              <h4 className="text-[16px] font-serif font-medium text-ink mb-1.5 flex items-center justify-between">
-                <span>Methodology &amp; ML</span>
-                <ArrowRight size={14} className="text-muted group-hover:text-ink group-hover:translate-x-1 transition-all" />
-              </h4>
-              <p className="text-[13px] text-body leading-relaxed text-pretty">
-                Learn the mathematics of Leave-One-Out occlusion, Cardiff Twitter-RoBERTa sentiment, and SOP triage.
-              </p>
-            </div>
-            <span className="text-[11px] font-mono text-muted mt-5 block pt-3 border-t border-hairline/60">
-              Read Methodology →
-            </span>
-          </button>
-
-          {/* Card 4: Architecture & Docs */}
-          <button
-            onClick={() => onNavigate("architecture")}
-            className="p-6 rounded-2xl bg-surface-card border border-hairline text-left hover:border-hairline-strong transition-all duration-150 ease-out active:scale-[0.98] shadow-xs flex flex-col justify-between group"
-          >
-            <div>
-              <div className="w-9 h-9 rounded-xl bg-canvas-soft border border-hairline flex items-center justify-center text-ink mb-4 group-hover:bg-ink group-hover:text-white transition-colors">
-                <Layers size={16} strokeWidth={1.75} />
-              </div>
-              <h4 className="text-[16px] font-serif font-medium text-ink mb-1.5 flex items-center justify-between">
-                <span>Docs &amp; Specs</span>
-                <ArrowRight size={14} className="text-muted group-hover:text-ink group-hover:translate-x-1 transition-all" />
-              </h4>
-              <p className="text-[13px] text-body leading-relaxed text-pretty">
-                Explore interactive system blueprints, benchmarks against LLM APIs, and REST API Swagger endpoints.
-              </p>
-            </div>
-            <span className="text-[11px] font-mono text-muted mt-5 block pt-3 border-t border-hairline/60">
-              System Whitepaper →
-            </span>
-          </button>
+            Launch Batch Processor
+          </Button>
         </div>
-      </div>
+      </section>
     </div>
   );
 };

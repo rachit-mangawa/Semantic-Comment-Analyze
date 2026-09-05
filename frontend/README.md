@@ -1,25 +1,22 @@
-# Semantic Analysis Frontend Client
+# Semantic Analysis Frontend
 
-Single-page analytical interface built with React 18, Vite, Tailwind CSS, Lucide Icons, Framer Motion, and Recharts.
+Web client for the Semantic Comment Analysis platform. Built with React 18, TypeScript, Vite, Tailwind CSS, Framer Motion, and Recharts.
 
 ---
 
 ## Design System
 
 - **Typography**:
-  - **Headings**: *EB Garamond* serif font.
-  - **Data & Controls**: *Inter* sans-serif font.
-  - **Code**: System monospace font for JSON payloads, parameters, and tokens.
+  - **Display / Headers**: `Inter Tight` (light weights 300, 330, 400) with `-0.025em` tracking.
+  - **Body & Controls**: `Inter` (`#000000` ink, `#71717a` secondary shade).
+  - **Code**: System monospace for JSON, tokens, latency, and vector dimensions.
 - **Color System**:
-  - **Background**: Soft Canvas (`#f5f5f5` / `#fafafa`) with white card surfaces (`#ffffff`).
-  - **Typography**: Deep Ink (`#0c0a09`) with muted body (`#4e4e4e`) and secondary labels (`#777169`).
-  - **Borders**: Hairlines (`#e7e5e4`).
-  - **Intent Accents**:
-    - Bug Report: `#ef4444` (Red)
-    - Complaint: `#f97316` (Orange)
-    - Feature Request: `#8b5cf6` (Purple)
-    - Praise: `#22c55e` (Green)
-    - Question: `#3b82f6` (Blue)
+  - **Canvas**: Cream background (`#fbfbf5`).
+  - **Cards**: Pure white surfaces (`#ffffff`) with Level 3 soft paper shadows.
+  - **Hairlines**: Light zinc borders (`#e4e4e7`).
+  - **Featured CTA**: Aloe mint accent (`#c1fbd4` / `#aef5c5`).
+- **Interactive Controls**:
+  - All interactive buttons and selector chips use pill geometry (`rounded-pill`).
 
 ---
 
@@ -28,44 +25,49 @@ Single-page analytical interface built with React 18, Vite, Tailwind CSS, Lucide
 ```text
 src/
 ├── components/
-│   ├── About/                      # Architecture & documentation views
-│   │   ├── AboutView.tsx           # Tabbed navigation hub
-│   │   ├── ArchitectureDiagram.tsx # SVG flow diagram inspector
-│   │   ├── HeroSection.tsx         # Overview header
-│   │   ├── HowItWorks.tsx          # Execution lifecycle steps
-│   │   ├── InteractivePipeline.tsx # Step-by-step pipeline inspector
-│   │   ├── OcclusionSimulator.tsx  # Token masking simulator
-│   │   ├── BusinessHeuristicsMatrix.tsx # Rule matrix explorer
-│   │   ├── BenchmarkComparison.tsx # Latency & cost benchmarks
-│   │   ├── ApiReferenceView.tsx    # In-app REST API docs
-│   │   └── TechStackGrid.tsx       # Subsystem components & repo tree
-│   ├── SingleAnalysisView.tsx      # Single text analysis with heatmap & radar chart
-│   ├── BatchProcessingView.tsx     # Streaming CSV uploader & table preview
-│   ├── Navbar.tsx                  # Top navigation bar with active view tracking
-│   ├── FeatureCard.tsx             # Card container component
-│   └── Button.tsx                  # Standardized button
-├── index.css                       # Tailwind layers and font definitions
-├── App.tsx                         # View router & layout
-└── main.tsx                        # DOM mount
+│   ├── About/                         # Specs and architecture hub
+│   │   ├── AboutView.tsx              # Consolidated 6-tab specifications hub
+│   │   ├── ArchitectureDiagram.tsx    # Subsystem SVG topology inspector
+│   │   ├── HowItWorks.tsx             # 4-stage execution lifecycle
+│   │   ├── InteractivePipeline.tsx    # 7-stage pipeline inspector with latency metrics
+│   │   ├── OcclusionSimulator.tsx     # Leave-One-Out token occlusion simulator
+│   │   ├── BusinessHeuristicsMatrix.tsx # Deterministic rule matrix sandbox
+│   │   ├── BenchmarkComparison.tsx    # Latency, throughput, and compute benchmarks
+│   │   ├── ApiReferenceView.tsx       # REST API reference with copyable snippets
+│   │   └── TechStackGrid.tsx          # Subsystem component catalog
+│   ├── OverviewView.tsx               # Editorial Split Hero with live telemetry and sandbox
+│   ├── SingleAnalysisView.tsx         # Real-time comment analysis and token heatmap
+│   ├── BatchProcessingView.tsx        # Chunked CSV batch upload and live stream table
+│   ├── Navbar.tsx                     # Floating capsule navigation with search shortcut
+│   ├── Footer.tsx                     # Unified footer with site links and license
+│   ├── PageHeader.tsx                 # Standardized view header
+│   └── Button.tsx                     # Pill button component
+├── router.ts                          # Client hash-based view router
+├── index.css                          # Universal design tokens and utility layers
+├── App.tsx                            # Root application shell
+└── main.tsx                           # Application entry point
 ```
 
 ---
 
-## Development
+## Development & Build
 
 ### 1. Install Dependencies
 ```bash
 npm install
 ```
 
-### 2. Start Vite Dev Server
+### 2. Start Dev Server
 ```bash
 npm run dev
 ```
-Starts local dev server at `http://localhost:3000`. Vite automatically proxies `/semantic/*`, `/sementic/*`, and `/api/*` requests to `http://127.0.0.1:8000`.
+Starts local Vite server on port 3000. Proxies `/semantic/*` and `/api/*` endpoints to the backend on `http://127.0.0.1:8000`.
 
-### 3. Build for Production
+### 3. Production Build
 ```bash
 npm run build
 ```
-Compiles the production static bundle into `dist/`. FastAPI serves `dist/` directly from `/`.
+Type-checks with `tsc` and compiles static assets into `dist/` with relative asset links (`base: "./"`).
+
+### 4. GitHub Pages Deployment
+Assets build automatically via GitHub Actions on pushes to `main` using `.github/workflows/deploy.yml`. Because routing uses hash-based URLs (`#/overview`, `#/single`, `#/batch`, `#/architecture`), pages reload without requiring server-side fallback rules.

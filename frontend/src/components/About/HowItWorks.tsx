@@ -34,46 +34,46 @@ export const HowItWorks = () => {
   ];
 
   return (
-    <section className="mb-16">
-      <div className="text-center max-w-2xl mx-auto mb-12">
-        <span className="text-[12px] font-mono uppercase tracking-wider text-muted font-semibold">
+    <div className="surface-card-base w-full">
+      <div className="mb-8 pb-6 border-b border-hairline-light">
+        <span className="eyebrow-cap">
           Execution Lifecycle
         </span>
-        <h2 className="text-3xl font-serif font-light text-ink tracking-tight mt-1">
+        <h3 className="section-heading mt-1">
           How the Pipeline Operates
-        </h2>
-        <p className="text-[14px] text-body mt-2">
+        </h3>
+        <p className="text-[14px] text-shade-60 mt-1 font-sans">
           From cold boot to streaming response: four coordinated phases ensuring microsecond speed, total explainability, and deterministic safety.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {steps.map((step) => {
           const Icon = step.icon;
           return (
             <div
               key={step.num}
-              className="bg-surface-card p-6 md:p-8 rounded-2xl border border-hairline hover:border-hairline-strong transition-all shadow-sm flex flex-col justify-between"
+              className="bg-canvas-cream/60 p-6 sm:p-7 rounded-xl border border-hairline-light hover:border-black/30 transition-all shadow-xs flex flex-col justify-between"
             >
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-2xl font-mono font-bold text-muted">
+                  <span className="text-2xl font-mono font-bold text-shade-40">
                     {step.num}
                   </span>
-                  <span className="p-2.5 rounded-xl bg-canvas-soft border border-hairline text-ink">
+                  <span className="p-2.5 rounded-pill bg-white border border-hairline-light text-ink shadow-xs">
                     <Icon size={18} />
                   </span>
                 </div>
-                <h3 className="text-xl font-serif font-medium text-ink mb-3">
+                <h4 className="text-xl font-display font-[330] text-ink mb-2.5">
                   {step.title}
-                </h3>
-                <p className="text-[14px] font-sans text-body leading-relaxed mb-6">
+                </h4>
+                <p className="text-[14px] font-sans text-shade-60 leading-relaxed mb-6">
                   {step.desc}
                 </p>
               </div>
-              <div className="pt-4 border-t border-hairline flex items-center justify-between">
-                <span className="text-[11px] font-mono text-muted uppercase">Source file</span>
-                <code className="text-[12px] font-mono text-ink bg-canvas-soft px-2 py-0.5 rounded border border-hairline">
+              <div className="pt-4 border-t border-hairline-light flex items-center justify-between text-[12px] font-mono text-shade-50">
+                <span className="uppercase tracking-wider">Source file</span>
+                <code className="text-ink bg-white px-2 py-0.5 rounded border border-hairline-light shadow-2xs">
                   {step.tag}
                 </code>
               </div>
@@ -81,6 +81,6 @@ export const HowItWorks = () => {
           );
         })}
       </div>
-    </section>
+    </div>
   );
 };

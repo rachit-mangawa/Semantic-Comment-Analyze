@@ -3,6 +3,7 @@
 import React, { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PageHeader } from "@/components/PageHeader";
+import { Button } from "@/components/Button";
 import {
   Upload,
   Download,
@@ -13,7 +14,6 @@ import {
   SlidersHorizontal,
   Play,
   RotateCcw,
-  Sparkles,
   ArrowRight,
   Database
 } from "lucide-react";
@@ -29,11 +29,11 @@ const SAMPLE_CSV_CONTENT = `id,text,source
 8,"Your refund policy was completely misleading and I demand a manager response immediately.",trustpilot`;
 
 const INTENT_BADGES: Record<string, { bg: string; text: string; border: string }> = {
-  "Bug Report": { bg: "bg-red-500/10", text: "text-red-700", border: "border-red-500/20" },
-  "Complaint": { bg: "bg-orange-500/10", text: "text-orange-700", border: "border-orange-500/20" },
-  "Feature Request": { bg: "bg-purple-500/10", text: "text-purple-700", border: "border-purple-500/20" },
-  "Praise": { bg: "bg-emerald-500/10", text: "text-emerald-700", border: "border-emerald-500/20" },
-  "Question": { bg: "bg-blue-500/10", text: "text-blue-700", border: "border-blue-500/20" },
+  "Bug Report": { bg: "bg-rose-50", text: "text-rose-700", border: "border-rose-200" },
+  "Complaint": { bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200" },
+  "Feature Request": { bg: "bg-purple-50", text: "text-purple-700", border: "border-purple-200" },
+  "Praise": { bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200" },
+  "Question": { bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200" },
 };
 
 // RFC-4180 compliant CSV row parser handling quotes and embedded commas
@@ -180,21 +180,19 @@ export const BatchProcessingView = () => {
             setHeaderRow(parsedHeader);
           }
 
-          const parsedDataRows = rawLines.slice(1).map(parseCSVRow);
-          setPreviewRows(parsedDataRows);
-          setProcessedCount(parsedDataRows.length);
-          setElapsedMs(Math.round(performance.now() - t0));
+          const dataLines = rawLines.slice(1);
+          setProcessedCount(dataLines.length);
+
+          const previewParsed = dataLines.slice(0, 100).map((l) => parseCSVRow(l));
+          setPreviewRows(previewParsed);
         }
       }
 
-      csvAccumulator += decoder.decode();
       setElapsedMs(Math.round(performance.now() - t0));
-
-      const blob = new Blob([csvAccumulator], { type: "text/csv" });
-      const url = URL.createObjectURL(blob);
-      setDownloadUrl(url);
+      const finalBlob = new Blob([csvAccumulator], { type: "text/csv;charset=utf-8;" });
+      setDownloadUrl(URL.createObjectURL(finalBlob));
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Batch processing failed.");
+      setError(e instanceof Error ? e.message : "Batch streaming execution encountered an error.");
     } finally {
       setLoading(false);
     }
@@ -202,42 +200,49 @@ export const BatchProcessingView = () => {
 
   return (
     <div className="page-container">
-      {/* Universal Page Header */}
+      {/* Transactional Page Header */}
       <PageHeader
-        eyebrow="High-Throughput Streaming Engine"
-        title="Batch CSV Processing"
-        description="Stream thousands of customer comments through SentenceTransformer embeddings and Cardiff Twitter-RoBERTa sentiment models with chunked HTTP streaming."
+        eyebrow="Constant-Memory Architecture"
+        title="Batch Processing Pipeline"
+        description="Stream large customer feedback CSV archives through chunked 32-sample embedding batches without exceeding ~45MB of RAM."
         badge={
-          <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-mono tracking-wider text-ink uppercase bg-canvas-soft border border-hairline rounded-md tabular-nums select-none">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
-            32-Sample Batches
+          <span className="pill-tag-mint select-none">
+            <Database size={13} strokeWidth={2} />
+            <span>Chunked HTTP Generator</span>
           </span>
         }
       />
 
-      {/* Main Configuration Card */}
-      <div className="bg-surface-card border border-hairline rounded-2xl p-6 md:p-8 shadow-xs flex flex-col gap-6">
-        {/* Sample dataset fast-start bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 bg-canvas-soft border border-hairline rounded-xl">
-          <div className="flex items-center gap-2.5">
-            <Sparkles size={16} strokeWidth={1.75} className="text-muted shrink-0" />
-            <span className="text-[13px] font-sans text-body">
-              Don&apos;t have a file ready? Use our pre-built test benchmark:
+      {/* Main Upload & Configuration Surface Card (Level 3 Elevation) */}
+      <div className="surface-card-base flex flex-col gap-6">
+        {/* Sample Actions Bar */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-hairline-light">
+          <div>
+            <span className="text-[12px] font-sans uppercase tracking-[0.72px] font-medium text-shade-50 block mb-1">
+              Sample Feedback Dataset
             </span>
+            <p className="text-[14px] text-shade-60">
+              Test with our curated 8-row benchmark dataset covering all 5 intent classes.
+            </p>
           </div>
-          <div className="flex items-center gap-2">
-            <button
+          <div className="flex items-center gap-2.5">
+            <Button
+              variant="outline-light"
+              size="sm"
               onClick={handleLoadSample}
-              className="px-3 py-1.5 rounded-lg text-[12px] font-sans font-medium bg-surface-card border border-hairline text-ink hover:bg-canvas transition-[color,background-color,border-color,transform] duration-150 ease-out enabled:active:scale-[0.96] shadow-2xs"
+              icon={<FileText size={14} />}
             >
-              Load Sample (8 Rows)
-            </button>
-            <button
+              Load Sample CSV
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={handleDownloadSample}
-              className="px-3 py-1.5 rounded-lg text-[12px] font-sans font-medium text-body hover:text-ink hover:bg-canvas-soft transition-colors enabled:active:scale-[0.96]"
+              className="text-shade-60 hover:text-black"
+              icon={<Download size={14} />}
             >
-              Download CSV
-            </button>
+              Download Sample
+            </Button>
           </div>
         </div>
 
@@ -247,12 +252,12 @@ export const BatchProcessingView = () => {
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
-          className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer transition-[border-color,background-color] duration-150 select-none ${
+          className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer transition-all duration-150 select-none ${
             isDragOver
-              ? "border-ink bg-surface-strong"
+              ? "border-black bg-white"
               : file
-              ? "border-emerald-600/40 bg-emerald-500/5"
-              : "border-hairline-strong bg-canvas-soft/60 hover:border-muted hover:bg-canvas-soft"
+              ? "border-emerald-600/40 bg-emerald-50/30"
+              : "border-hairline-strong bg-canvas-cream hover:border-black/40 hover:bg-white"
           }`}
         >
           <input
@@ -265,25 +270,25 @@ export const BatchProcessingView = () => {
 
           {file ? (
             <div className="flex items-center gap-4 text-center">
-              <div className="w-12 h-12 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center justify-center shrink-0">
+              <div className="w-12 h-12 rounded-pill bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center justify-center shrink-0">
                 <FileSpreadsheet size={24} strokeWidth={1.75} />
               </div>
               <div className="text-left">
                 <p className="text-[16px] font-sans font-semibold text-ink">{file.name}</p>
-                <p className="text-[12px] font-mono text-muted tabular-nums">
+                <p className="text-[12px] font-mono text-shade-50 tabular-nums">
                   {(file.size / 1024).toFixed(1)} KB • Ready for streaming analysis
                 </p>
               </div>
             </div>
           ) : (
             <div className="flex flex-col items-center text-center">
-              <div className="w-12 h-12 rounded-xl bg-surface-card border border-hairline text-muted flex items-center justify-center mb-3 shadow-2xs">
+              <div className="w-12 h-12 rounded-pill bg-white border border-hairline-light text-shade-50 flex items-center justify-center mb-3 shadow-sm">
                 <Upload size={20} strokeWidth={1.75} />
               </div>
               <p className="text-[15px] font-sans font-medium text-ink">
                 Drag and drop your customer comments CSV here
               </p>
-              <p className="text-[13px] font-sans text-muted mt-1">
+              <p className="text-[13px] font-sans text-shade-50 mt-1">
                 or click to browse from your computer (UTF-8 formatted .csv)
               </p>
             </div>
@@ -298,7 +303,7 @@ export const BatchProcessingView = () => {
               <label className="text-[13px] font-sans font-medium text-ink">
                 Target Text Column
               </label>
-              <span className="text-[11px] font-mono text-muted">Column header name</span>
+              <span className="text-[11px] font-mono text-shade-50">Column header name</span>
             </div>
             <div className="relative">
               <input
@@ -306,10 +311,10 @@ export const BatchProcessingView = () => {
                 value={targetColumn}
                 onChange={(e) => setTargetColumn(e.target.value)}
                 placeholder="e.g. text, feedback, comment"
-                className="w-full bg-canvas-soft rounded-lg px-3.5 py-2.5 text-[14px] font-mono text-ink border border-hairline focus:border-ink focus:bg-white focus:outline-none transition-[border-color,background-color] duration-150"
+                className="w-full bg-canvas-cream rounded-md px-3.5 py-2.5 text-[14px] font-mono text-ink border border-hairline-light focus:border-black focus:bg-white focus:outline-none transition-colors duration-150"
               />
             </div>
-            <p className="text-[12px] text-muted">
+            <p className="text-[12px] text-shade-50 font-sans">
               Specify which column contains the natural language feedback to analyze.
             </p>
           </div>
@@ -317,10 +322,10 @@ export const BatchProcessingView = () => {
           {/* Confidence Threshold Slider */}
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
-              <label className="text-[13px] font-sans font-medium text-ink">
-                Confidence Threshold
+              <label className="text-[13px] font-sans font-medium text-ink flex items-center gap-2">
+                <span>Confidence Threshold</span>
               </label>
-              <span className="text-[13px] font-mono font-bold text-ink tabular-nums">
+              <span className="text-[12px] font-mono font-bold text-ink tabular-nums px-2 py-0.5 rounded bg-white border border-hairline-light shadow-xs">
                 {threshold.toFixed(2)}
               </span>
             </div>
@@ -331,34 +336,58 @@ export const BatchProcessingView = () => {
               step="0.05"
               value={threshold}
               onChange={(e) => setThreshold(parseFloat(e.target.value))}
-              className="w-full accent-ink cursor-pointer mt-2"
+              className="w-full accent-black cursor-pointer mt-1"
             />
-            <p className="text-[12px] text-muted">
-              Minimum probability required for multi-class intent assignment.
+            {/* Quick Presets */}
+            <div className="flex items-center justify-between gap-1.5 pt-1">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {[
+                  { label: "Permissive", val: 0.35 },
+                  { label: "Balanced", val: 0.50 },
+                  { label: "Strict", val: 0.75 },
+                ].map((p) => {
+                  const isCurrent = Math.abs(threshold - p.val) < 0.02;
+                  return (
+                    <button
+                      key={p.label}
+                      type="button"
+                      onClick={() => setThreshold(p.val)}
+                      className={`px-2 py-0.5 rounded-pill text-[11px] font-sans transition-all active:scale-95 ${
+                        isCurrent
+                          ? "bg-black text-white font-semibold shadow-xs"
+                          : "bg-white border border-hairline-light text-shade-60 hover:text-black hover:border-shade-40"
+                      }`}
+                    >
+                      {p.label} ({p.val})
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <p className="text-[11px] text-shade-50 font-sans mt-0.5">
+              Minimum calibrated confidence required for deterministic intent routing.
             </p>
           </div>
         </div>
 
         {/* Action Button & Live Progress Telemetry */}
-        <div className="pt-4 border-t border-hairline flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="pt-5 border-t border-hairline-light flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <button
+            <Button
+              variant="primary"
+              size="md"
               onClick={handleProcess}
               disabled={!file || loading}
-              className="flex items-center justify-center gap-2 pl-5 pr-6 py-2.5 rounded-xl font-sans text-[14px] font-medium bg-ink text-white hover:bg-black disabled:opacity-40 disabled:cursor-not-allowed transition-[background-color,transform,opacity] duration-150 ease-out enabled:active:scale-[0.96] shadow-sm"
-            >
-              {loading ? (
-                <>
+              icon={
+                loading ? (
                   <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                  <span>Streaming Analysis...</span>
-                </>
-              ) : (
-                <>
+                ) : (
                   <Play size={15} strokeWidth={2} />
-                  <span>Start Batch Processing</span>
-                </>
-              )}
-            </button>
+                )
+              }
+            >
+              {loading ? "Streaming Analysis..." : "Start Batch Processing"}
+            </Button>
 
             {file && !loading && (
               <button
@@ -366,17 +395,17 @@ export const BatchProcessingView = () => {
                   setFile(null);
                   resetResults();
                 }}
-                className="p-2.5 rounded-xl border border-hairline text-muted hover:text-ink hover:bg-canvas-soft transition-colors enabled:active:scale-[0.96]"
+                className="p-2.5 rounded-pill border border-hairline-light text-shade-60 hover:text-ink hover:bg-canvas-cream transition-colors active:scale-95"
                 title="Reset batch configuration"
               >
-                <RotateCcw size={15} strokeWidth={1.75} />
+                <RotateCcw size={15} />
               </button>
             )}
           </div>
 
           {/* Streaming throughput counters */}
           {loading && (
-            <div className="flex items-center gap-3 text-[12px] font-mono text-muted bg-canvas-soft border border-hairline px-3.5 py-2 rounded-lg">
+            <div className="flex items-center gap-3 text-[12px] font-mono text-shade-60 bg-canvas-cream border border-hairline-light px-4 py-2 rounded-pill">
               <span className="w-2 h-2 rounded-full bg-emerald-600 animate-ping" />
               <span>
                 Processed <strong className="text-ink tabular-nums">{processedCount}</strong> rows
@@ -392,8 +421,8 @@ export const BatchProcessingView = () => {
         </div>
 
         {error && (
-          <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-[13px] flex items-center gap-2.5">
-            <AlertCircle size={16} strokeWidth={1.75} className="shrink-0" />
+          <div className="p-3.5 rounded-md bg-rose-50 border border-rose-200 text-rose-800 text-[13px] flex items-center gap-2.5">
+            <AlertCircle size={16} className="shrink-0" />
             <span>{error}</span>
           </div>
         )}
@@ -409,12 +438,12 @@ export const BatchProcessingView = () => {
             transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
             className="flex flex-col gap-4"
           >
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-hairline">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-hairline-light">
               <div className="flex items-baseline gap-3">
-                <h3 className="text-2xl font-serif font-light text-ink">
+                <h3 className="text-2xl font-display font-[330] text-ink">
                   Processed Results
                 </h3>
-                <span className="text-[12px] font-mono text-muted tabular-nums">
+                <span className="text-[12px] font-mono text-shade-50 tabular-nums">
                   {processedCount} rows streaming • {elapsedMs ? `${elapsedMs}ms total` : ""}
                 </span>
               </div>
@@ -423,7 +452,7 @@ export const BatchProcessingView = () => {
                 <a
                   href={downloadUrl}
                   download={`analyzed_${file?.name || "batch_results.csv"}`}
-                  className="inline-flex items-center gap-2 pl-3.5 pr-4 py-2 rounded-xl text-[13px] font-sans font-medium bg-ink text-white hover:bg-black transition-[background-color,transform] duration-150 ease-out enabled:active:scale-[0.96] shadow-sm self-start sm:self-auto"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-pill text-[13px] font-sans font-semibold bg-aloe-10 text-ink hover:bg-[#aef5c5] transition-all duration-150 active:scale-95 shadow-sm self-start sm:self-auto"
                 >
                   <Download size={14} strokeWidth={2} />
                   <span>Download Full CSV Output</span>
@@ -431,27 +460,27 @@ export const BatchProcessingView = () => {
               )}
             </div>
 
-            {/* Scrollable Data Table with Sticky Header */}
-            <div className="bg-surface-card border border-hairline rounded-2xl overflow-hidden shadow-xs">
+            {/* Scrollable Data Table with Level 3 Elevation */}
+            <div className="bg-white border border-hairline-light rounded-xl overflow-hidden shadow-level-3">
               <div className="overflow-x-auto max-h-[500px]">
                 <table className="w-full text-left text-[13px] font-sans whitespace-nowrap">
-                  <thead className="sticky top-0 z-10 bg-surface-strong/95 backdrop-blur-xs border-b border-hairline text-ink select-none">
+                  <thead className="sticky top-0 z-10 bg-canvas-cream/95 backdrop-blur-xs border-b border-hairline-light text-ink select-none">
                     <tr>
                       {headerRow.map((header, i) => (
                         <th
                           key={i}
-                          className="px-4 py-3 font-mono text-[11px] uppercase tracking-wider font-semibold text-muted"
+                          className="px-4 py-3 font-sans text-[12px] uppercase tracking-[0.72px] font-semibold text-shade-50"
                         >
                           {header}
                         </th>
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-hairline">
+                  <tbody className="divide-y divide-hairline-light">
                     {previewRows.map((row, rowIdx) => (
                       <tr
                         key={rowIdx}
-                        className="hover:bg-canvas-soft/80 transition-colors"
+                        className="hover:bg-canvas-cream/80 transition-colors"
                       >
                         {row.map((cell, colIdx) => {
                           const colName = (headerRow[colIdx] || "").toUpperCase();
@@ -459,14 +488,14 @@ export const BatchProcessingView = () => {
                           // Intent Column Badging
                           if (colName === "INTENT") {
                             const badge = INTENT_BADGES[cell] || {
-                              bg: "bg-surface-strong",
+                              bg: "bg-canvas-cream",
                               text: "text-ink",
-                              border: "border-hairline",
+                              border: "border-hairline-light",
                             };
                             return (
                               <td key={colIdx} className="px-4 py-3">
                                 <span
-                                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-sans font-medium border ${badge.bg} ${badge.text} ${badge.border}`}
+                                  className={`inline-flex items-center px-3 py-1 rounded-pill text-[12px] font-sans font-medium border ${badge.bg} ${badge.text} ${badge.border}`}
                                 >
                                   {cell}
                                 </span>
@@ -481,12 +510,12 @@ export const BatchProcessingView = () => {
                             return (
                               <td key={colIdx} className="px-4 py-3">
                                 <span
-                                  className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-mono font-medium ${
+                                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-pill text-[12px] font-mono font-medium ${
                                     isPos
-                                      ? "text-emerald-700 bg-emerald-50 border border-emerald-200"
+                                      ? "text-emerald-800 bg-emerald-50 border border-emerald-200"
                                       : isNeg
-                                      ? "text-red-700 bg-red-50 border border-red-200"
-                                      : "text-muted bg-canvas-soft border border-hairline"
+                                      ? "text-rose-800 bg-rose-50 border border-rose-200"
+                                      : "text-shade-60 bg-canvas-cream border border-hairline-light"
                                   }`}
                                 >
                                   <span
@@ -494,8 +523,8 @@ export const BatchProcessingView = () => {
                                       isPos
                                         ? "bg-emerald-600"
                                         : isNeg
-                                        ? "bg-red-600"
-                                        : "bg-muted"
+                                        ? "bg-rose-600"
+                                        : "bg-shade-40"
                                     }`}
                                   />
                                   {cell}
@@ -524,18 +553,18 @@ export const BatchProcessingView = () => {
                                 <span
                                   className={`inline-flex items-center gap-1.5 text-[12px] font-mono font-medium ${
                                     cell === "High"
-                                      ? "text-red-700"
+                                      ? "text-rose-700 font-semibold"
                                       : cell === "Medium"
-                                      ? "text-orange-700"
+                                      ? "text-amber-700"
                                       : "text-emerald-700"
                                   }`}
                                 >
                                   <span
                                     className={`w-1.5 h-1.5 rounded-full ${
                                       cell === "High"
-                                        ? "bg-red-600"
+                                        ? "bg-rose-600"
                                         : cell === "Medium"
-                                        ? "bg-orange-500"
+                                        ? "bg-amber-500"
                                         : "bg-emerald-600"
                                     }`}
                                   />
@@ -549,8 +578,8 @@ export const BatchProcessingView = () => {
                           if (colName === "RECOMMENDED_ACTION") {
                             return (
                               <td key={colIdx} className="px-4 py-3 font-sans text-ink">
-                                <span className="inline-flex items-center gap-1 text-[12px] font-medium bg-canvas-soft border border-hairline px-2 py-0.5 rounded">
-                                  <ArrowRight size={11} className="text-muted" />
+                                <span className="inline-flex items-center gap-1 text-[12px] font-medium bg-canvas-cream border border-hairline-light px-2.5 py-0.5 rounded-pill">
+                                  <ArrowRight size={11} className="text-shade-40" />
                                   <span>{cell}</span>
                                 </span>
                               </td>
@@ -561,7 +590,7 @@ export const BatchProcessingView = () => {
                           return (
                             <td
                               key={colIdx}
-                              className="px-4 py-3 text-body max-w-xs truncate"
+                              className="px-4 py-3 text-shade-60 max-w-xs truncate"
                               title={cell}
                             >
                               {cell}

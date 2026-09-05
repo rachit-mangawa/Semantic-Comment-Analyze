@@ -1,20 +1,20 @@
 import React, { useState } from "react";
-import { Maximize2, Minimize2, ExternalLink, Download, Layers } from "lucide-react";
+import { Maximize2, Minimize2, ExternalLink } from "lucide-react";
 
 export const ArchitectureDiagram = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   return (
-    <section className="mb-16">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+    <div className="surface-card-base flex flex-col gap-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-hairline-light">
         <div>
-          <span className="text-[12px] font-mono uppercase tracking-wider text-muted font-semibold">
+          <span className="eyebrow-cap">
             System Topology
           </span>
-          <h2 className="text-3xl font-serif font-light text-ink tracking-tight mt-1">
-            Data Flow & Subsystem Architecture
-          </h2>
-          <p className="text-[14px] text-body mt-1">
+          <h3 className="section-heading mt-1">
+            Data Flow &amp; Subsystem Architecture
+          </h3>
+          <p className="text-[14px] text-shade-60 mt-1 font-sans">
             Complete topology showing the decoupled flow from FastAPI ASGI Ingestion to Transformer Pipelines and Deterministic Evaluators.
           </p>
         </div>
@@ -24,26 +24,26 @@ export const ArchitectureDiagram = () => {
             href="/arch.svg"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-hairline bg-surface-card text-[13px] font-medium text-body hover:text-ink hover:bg-canvas-soft transition-colors shadow-sm"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-pill border border-hairline-light bg-canvas-cream text-[12px] font-sans font-medium text-shade-60 hover:text-ink hover:bg-white transition-all active:scale-95 shadow-xs"
           >
-            <ExternalLink size={14} />
+            <ExternalLink size={13} />
             <span>Open Vector SVG</span>
           </a>
           <button
             onClick={() => setIsFullscreen(!isFullscreen)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-hairline bg-surface-card text-[13px] font-medium text-body hover:text-ink hover:bg-canvas-soft transition-colors shadow-sm"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-pill border border-hairline-light bg-canvas-cream text-[12px] font-sans font-medium text-shade-60 hover:text-ink hover:bg-white transition-all active:scale-95 shadow-xs"
           >
-            {isFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+            {isFullscreen ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
             <span>{isFullscreen ? "Exit Fullscreen" : "Fullscreen View"}</span>
           </button>
         </div>
       </div>
 
       <div
-        className={`relative w-full border border-hairline rounded-2xl bg-white overflow-hidden p-6 md:p-10 flex items-center justify-center transition-all ${
+        className={`relative w-full border border-hairline-light rounded-xl bg-white overflow-hidden p-6 md:p-8 flex items-center justify-center transition-all ${
           isFullscreen
             ? "fixed inset-4 z-50 h-[calc(100vh-2rem)] shadow-2xl bg-white/95 backdrop-blur-md"
-            : "h-[620px] shadow-sm"
+            : "h-[540px] shadow-inner"
         }`}
       >
         <img
@@ -55,13 +55,13 @@ export const ArchitectureDiagram = () => {
         {isFullscreen && (
           <button
             onClick={() => setIsFullscreen(false)}
-            className="absolute top-6 right-6 p-2 rounded-full bg-ink text-white hover:bg-black transition-colors shadow-lg"
+            className="absolute top-6 right-6 p-2 rounded-pill bg-black text-white hover:bg-shade-80 transition-colors shadow-lg"
             title="Close Fullscreen"
           >
             <Minimize2 size={18} />
           </button>
         )}
       </div>
-    </section>
+    </div>
   );
 };

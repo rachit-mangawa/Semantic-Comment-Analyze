@@ -29,7 +29,7 @@ export function parseCurrentRoute(): RouteState {
   switch (primary) {
     case "methodology":
     case "method":
-      return { view: "methodology" };
+      return { view: "architecture", subTab: subTab || "pipeline" };
     case "single":
     case "analyze":
     case "analysis":

@@ -1,291 +1,286 @@
-import React, { useState } from "react";
-import { Zap, Database, BookOpen, Layers, ExternalLink, Menu, X, LucideIcon } from "lucide-react";
+"use client";
+
+import React, { useState, useEffect } from "react";
+import {
+  Sparkles,
+  Zap,
+  Database,
+  BookOpen,
+  Layers,
+  Search,
+  Command,
+  X,
+  ArrowRight
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { RouteView } from "@/router";
 
 export type ViewType = RouteView;
-
-const GithubIcon: React.FC<{ size?: number; className?: string }> = ({ size = 14, className = "" }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-    aria-hidden="true"
-  >
-    <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
-    <path d="M9 18c-4.51 2-5-2-7-2" />
-  </svg>
-);
 
 interface NavbarProps {
   activeView: ViewType;
   onViewChange: (view: ViewType) => void;
 }
 
-interface NavItem {
+interface NavTab {
   id: ViewType;
   label: string;
   shortLabel: string;
-  icon: LucideIcon;
-  href: string;
-  tag: string;
+  icon: React.ElementType;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ activeView, onViewChange }) => {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  // Redesigned navigation items: Overview is accessed via the Brand Logo on the left.
-  const navItems: NavItem[] = [
+  // 4 Canonical Tabs with consolidated Docs & Architecture
+  const navTabs: NavTab[] = [
+    { id: "overview", label: "Overview", shortLabel: "Overview", icon: Sparkles },
+    { id: "single", label: "Single Analysis", shortLabel: "Single", icon: Zap },
+    { id: "batch", label: "Batch Processing", shortLabel: "Batch", icon: Database },
+    { id: "architecture", label: "Docs & Specs", shortLabel: "Docs", icon: Layers },
+  ];
+
+  // Listen for Cmd+K / Ctrl+K and keys 1-4
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const activeEl = document.activeElement;
+      const isInput =
+        activeEl instanceof HTMLInputElement ||
+        activeEl instanceof HTMLTextAreaElement ||
+        (activeEl as HTMLElement)?.isContentEditable;
+
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setCommandPaletteOpen((prev) => !prev);
+        return;
+      }
+
+      if (e.key === "Escape") {
+        setCommandPaletteOpen(false);
+        return;
+      }
+
+      if (!isInput && !commandPaletteOpen) {
+        if (e.key === "1") onViewChange("overview");
+        else if (e.key === "2") onViewChange("single");
+        else if (e.key === "3") onViewChange("batch");
+        else if (e.key === "4") onViewChange("architecture");
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [commandPaletteOpen, onViewChange]);
+
+  const handleTabClick = (view: ViewType) => {
+    onViewChange(view);
+  };
+
+  const handleCommandSelect = (view: ViewType) => {
+    onViewChange(view);
+    setCommandPaletteOpen(false);
+  };
+
+  const quickActions = [
     {
-      id: "single",
-      label: "Single Analysis",
-      shortLabel: "Single",
+      title: "Platform Overview",
+      description: "Architecture summary and interactive triage playground",
+      view: "overview" as ViewType,
+      icon: Sparkles,
+      shortcut: "1",
+    },
+    {
+      title: "Single Comment Analysis",
+      description: "Real-time intent and token occlusion heatmap",
+      view: "single" as ViewType,
       icon: Zap,
-      href: "#/single",
-      tag: "Real-time",
+      shortcut: "2",
     },
     {
-      id: "batch",
-      label: "Batch Processing",
-      shortLabel: "Batch",
+      title: "Batch Processing Pipeline",
+      description: "Chunked CSV streaming inference pipeline",
+      view: "batch" as ViewType,
       icon: Database,
-      href: "#/batch",
-      tag: "Streaming",
+      shortcut: "3",
     },
     {
-      id: "methodology",
-      label: "Methodology",
-      shortLabel: "Methodology",
-      icon: BookOpen,
-      href: "#/methodology",
-      tag: "XAI Math",
-    },
-    {
-      id: "architecture",
-      label: "Docs & Specs",
-      shortLabel: "Docs",
+      title: "Docs & Architecture Specs",
+      description: "Blueprints, pipeline telemetry, occlusion XAI, heuristics, and REST API",
+      view: "architecture" as ViewType,
       icon: Layers,
-      href: "#/architecture",
-      tag: "API / SOP",
+      shortcut: "4",
     },
   ];
 
-  const handleNavClick = (view: ViewType) => {
-    onViewChange(view);
-    setMobileMenuOpen(false);
-  };
-
-  const isOverview = activeView === "overview";
+  const filteredActions = quickActions.filter(
+    (action) =>
+      action.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      action.description.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-hairline/80 bg-surface-card/85 backdrop-blur-xl shadow-[0_1px_4px_0_rgba(0,0,0,0.02)] transition-colors">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between gap-4">
-        
-        {/* Left: Brand Identity (Acts as direct Overview link) */}
-        <div className="flex items-center gap-3 shrink-0">
-          <a
-            href="#/overview"
-            onClick={(e) => {
-              e.preventDefault();
-              handleNavClick("overview");
-            }}
-            className={`group flex items-center gap-3 p-1.5 -m-1.5 rounded-xl transition-all duration-150 select-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 ${
-              isOverview
-                ? "bg-canvas-soft/80 ring-1 ring-hairline"
-                : "hover:bg-canvas-soft/50"
-            }`}
-            title="Semantic Comment Analysis — Click to return to Overview"
-          >
-            {/* Monogram Badge */}
-            <div className="relative flex items-center justify-center w-9 h-9 rounded-xl bg-ink text-canvas font-serif text-[17px] font-bold shadow-xs ring-1 ring-ink/10 transition-transform duration-200 group-hover:scale-105 active:scale-95">
-              S
-              {isOverview && (
-                <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-surface-card" />
-              )}
-            </div>
-
-            {/* Typography */}
-            <div className="flex flex-col">
-              <div className="flex items-center gap-2">
-                <span className="font-serif text-[19px] sm:text-[20px] font-medium tracking-tight text-ink leading-tight">
-                  Semantic
-                </span>
-                <span className="text-[10px] font-mono uppercase tracking-wider text-muted px-1.5 py-0.5 rounded bg-canvas border border-hairline hidden sm:inline-block">
-                  NLP
-                </span>
-              </div>
-              <span className="text-[11px] font-mono text-muted tracking-tight hidden sm:block">
-                Comment Intelligence
-              </span>
-            </div>
-          </a>
-        </div>
-
-        {/* Center: Spacious Floating Pill Navigation Dock (Desktop) */}
+    <>
+      {/* Floating White Pill Capsule Navbar (Exactly matching reference image) */}
+      <header className="sticky top-4 z-40 w-full flex justify-center px-3 sm:px-4 pointer-events-none select-none">
         <nav
-          className="hidden md:flex items-center p-1.5 rounded-full bg-canvas-soft/80 border border-hairline shadow-xs backdrop-blur-md"
+          className="pointer-events-auto flex items-center gap-1 sm:gap-1.5 p-1.5 bg-white/95 backdrop-blur-xl border border-hairline-light rounded-pill shadow-level-3 max-w-full overflow-x-auto no-scrollbar transition-all duration-200"
           aria-label="Main Navigation"
         >
-          <div className="flex items-center gap-1">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = activeView === item.id;
+          {navTabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeView === tab.id;
 
-              return (
-                <a
-                  key={item.id}
-                  href={item.href}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleNavClick(item.id);
-                  }}
-                  aria-current={isActive ? "page" : undefined}
-                  className={`relative flex items-center gap-2 px-3.5 lg:px-4 py-2 rounded-full text-[13px] font-sans font-normal select-none transition-colors duration-150 ease-out focus-visible:ring-2 focus-visible:ring-ink active:scale-[0.97] ${
-                    isActive
-                      ? "text-ink font-medium"
-                      : "text-muted hover:text-ink hover:bg-surface-card/50"
-                  }`}
-                >
-                  {/* Smooth Sliding Pill Indicator via Framer Motion */}
-                  {isActive && (
-                    <motion.div
-                      layoutId="navbar-active-pill"
-                      className="absolute inset-0 rounded-full bg-surface-card border border-hairline/80 shadow-xs"
-                      transition={{ type: "spring", stiffness: 450, damping: 35 }}
-                    />
-                  )}
+            return (
+              <button
+                key={tab.id}
+                onClick={() => handleTabClick(tab.id)}
+                aria-current={isActive ? "page" : undefined}
+                className={`relative flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-pill text-[13px] sm:text-[14px] font-sans font-medium whitespace-nowrap transition-all duration-150 ease-out active:scale-[0.97] ${
+                  isActive
+                    ? "text-white font-semibold"
+                    : "text-shade-60 hover:text-black hover:bg-black/[0.04]"
+                }`}
+              >
+                {/* Active Solid Black Pill Background */}
+                {isActive && (
+                  <motion.div
+                    layoutId="navbar-pill-active"
+                    className="absolute inset-0 rounded-pill bg-black shadow-sm"
+                    transition={{ type: "spring", stiffness: 480, damping: 38 }}
+                  />
+                )}
 
-                  <span className="relative z-10 flex items-center gap-2">
-                    <Icon
-                      size={14}
-                      strokeWidth={isActive ? 2 : 1.75}
-                      className={isActive ? "text-ink" : "text-muted"}
-                    />
-                    <span className="hidden lg:inline">{item.label}</span>
-                    <span className="lg:hidden">{item.shortLabel}</span>
-                  </span>
-                </a>
-              );
-            })}
-          </div>
-        </nav>
+                <span className="relative z-10 flex items-center gap-2">
+                  <Icon
+                    size={15}
+                    strokeWidth={isActive ? 2.25 : 1.75}
+                    className={`shrink-0 ${isActive ? "text-white" : "text-shade-50"}`}
+                  />
+                  <span className="hidden sm:inline">{tab.label}</span>
+                  <span className="sm:hidden">{tab.shortLabel}</span>
+                </span>
+              </button>
+            );
+          })}
 
-        {/* Right: Actions, Live Engine Status & External Links */}
-        <div className="flex items-center gap-2.5 shrink-0">
-          {/* Engine Live Status Pill */}
-          <div className="hidden xl:inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-mono tracking-tight bg-canvas-soft border border-hairline text-body select-none">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Engine: Live (384d)</span>
-          </div>
-
-          {/* GitHub Link */}
-          <a
-            href="https://github.com/rachit-mangawa/Semantic-Comment-Analyze"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-mono text-body hover:text-ink border border-hairline hover:bg-canvas-soft hover:border-hairline transition-all duration-150 active:scale-[0.96]"
-            title="GitHub Repository"
-          >
-            <GithubIcon size={13} />
-            <span>GitHub</span>
-          </a>
-
-          {/* Interactive API Docs Link */}
-          <a
-            href="/docs"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-mono text-body hover:text-ink border border-hairline hover:bg-canvas-soft hover:border-hairline transition-all duration-150 active:scale-[0.96]"
-            title="Interactive FastAPI Swagger Specification"
-          >
-            <span>/docs</span>
-            <ExternalLink size={12} strokeWidth={1.75} className="text-muted" />
-          </a>
-
-          {/* Mobile Menu Hamburger Toggle (< md) */}
+          {/* Quick Search & Command launcher */}
+          <div className="h-4 w-px bg-hairline-light mx-1 select-none hidden sm:block" />
           <button
-            type="button"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden inline-flex items-center justify-center w-9 h-9 rounded-lg border border-hairline text-body hover:text-ink hover:bg-canvas-soft transition-colors"
-            aria-label="Toggle navigation menu"
-            aria-expanded={mobileMenuOpen}
+            onClick={() => setCommandPaletteOpen(true)}
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-pill text-[12px] font-sans text-shade-60 hover:text-black hover:bg-black/[0.04] transition-all active:scale-[0.97]"
+            title="Search views (⌘K or keys 1-5)"
+            aria-label="Search views"
           >
-            {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+            <Search size={14} className="text-shade-50" />
+            <kbd className="hidden md:inline-block px-1.5 py-0.5 rounded bg-canvas-cream border border-hairline-light text-[10px] font-mono text-shade-50">
+              ⌘K
+            </kbd>
           </button>
-        </div>
-      </div>
+        </nav>
+      </header>
 
-      {/* Mobile Drawer Navigation (< md) */}
+      {/* ⌘K Command Palette Modal */}
       <AnimatePresence>
-        {mobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
-            className="md:hidden border-t border-hairline bg-surface-card px-4 pt-3 pb-6 flex flex-col gap-2 shadow-lg"
-          >
-            <div className="text-[10px] font-mono text-muted uppercase tracking-wider px-2 py-1">
-              Navigation
-            </div>
+        {commandPaletteOpen && (
+          <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 sm:px-6">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setCommandPaletteOpen(false)}
+              className="fixed inset-0 bg-black/40 backdrop-blur-sm"
+            />
 
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = activeView === item.id;
-              return (
-                <a
-                  key={item.id}
-                  href={item.href}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleNavClick(item.id);
-                  }}
-                  className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[14px] font-sans transition-colors ${
-                    isActive
-                      ? "bg-canvas-soft text-ink font-medium border border-hairline"
-                      : "text-body hover:text-ink hover:bg-canvas/50"
-                  }`}
+            {/* Modal Dialog */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96, y: -8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: -8 }}
+              transition={{ duration: 0.18, ease: "easeOut" }}
+              className="relative w-full max-w-lg bg-white border border-hairline-light rounded-2xl shadow-level-4 overflow-hidden z-10 text-ink"
+            >
+              {/* Search Bar Input */}
+              <div className="flex items-center gap-3 px-4 py-3.5 border-b border-hairline-light bg-canvas-cream/50">
+                <Search size={18} className="text-shade-40 shrink-0" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Jump to a view... (e.g. single, batch, docs)"
+                  autoFocus
+                  className="w-full bg-transparent text-[15px] font-sans text-ink placeholder:text-shade-40 focus:outline-none"
+                />
+                <button
+                  onClick={() => setCommandPaletteOpen(false)}
+                  className="p-1 rounded-pill hover:bg-black/5 text-shade-40 hover:text-ink transition-colors"
                 >
-                  <div className="flex items-center gap-2.5">
-                    <Icon size={16} className={isActive ? "text-ink" : "text-muted"} />
-                    <span>{item.label}</span>
-                  </div>
-                  <span className="text-[11px] font-mono text-muted px-2 py-0.5 rounded bg-surface-card border border-hairline">
-                    {item.tag}
-                  </span>
-                </a>
-              );
-            })}
+                  <X size={16} />
+                </button>
+              </div>
 
-            <div className="pt-3 mt-1 border-t border-hairline flex items-center justify-between gap-2">
-              <a
-                href="https://github.com/rachit-mangawa/Semantic-Comment-Analyze"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-[12px] font-mono text-body border border-hairline hover:bg-canvas-soft"
-              >
-                <GithubIcon size={14} />
-                <span>GitHub</span>
-              </a>
-              <a
-                href="/docs"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-[12px] font-mono text-body border border-hairline hover:bg-canvas-soft"
-              >
-                <span>Swagger /docs</span>
-                <ExternalLink size={12} className="text-muted" />
-              </a>
-            </div>
-          </motion.div>
+              {/* Action List */}
+              <div className="p-2 max-h-80 overflow-y-auto divide-y divide-hairline-light/50">
+                <div className="text-[11px] font-sans uppercase tracking-[0.72px] font-semibold text-shade-40 px-3 py-2">
+                  Navigation Targets
+                </div>
+
+                {filteredActions.map((action) => {
+                  const Icon = action.icon;
+                  return (
+                    <button
+                      key={action.view}
+                      onClick={() => handleCommandSelect(action.view)}
+                      className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-canvas-cream transition-colors text-left group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-pill bg-black/5 flex items-center justify-center text-ink group-hover:bg-black group-hover:text-white transition-colors">
+                          <Icon size={16} />
+                        </div>
+                        <div>
+                          <p className="text-[14px] font-sans font-medium text-ink">
+                            {action.title}
+                          </p>
+                          <p className="text-[12px] font-sans text-shade-50">
+                            {action.description}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <kbd className="px-1.5 py-0.5 rounded bg-canvas-cream border border-hairline-light text-[11px] font-mono text-shade-50">
+                          {action.shortcut}
+                        </kbd>
+                        <ArrowRight
+                          size={14}
+                          className="text-shade-40 opacity-0 group-hover:opacity-100 transition-opacity"
+                        />
+                      </div>
+                    </button>
+                  );
+                })}
+
+                {filteredActions.length === 0 && (
+                  <div className="py-8 text-center text-shade-50 text-[14px]">
+                    No matching views found for &ldquo;{searchQuery}&rdquo;
+                  </div>
+                )}
+              </div>
+
+              {/* Footer hint */}
+              <div className="px-4 py-2.5 bg-canvas-cream border-t border-hairline-light flex items-center justify-between text-[11px] font-mono text-shade-50">
+                <span>Select to navigate</span>
+                <div className="flex items-center gap-1.5">
+                  <kbd className="px-1.5 py-0.5 rounded bg-white border border-hairline-light text-[10px]">
+                    ESC
+                  </kbd>
+                  <span>to close</span>
+                </div>
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
-    </header>
+    </>
   );
 };

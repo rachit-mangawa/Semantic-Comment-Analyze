@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Copy, Check, Terminal, Code2, Server } from "lucide-react";
+import { Copy, Check, Terminal, Code2 } from "lucide-react";
 
 export const ApiReferenceView = () => {
   const [activeEndpoint, setActiveEndpoint] = useState<"analyze" | "batch">("analyze");
@@ -18,12 +18,12 @@ export const ApiReferenceView = () => {
       switch (activeLang) {
         case "curl":
           return `curl -X POST "http://127.0.0.1:8000/semantic/analyze" \\
-     -H "Content-Type: application/json" \\
-     -d '{
-       "text": "The app freezes completely whenever I click export on large PDF tables!",
-       "threshold": 0.5,
-       "include_explanation": true
-     }'`;
+  -H "Content-Type: application/json" \\
+  -d '{
+    "text": "The app freezes completely whenever I click export on large PDF tables!",
+    "threshold": 0.5,
+    "include_explanation": true
+  }'`;
         case "python":
           return `import requests
 
@@ -60,10 +60,10 @@ console.log("Analysis Result:", data);`;
       switch (activeLang) {
         case "curl":
           return `curl -X POST "http://127.0.0.1:8000/semantic/batch" \\
-     -F "file=@customer_tickets.csv" \\
-     -F "targetColumn=feedback" \\
-     -F "threshold=0.5" \\
-     --output analyzed_results.csv`;
+  -F "file=@customer_tickets.csv" \\
+  -F "targetColumn=feedback" \\
+  -F "threshold=0.5" \\
+  --output analyzed_results.csv`;
         case "python":
           return `import requests
 
@@ -98,25 +98,26 @@ const reader = res.body?.getReader();
 
   const sampleJsonResponse = `{
   "intent": {
-    "labels": ["Bug Report"],
-    "scores": [0.962],
+    "top_intent": "Bug Report",
+    "top_confidence": 0.962,
+    "labels": ["Bug Report", "Complaint", "Feature Request", "Praise", "Question"],
+    "scores": [0.962, 0.021, 0.010, 0.004, 0.003],
     "all_intents": {
       "Bug Report": 0.962,
-      "Complaint": 0.024,
-      "Feature Request": 0.007,
-      "Question": 0.004,
-      "Praise": 0.003
-    },
-    "top_intent": "Bug Report",
-    "top_confidence": 0.962
+      "Complaint": 0.021,
+      "Feature Request": 0.010,
+      "Praise": 0.004,
+      "Question": 0.003
+    }
   },
   "sentiment": {
     "label": "NEGATIVE",
     "score": 0.941
   },
   "explainability": [
-    { "word": "freezes", "contribution": 0.482, "primary_intent": "Bug Report" },
-    { "word": "export", "contribution": 0.045, "primary_intent": "Bug Report" }
+    { "word": "application", "contribution": 0.045, "primary_intent": "Bug Report" },
+    { "word": "crashes", "contribution": 0.482, "primary_intent": "Bug Report" },
+    { "word": "export", "contribution": 0.065, "primary_intent": "Bug Report" }
   ],
   "tone": "Frustrated",
   "urgency": "High",
@@ -124,38 +125,38 @@ const reader = res.body?.getReader();
 }`;
 
   return (
-    <div className="bg-surface-card border border-hairline rounded-2xl p-6 md:p-8 mb-16 shadow-sm">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 pb-6 border-b border-hairline">
+    <div className="surface-card-base w-full flex flex-col gap-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-hairline-light">
         <div>
-          <span className="text-[12px] font-mono uppercase tracking-wider text-muted font-semibold">
+          <span className="eyebrow-cap">
             API Documentation
           </span>
-          <h3 className="text-2xl font-serif font-light text-ink mt-1">
-            REST API & Integration Specifications
+          <h3 className="section-heading mt-1">
+            REST API &amp; Integration Specifications
           </h3>
-          <p className="text-[14px] text-body mt-1">
+          <p className="text-[14px] text-shade-60 mt-1 font-sans">
             Directly connect your microservices, CRM pipelines, or ETL jobs to the Semantic Comment Analysis API.
           </p>
         </div>
 
-        {/* Endpoint Selector */}
-        <div className="flex gap-2">
+        {/* Endpoint Selector Pills */}
+        <div className="flex items-center gap-2">
           <button
             onClick={() => setActiveEndpoint("analyze")}
-            className={`px-3 py-1.5 rounded-lg text-[13px] font-mono transition-[color,background-color,border-color,transform] duration-150 ease-out enabled:active:scale-[0.96] ${
+            className={`px-3.5 py-1.5 rounded-pill text-[12px] font-mono transition-all duration-150 ease-out active:scale-[0.97] select-none ${
               activeEndpoint === "analyze"
-                ? "bg-ink text-white font-semibold shadow-xs"
-                : "bg-canvas-soft border border-hairline text-body hover:bg-canvas"
+                ? "bg-black text-white font-semibold shadow-xs"
+                : "bg-canvas-cream border border-hairline-light text-shade-60 hover:text-ink hover:bg-white"
             }`}
           >
             POST /semantic/analyze
           </button>
           <button
             onClick={() => setActiveEndpoint("batch")}
-            className={`px-3 py-1.5 rounded-lg text-[13px] font-mono transition-[color,background-color,border-color,transform] duration-150 ease-out enabled:active:scale-[0.96] ${
+            className={`px-3.5 py-1.5 rounded-pill text-[12px] font-mono transition-all duration-150 ease-out active:scale-[0.97] select-none ${
               activeEndpoint === "batch"
-                ? "bg-ink text-white font-semibold shadow-xs"
-                : "bg-canvas-soft border border-hairline text-body hover:bg-canvas"
+                ? "bg-black text-white font-semibold shadow-xs"
+                : "bg-canvas-cream border border-hairline-light text-shade-60 hover:text-ink hover:bg-white"
             }`}
           >
             POST /semantic/batch
@@ -164,38 +165,27 @@ const reader = res.body?.getReader();
       </div>
 
       {/* Code Snippet Box */}
-      <div className="bg-canvas-soft border border-hairline rounded-2xl overflow-hidden mb-8 shadow-xs">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-hairline bg-surface-card">
+      <div className="bg-canvas-cream border border-hairline-light rounded-xl overflow-hidden shadow-inner">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-hairline-light bg-white">
           <div className="flex items-center gap-1.5">
-            <button
-              onClick={() => setActiveLang("curl")}
-              className={`px-2.5 py-1 rounded text-[12px] font-mono font-medium transition-[color,background-color,transform] duration-150 ease-out enabled:active:scale-[0.96] ${
-                activeLang === "curl" ? "bg-ink text-white" : "text-muted hover:text-ink"
-              }`}
-            >
-              cURL
-            </button>
-            <button
-              onClick={() => setActiveLang("python")}
-              className={`px-2.5 py-1 rounded text-[12px] font-mono font-medium transition-[color,background-color,transform] duration-150 ease-out enabled:active:scale-[0.96] ${
-                activeLang === "python" ? "bg-ink text-white" : "text-muted hover:text-ink"
-              }`}
-            >
-              Python
-            </button>
-            <button
-              onClick={() => setActiveLang("typescript")}
-              className={`px-2.5 py-1 rounded text-[12px] font-mono font-medium transition-[color,background-color,transform] duration-150 ease-out enabled:active:scale-[0.96] ${
-                activeLang === "typescript" ? "bg-ink text-white" : "text-muted hover:text-ink"
-              }`}
-            >
-              TypeScript
-            </button>
+            {(["curl", "python", "typescript"] as const).map((lang) => (
+              <button
+                key={lang}
+                onClick={() => setActiveLang(lang)}
+                className={`px-3 py-1 rounded-pill text-[11px] font-mono transition-all active:scale-95 select-none ${
+                  activeLang === lang
+                    ? "bg-black text-white font-semibold shadow-xs"
+                    : "text-shade-60 hover:text-ink hover:bg-canvas-cream"
+                }`}
+              >
+                {lang === "curl" ? "cURL" : lang === "python" ? "Python" : "TypeScript"}
+              </button>
+            ))}
           </div>
 
           <button
             onClick={() => copyToClipboard(getCodeSnippet())}
-            className="flex items-center gap-1.5 pl-2.5 pr-3 py-1 rounded-md border border-hairline bg-canvas-soft text-[12px] font-mono text-body hover:text-ink hover:bg-canvas transition-[color,background-color,border-color,transform] duration-150 ease-out enabled:active:scale-[0.96]"
+            className="flex items-center gap-1.5 px-3 py-1 rounded-pill border border-hairline-light bg-canvas-cream text-[11px] font-mono text-shade-60 hover:text-ink hover:bg-white transition-all active:scale-95 shadow-xs"
             title="Copy snippet to clipboard"
           >
             {copied ? (
@@ -206,7 +196,7 @@ const reader = res.body?.getReader();
                 transition={{ type: "spring", duration: 0.3, bounce: 0 }}
                 className="flex items-center gap-1.5 text-emerald-700"
               >
-                <Check size={13} strokeWidth={2} />
+                <Check size={12} strokeWidth={2} />
                 <span>Copied</span>
               </motion.span>
             ) : (
@@ -217,14 +207,14 @@ const reader = res.body?.getReader();
                 transition={{ type: "spring", duration: 0.3, bounce: 0 }}
                 className="flex items-center gap-1.5"
               >
-                <Copy size={13} strokeWidth={1.75} />
+                <Copy size={12} strokeWidth={1.75} />
                 <span>Copy</span>
               </motion.span>
             )}
           </button>
         </div>
 
-        <div className="p-4 overflow-x-auto">
+        <div className="p-5 overflow-x-auto">
           <pre className="text-[13px] font-mono text-ink leading-relaxed">
             <code>{getCodeSnippet()}</code>
           </pre>
@@ -233,23 +223,23 @@ const reader = res.body?.getReader();
 
       {/* Schemas breakdown */}
       {activeEndpoint === "analyze" ? (
-        <div>
-          <h4 className="text-[14px] font-mono uppercase text-muted tracking-wider font-semibold mb-3">
+        <div className="pt-2">
+          <span className="eyebrow-cap mb-3">
             Expected JSON Response Schema
-          </h4>
-          <div className="bg-canvas-soft border border-hairline rounded-2xl p-4 overflow-x-auto">
-            <pre className="text-[13px] font-mono text-ink leading-relaxed">
+          </span>
+          <div className="bg-canvas-cream border border-hairline-light rounded-xl p-5 overflow-x-auto shadow-inner">
+            <pre className="text-[12px] font-mono text-ink leading-relaxed">
               <code>{sampleJsonResponse}</code>
             </pre>
           </div>
         </div>
       ) : (
-        <div>
-          <h4 className="text-[14px] font-mono uppercase text-muted tracking-wider font-semibold mb-3">
+        <div className="pt-2">
+          <span className="eyebrow-cap mb-3">
             Streaming CSV Output Schema
-          </h4>
-          <div className="bg-canvas-soft border border-hairline rounded-2xl p-4 overflow-x-auto">
-            <pre className="text-[13px] font-mono text-ink leading-relaxed">
+          </span>
+          <div className="bg-canvas-cream border border-hairline-light rounded-xl p-5 overflow-x-auto shadow-inner">
+            <pre className="text-[12px] font-mono text-ink leading-relaxed">
               <code>{`ORIGINAL_COLUMNS...,INTENT,CONFIDENCE,SENTIMENT,SENTIMENT_SCORE,TONE,URGENCY,RECOMMENDED_ACTION
 "Your application crashed when exporting to PDF",Bug Report,0.96,NEGATIVE,0.94,Frustrated,High,Log Jira Ticket
 "Can we add automated weekly exports?",Feature Request,0.91,POSITIVE,0.85,Excited,Low,Add to Roadmap

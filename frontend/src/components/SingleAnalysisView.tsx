@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PageHeader } from "@/components/PageHeader";
+import { Button } from "@/components/Button";
 import {
   BarChart,
   Bar,
@@ -25,8 +26,6 @@ import {
   CheckCircle2, 
   Clock, 
   SlidersHorizontal,
-  Layers,
-  Activity,
   Copy,
   Check
 } from "lucide-react";
@@ -72,18 +71,18 @@ const WordContributionHeatmap = ({ data }: { data: ExplainabilityData }) => {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="leading-relaxed whitespace-pre-wrap text-[16px] p-6 bg-canvas-soft rounded-xl border border-hairline font-sans text-ink flex flex-wrap gap-x-1.5 gap-y-2 select-text">
+      <div className="leading-relaxed whitespace-pre-wrap text-[16px] p-6 bg-canvas-cream rounded-lg border border-hairline-light font-sans text-ink flex flex-wrap gap-x-1.5 gap-y-2 select-text shadow-inner">
         {data.map((item, idx) => {
           const alpha = Math.min(Math.abs(item.contribution) / maxAbs, 1);
           const colorMeta = INTENT_COLORS[item.primary_intent];
-          const bgColor = colorMeta && item.contribution > 0 ? `rgba(${colorMeta.rgb}, ${Math.max(alpha * 0.5, 0.08)})` : "transparent";
+          const bgColor = colorMeta && item.contribution > 0 ? `rgba(${colorMeta.rgb}, ${Math.max(alpha * 0.45, 0.08)})` : "transparent";
 
           return (
             <span
               key={idx}
               style={{ backgroundColor: alpha > 0.04 ? bgColor : "transparent" }}
-              className={`px-1.5 py-0.5 rounded transition-all cursor-default relative group ${
-                alpha > 0.25 ? "font-semibold underline decoration-dotted decoration-muted" : ""
+              className={`px-2 py-0.5 rounded-pill transition-all cursor-default relative group ${
+                alpha > 0.25 ? "font-semibold underline decoration-dotted decoration-shade-40" : ""
               }`}
               title={`${item.word} → ${item.primary_intent} (ΔP: +${(item.contribution * 100).toFixed(1)}%)`}
             >
@@ -94,13 +93,13 @@ const WordContributionHeatmap = ({ data }: { data: ExplainabilityData }) => {
       </div>
 
       {/* Categorical Intent Legend */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pt-3 border-t border-hairline text-[12px] font-mono text-muted">
+      <div className="flex flex-wrap items-center justify-between gap-4 pt-3 border-t border-hairline-light text-[12px] font-mono text-shade-50">
         <div className="flex flex-wrap gap-4 items-center">
-          <span className="font-semibold uppercase tracking-wider text-muted">Token Attribution:</span>
+          <span className="font-semibold uppercase tracking-wider text-shade-50">Token Attribution:</span>
           {Object.entries(INTENT_COLORS).map(([intent, meta]) => (
             <div key={intent} className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: meta.hex }} />
-              <span className="text-body font-sans text-[13px]">{intent}</span>
+              <span className="text-shade-60 font-sans text-[13px]">{intent}</span>
             </div>
           ))}
         </div>
@@ -118,6 +117,16 @@ export const SingleAnalysisView = () => {
   const [error, setError] = useState("");
   const [latencyMs, setLatencyMs] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const prefill = sessionStorage.getItem("analyze_prefill");
+      if (prefill) {
+        setText(prefill);
+        sessionStorage.removeItem("analyze_prefill");
+      }
+    }
+  }, []);
 
   const handleAnalyze = async () => {
     if (!text.trim() || loading) return;
@@ -170,7 +179,7 @@ export const SingleAnalysisView = () => {
     const { label, score } = result.sentiment;
     return [
       { name: "Positive", value: label === "POSITIVE" ? score : 0, color: "#16a34a" },
-      { name: "Neutral", value: label === "NEUTRAL" ? score : 0, color: "#a8a29e" },
+      { name: "Neutral", value: label === "NEUTRAL" ? score : 0, color: "#a1a1aa" },
       { name: "Negative", value: label === "NEGATIVE" ? score : 0, color: "#dc2626" },
     ];
   };
@@ -179,45 +188,43 @@ export const SingleAnalysisView = () => {
     if (!result || !result.intent.all_intents) return [];
     return INTENTS.map((intent) => ({
       subject: intent,
-      A: (result.intent.all_intents[intent] || 0) * 100,
-      fullMark: 100,
+      A: Math.round((result.intent.all_intents[intent] || 0) * 100),
     }));
   };
 
-  const topIntent = result?.intent.top_intent || "";
-  const topMeta = INTENT_COLORS[topIntent] || { hex: "#292524", text: "text-ink", bg: "bg-surface-strong" };
+  const topMeta = result ? INTENT_COLORS[result.intent.top_intent] || { rgb: "0,0,0", hex: "#000000" } : null;
 
   return (
     <div className="page-container">
-      {/* Universal Page Header */}
+      {/* Transactional Page Header */}
       <PageHeader
-        eyebrow="Real-Time NLP Inference"
+        eyebrow="Interactive Workspace"
         title="Single Comment Analysis"
-        description="Evaluate customer feedback against the intent classifier, RoBERTa sentiment model, and token occlusion explainability engine."
+        description="Inspect deterministic multi-class intent classification, sentiment intensity, and token-level occlusion attribution in real-time."
         badge={
-          <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-mono tracking-wider text-ink uppercase bg-canvas-soft border border-hairline rounded-md tabular-nums select-none">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
-            Interactive Sandbox
+          <span className="pill-tag-mint select-none">
+            <span className="w-2 h-2 rounded-full bg-black animate-pulse" />
+            <span>Real-time XAI Sandbox</span>
           </span>
         }
       />
 
-      {/* Input Card (Focal Point) */}
-      <div className="bg-surface-card border border-hairline rounded-2xl p-6 shadow-xs">
+      {/* Input Surface Card (Level 3 Elevation) */}
+      <div className="surface-card-base">
         {/* Preset Chips */}
         <div className="mb-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-mono uppercase text-muted tracking-wider font-semibold">
-              Try a realistic sample:
+          <div className="flex items-center justify-between mb-2.5">
+            <span className="text-[12px] font-sans uppercase text-shade-50 tracking-[0.72px] font-medium">
+              Realistic Sample Inputs:
             </span>
             {text && (
               <button
                 onClick={() => setText("")}
-                className="text-[12px] font-mono text-muted hover:text-ink flex items-center gap-1.5 transition-colors enabled:active:scale-[0.96] p-1 -m-1"
+                className="text-[12px] font-sans text-shade-50 hover:text-ink flex items-center gap-1.5 transition-colors p-1"
                 title="Clear current text"
               >
-                <Trash2 size={12} strokeWidth={1.75} />
-                <span>Clear</span>
+                <Trash2 size={13} />
+                <span>Clear text</span>
               </button>
             )}
           </div>
@@ -228,10 +235,10 @@ export const SingleAnalysisView = () => {
                 <button
                   key={preset.label}
                   onClick={() => loadPreset(preset.text)}
-                  className={`px-3 py-1.5 rounded-lg text-[12px] font-sans font-medium transition-[color,background-color,border-color,transform] duration-150 ease-out enabled:active:scale-[0.96] ${
+                  className={`px-4 py-2 rounded-pill text-[13px] font-sans font-medium transition-all duration-150 ease-out active:scale-[0.97] ${
                     isSelected
-                      ? "bg-surface-strong border-ink text-ink font-semibold shadow-xs"
-                      : "bg-canvas-soft border border-hairline text-body hover:border-hairline-strong hover:text-ink"
+                      ? "bg-black text-white shadow-sm"
+                      : "bg-canvas-cream border border-hairline-light text-shade-60 hover:text-black hover:border-shade-40"
                   }`}
                 >
                   {preset.label}
@@ -249,24 +256,30 @@ export const SingleAnalysisView = () => {
             onChange={(e) => setText(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Type or paste customer feedback, support ticket, or review text here... (Ctrl+Enter to analyze)"
-            className="w-full bg-canvas-soft rounded-xl p-4 text-[15px] font-sans text-ink border border-hairline focus:border-ink focus:bg-white focus:outline-none transition-[border-color,background-color] duration-150 resize-none shadow-inner leading-relaxed"
+            className="w-full bg-canvas-cream rounded-md p-4 text-[15px] font-sans text-ink border border-hairline-light focus:border-black focus:bg-white focus:outline-none transition-colors duration-150 resize-none shadow-inner leading-relaxed"
           />
-          <div className="flex items-center justify-between mt-2 text-[12px] font-mono text-muted">
-            <span>Press <kbd className="bg-surface-strong px-1.5 py-0.5 rounded border border-hairline text-ink">Ctrl</kbd> + <kbd className="bg-surface-strong px-1.5 py-0.5 rounded border border-hairline text-ink">Enter</kbd></span>
+          <div className="flex items-center justify-between mt-2.5 text-[12px] font-mono text-shade-50">
+            <span>Press <kbd className="bg-white px-2 py-0.5 rounded border border-hairline-light text-ink">Ctrl</kbd> + <kbd className="bg-white px-2 py-0.5 rounded border border-hairline-light text-ink">Enter</kbd></span>
             <span className="tabular-nums">{text.length} characters • {text.trim() ? text.trim().split(/\s+/).length : 0} words</span>
           </div>
         </div>
 
-        {/* Controls row */}
-        <div className="mt-5 pt-4 border-t border-hairline flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-          {/* Threshold Slider */}
-          <div className="flex items-center gap-4 flex-1 max-w-xs">
-            <SlidersHorizontal size={16} strokeWidth={1.75} className="text-muted shrink-0" />
-            <div className="flex-1">
-              <div className="flex justify-between text-[12px] font-mono mb-1">
-                <span className="text-muted">Confidence Threshold</span>
-                <span className="font-bold text-ink tabular-nums">{threshold.toFixed(2)}</span>
+        {/* Integrated Controls & Configuration Toolbar */}
+        <div className="mt-5 pt-4 border-t border-hairline-light flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 bg-canvas-cream/50 p-3.5 sm:p-4 rounded-xl border border-hairline-light">
+          {/* Left: Slider + Value + Quick Preset Pills */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 flex-1">
+            <div className="flex items-center gap-2.5 shrink-0">
+              <SlidersHorizontal size={15} className="text-shade-50 shrink-0" />
+              <div className="flex items-center gap-2">
+                <span className="text-[12px] font-sans font-medium text-ink">Threshold:</span>
+                <span className="text-[12px] font-mono font-bold text-ink tabular-nums px-2 py-0.5 rounded bg-white border border-hairline-light shadow-xs">
+                  {threshold.toFixed(2)}
+                </span>
               </div>
+            </div>
+
+            {/* Slider track */}
+            <div className="w-full sm:w-40 shrink-0">
               <input
                 type="range"
                 min="0.10"
@@ -274,34 +287,60 @@ export const SingleAnalysisView = () => {
                 step="0.05"
                 value={threshold}
                 onChange={(e) => setThreshold(parseFloat(e.target.value))}
-                className="w-full accent-ink cursor-pointer"
+                className="w-full accent-black cursor-pointer block"
+                title={`Confidence threshold: ${threshold.toFixed(2)}`}
               />
+            </div>
+
+            {/* Quick Presets to eliminate empty dead space with rich utility */}
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {[
+                { label: "Permissive", val: 0.35 },
+                { label: "Balanced", val: 0.50 },
+                { label: "Strict", val: 0.75 },
+              ].map((p) => {
+                const isCurrent = Math.abs(threshold - p.val) < 0.02;
+                return (
+                  <button
+                    key={p.label}
+                    type="button"
+                    onClick={() => setThreshold(p.val)}
+                    className={`px-2.5 py-1 rounded-pill text-[11px] font-sans transition-all active:scale-95 ${
+                      isCurrent
+                        ? "bg-black text-white font-semibold shadow-xs"
+                        : "bg-white border border-hairline-light text-shade-60 hover:text-black hover:border-shade-40"
+                    }`}
+                  >
+                    {p.label} ({p.val})
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          {/* Submit Button */}
-          <button
-            onClick={handleAnalyze}
-            disabled={loading || !text.trim()}
-            className="flex items-center justify-center gap-2 pl-5 pr-6 py-2.5 rounded-xl font-sans text-[14px] font-medium bg-ink text-white hover:bg-black disabled:opacity-40 disabled:cursor-not-allowed transition-[background-color,transform,opacity] duration-150 ease-out enabled:active:scale-[0.96] shadow-sm"
-          >
-            {loading ? (
-              <>
-                <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                <span>Running Pipeline...</span>
-              </>
-            ) : (
-              <>
-                <Send size={15} strokeWidth={1.75} />
-                <span>Run Semantic Analysis</span>
-              </>
-            )}
-          </button>
+          {/* Right: Submit Button */}
+          <div className="flex items-center justify-end gap-3 shrink-0">
+            <Button
+              variant="primary"
+              size="md"
+              onClick={handleAnalyze}
+              disabled={loading || !text.trim()}
+              icon={
+                loading ? (
+                  <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                ) : (
+                  <Send size={15} />
+                )
+              }
+            >
+              {loading ? "Running Pipeline..." : "Run Semantic Analysis"}
+            </Button>
+          </div>
         </div>
 
         {error && (
-          <div className="mt-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-[13px] flex items-center gap-2">
-            <AlertCircle size={16} strokeWidth={1.75} className="shrink-0" />
+          <div className="mt-4 p-3.5 rounded-md bg-rose-50 border border-rose-200 text-rose-800 text-[13px] flex items-center gap-2">
+            <AlertCircle size={16} className="shrink-0" />
             <span>{error}</span>
           </div>
         )}
@@ -309,7 +348,7 @@ export const SingleAnalysisView = () => {
 
       {/* Results Section */}
       <AnimatePresence mode="wait">
-        {result ? (
+        {result && topMeta ? (
           <motion.div
             key="result"
             initial={{ opacity: 0, y: 12 }}
@@ -318,16 +357,16 @@ export const SingleAnalysisView = () => {
             transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
             className="flex flex-col gap-8"
           >
-            {/* Primary Verdict Banner (Focal Point) */}
-            <div className="bg-surface-card border border-hairline rounded-2xl p-6 shadow-xs">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-hairline">
+            {/* Primary Verdict Banner */}
+            <div className="surface-card-base">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-hairline-light">
                 <div>
-                  <span className="text-[11px] font-mono uppercase text-muted tracking-wider block mb-1">
+                  <span className="text-[12px] font-sans uppercase text-shade-50 tracking-[0.72px] block mb-1.5 font-medium">
                     Primary Verdict
                   </span>
                   <div className="flex items-center gap-3">
                     <span
-                      className="px-3.5 py-1.5 rounded-full text-[16px] font-sans font-semibold border flex items-center gap-2"
+                      className="px-4 py-1.5 rounded-pill text-[16px] font-sans font-semibold border flex items-center gap-2"
                       style={{
                         borderColor: topMeta.hex,
                         backgroundColor: `rgba(${topMeta.rgb}, 0.1)`,
@@ -337,7 +376,7 @@ export const SingleAnalysisView = () => {
                       <span className="w-2 h-2 rounded-full" style={{ backgroundColor: topMeta.hex }} />
                       {result.intent.top_intent}
                     </span>
-                    <span className="text-2xl font-mono font-bold text-ink tabular-nums">
+                    <span className="text-3xl font-display font-[330] text-ink tabular-nums">
                       {((result.intent.all_intents[result.intent.top_intent] || 0) * 100).toFixed(1)}%
                     </span>
                   </div>
@@ -345,19 +384,19 @@ export const SingleAnalysisView = () => {
 
                 <div className="flex flex-wrap items-center gap-3">
                   {latencyMs && (
-                    <span className="flex items-center gap-1.5 text-[12px] font-mono text-muted bg-canvas-soft border border-hairline px-3 py-1.5 rounded-lg select-none">
-                      <Clock size={13} strokeWidth={1.75} />
+                    <span className="flex items-center gap-1.5 text-[12px] font-mono text-shade-60 bg-canvas-cream border border-hairline-light px-3.5 py-1.5 rounded-pill select-none">
+                      <Clock size={13} />
                       <span className="tabular-nums">{latencyMs}ms latency</span>
                     </span>
                   )}
-                  <span className="text-[12px] font-mono text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg flex items-center gap-1.5 select-none">
-                    <CheckCircle2 size={13} strokeWidth={1.75} />
-                    <span>Deterministic SOP Match</span>
+                  <span className="text-[12px] font-sans font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 px-3.5 py-1.5 rounded-pill flex items-center gap-1.5 select-none">
+                    <CheckCircle2 size={13} />
+                    <span>Deterministic Head Match</span>
                   </span>
 
                   <button
                     onClick={handleCopySummary}
-                    className="flex items-center gap-1.5 pl-2.5 pr-3 py-1.5 rounded-lg border border-hairline bg-canvas-soft text-[12px] font-mono text-body hover:text-ink hover:bg-canvas transition-[color,background-color,border-color,transform] duration-150 ease-out enabled:active:scale-[0.96]"
+                    className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-pill border border-hairline-light bg-canvas-cream text-[12px] font-sans font-medium text-shade-70 hover:text-ink hover:bg-white transition-all active:scale-95"
                     title="Copy analysis summary to clipboard"
                   >
                     {copied ? (
@@ -367,7 +406,7 @@ export const SingleAnalysisView = () => {
                       </span>
                     ) : (
                       <span className="flex items-center gap-1.5">
-                        <Copy size={13} strokeWidth={1.75} />
+                        <Copy size={13} />
                         <span>Copy Summary</span>
                       </span>
                     )}
@@ -377,113 +416,113 @@ export const SingleAnalysisView = () => {
 
               {/* Heuristics Context Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-6">
-                <div className="bg-canvas-soft p-4 rounded-xl border border-hairline">
-                  <span className="text-[11px] font-mono uppercase text-muted block mb-1">
+                <div className="bg-canvas-cream p-5 rounded-lg border border-hairline-light">
+                  <span className="text-[12px] font-sans uppercase text-shade-50 tracking-[0.72px] block mb-1 font-medium">
                     Customer Tone
                   </span>
-                  <p className="text-xl font-serif font-medium text-ink">
+                  <p className="text-xl font-display font-[330] text-ink">
                     {result.tone || "Neutral"}
                   </p>
                 </div>
 
-                <div className="bg-canvas-soft p-4 rounded-xl border border-hairline">
-                  <span className="text-[11px] font-mono uppercase text-muted block mb-1">
+                <div className="bg-canvas-cream p-5 rounded-lg border border-hairline-light">
+                  <span className="text-[12px] font-sans uppercase text-shade-50 tracking-[0.72px] block mb-1 font-medium">
                     Urgency Priority
                   </span>
                   <div className="flex items-center gap-2">
                     <span
                       className={`w-2.5 h-2.5 rounded-full ${
                         result.urgency === "High"
-                          ? "bg-red-500 animate-pulse"
+                          ? "bg-rose-500 animate-pulse"
                           : result.urgency === "Medium"
-                          ? "bg-orange-500"
+                          ? "bg-amber-500"
                           : "bg-emerald-500"
                       }`}
                     />
-                    <p className="text-xl font-serif font-medium text-ink">
+                    <p className="text-xl font-display font-[330] text-ink">
                       {result.urgency || "Low"}
                     </p>
                   </div>
                 </div>
 
-                <div className="bg-canvas-soft p-4 rounded-xl border border-hairline">
-                  <span className="text-[11px] font-mono uppercase text-muted block mb-1">
+                <div className="bg-canvas-cream p-5 rounded-lg border border-hairline-light">
+                  <span className="text-[12px] font-sans uppercase text-shade-50 tracking-[0.72px] block mb-1 font-medium">
                     Recommended Action
                   </span>
                   <p className="text-[16px] font-sans font-semibold text-ink flex items-center gap-1.5">
-                    <ArrowRight size={15} className="text-muted shrink-0" />
+                    <ArrowRight size={15} className="text-shade-40 shrink-0" />
                     <span>{result.recommended_action || "Monitor"}</span>
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Signature Feature: Word Contribution Heatmap */}
-            <div className="bg-surface-card border border-hairline rounded-2xl p-6 shadow-sm">
-              <div className="flex items-center justify-between mb-4">
+            {/* Word Contribution Heatmap Surface */}
+            <div className="surface-card-base">
+              <div className="flex items-center justify-between mb-5">
                 <div>
-                  <span className="text-[11px] font-mono uppercase text-muted tracking-wider block font-semibold">
+                  <span className="text-[12px] font-sans uppercase text-shade-50 tracking-[0.72px] block font-medium">
                     Explainable AI (XAI)
                   </span>
-                  <h3 className="text-xl font-serif font-medium text-ink mt-0.5">
+                  <h3 className="text-2xl font-display font-[330] text-ink mt-0.5">
                     Word-Level Contribution Heatmap
                   </h3>
                 </div>
-                <span className="text-[12px] font-mono text-muted bg-canvas-soft border border-hairline px-2.5 py-1 rounded">
+                <span className="pill-tag-shade">
                   Leave-One-Out Math
                 </span>
               </div>
               <WordContributionHeatmap data={result.explainability} />
             </div>
 
-            {/* Secondary Diagnostics: Radar Chart & Sentiment */}
+            {/* Diagnostics: Radar Chart & Sentiment */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Radar Chart */}
-              <div className="bg-surface-card border border-hairline rounded-2xl p-6 shadow-sm">
+              <div className="surface-card-base">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[11px] font-mono uppercase text-muted tracking-wider font-semibold">
+                  <span className="text-[12px] font-sans uppercase text-shade-50 tracking-[0.72px] font-medium">
                     All Intents
                   </span>
-                  <span className="text-[12px] font-mono text-muted">5-Class Distribution</span>
+                  <span className="text-[12px] font-mono text-shade-50">5-Class Distribution</span>
                 </div>
-                <h4 className="text-lg font-serif font-medium text-ink mb-4">
+                <h4 className="text-xl font-display font-[330] text-ink mb-4">
                   Multi-Intent Radar
                 </h4>
                 <div className="h-64 w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <RadarChart cx="50%" cy="50%" outerRadius="70%" data={getRadarData()}>
-                      <PolarGrid stroke="#e7e5e4" />
-                      <PolarAngleAxis dataKey="subject" tick={{ fill: "#777169", fontSize: 11 }} />
+                      <PolarGrid stroke="#e4e4e7" />
+                      <PolarAngleAxis dataKey="subject" tick={{ fill: "#71717a", fontSize: 11 }} />
                       <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
                       <Radar
                         name="Intent Confidence"
                         dataKey="A"
-                        stroke="#0c0a09"
-                        fill="#0c0a09"
-                        fillOpacity={0.15}
+                        stroke="#000000"
+                        fill="#000000"
+                        fillOpacity={0.12}
                       />
-                      <Tooltip contentStyle={{ fontSize: "12px", borderRadius: "8px", border: "1px solid #e7e5e4" }} />
+                      <Tooltip contentStyle={{ fontSize: "12px", borderRadius: "8px", border: "1px solid #e4e4e7", boxShadow: "0 8px 8px rgba(0,0,0,0.03)" }} />
                     </RadarChart>
                   </ResponsiveContainer>
                 </div>
               </div>
 
               {/* Sentiment Breakdown */}
-              <div className="bg-surface-card border border-hairline rounded-2xl p-6 shadow-sm">
+              <div className="surface-card-base">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[11px] font-mono uppercase text-muted tracking-wider font-semibold">
+                  <span className="text-[12px] font-sans uppercase text-shade-50 tracking-[0.72px] font-medium">
                     Twitter-RoBERTa
                   </span>
-                  <span className="text-[12px] font-mono text-muted">Polarity Score</span>
+                  <span className="text-[12px] font-mono text-shade-50">Polarity Score</span>
                 </div>
-                <h4 className="text-lg font-serif font-medium text-ink mb-4">
+                <h4 className="text-xl font-display font-[330] text-ink mb-4">
                   Sentiment Breakdown
                 </h4>
                 <div className="h-64 w-full flex items-center justify-center">
                   <ResponsiveContainer width="100%" height="80%">
                     <BarChart data={getSentimentData()} margin={{ top: 20, right: 0, left: 0, bottom: 0 }}>
-                      <XAxis dataKey="name" tick={{ fontSize: 13, fill: "#777169", fontWeight: 500 }} axisLine={false} tickLine={false} />
-                      <Tooltip cursor={{ fill: "transparent" }} contentStyle={{ fontSize: "12px", borderRadius: "8px", border: "1px solid #e7e5e4" }} />
+                      <XAxis dataKey="name" tick={{ fontSize: 13, fill: "#71717a", fontWeight: 500 }} axisLine={false} tickLine={false} />
+                      <Tooltip cursor={{ fill: "transparent" }} contentStyle={{ fontSize: "12px", borderRadius: "8px", border: "1px solid #e4e4e7", boxShadow: "0 8px 8px rgba(0,0,0,0.03)" }} />
                       <Bar dataKey="value" radius={[6, 6, 6, 6]} maxBarSize={45}>
                         {getSentimentData().map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.color} />
@@ -496,19 +535,44 @@ export const SingleAnalysisView = () => {
             </div>
           </motion.div>
         ) : (
-          <div className="border border-dashed border-hairline-strong rounded-2xl p-10 text-center bg-canvas-soft/50">
-            <p className="text-[16px] font-serif text-ink mb-1">
-              No Analysis Running Yet
-            </p>
-            <p className="text-[14px] text-body mb-4">
-              Select one of the sample feedback prompts above or paste custom text to evaluate intent, tone, and word contributions.
-            </p>
-            <button
-              onClick={() => loadPreset(PRESETS[0].text)}
-              className="text-[13px] font-mono text-ink bg-surface-card border border-hairline px-3 py-1.5 rounded-lg hover:bg-canvas transition-colors"
-            >
-              Load Sample Bug Report
-            </button>
+          <div className="surface-card-base flex flex-col gap-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-hairline-light">
+              <div>
+                <span className="text-[11px] font-sans uppercase tracking-[0.72px] font-semibold text-shade-50 block mb-1">
+                  Workbench Ready
+                </span>
+                <h4 className="font-display text-2xl font-[330] text-ink">
+                  Select a starter scenario or analyze custom text
+                </h4>
+              </div>
+              <span className="text-[12px] font-mono text-shade-50 bg-canvas-cream border border-hairline-light px-3 py-1 rounded-pill self-start sm:self-auto select-none">
+                Deterministic XAI Head
+              </span>
+            </div>
+
+            {/* 3 Interactive Starter Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {PRESETS.slice(0, 3).map((p) => (
+                <div
+                  key={p.label}
+                  onClick={() => loadPreset(p.text)}
+                  className="p-5 rounded-xl bg-canvas-cream hover:bg-white border border-hairline-light hover:border-black/30 transition-all cursor-pointer group flex flex-col justify-between shadow-xs hover:shadow-md"
+                >
+                  <div>
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-pill text-[11px] font-sans font-semibold bg-white border border-hairline-light text-ink mb-3 group-hover:bg-black group-hover:text-white transition-colors">
+                      {p.label}
+                    </span>
+                    <p className="text-[13px] font-sans text-shade-60 line-clamp-3 leading-relaxed">
+                      &ldquo;{p.text}&rdquo;
+                    </p>
+                  </div>
+                  <div className="pt-4 mt-4 border-t border-hairline-light flex items-center justify-between text-[12px] font-sans text-shade-60 group-hover:text-ink">
+                    <span>Load sample</span>
+                    <ArrowRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </AnimatePresence>
