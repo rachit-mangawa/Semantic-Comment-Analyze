@@ -19,14 +19,14 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
 }) => {
   return (
     <div
-      className={`flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b transition-colors ${
+      className={`flex flex-col md:flex-row md:items-end justify-between gap-6 pb-7 sm:pb-8 border-b transition-colors ${
         onDark ? "border-hairline-dark text-on-primary" : "border-hairline-light text-ink"
       }`}
     >
       <div className="max-w-3xl">
         {eyebrow && (
           <span
-            className={`text-[12px] font-sans font-medium tracking-[0.72px] uppercase mb-2.5 block select-none ${
+            className={`text-[12px] font-sans font-medium tracking-[0.72px] uppercase mb-2 block select-none ${
               onDark ? "text-shade-40" : "text-shade-50"
             }`}
           >
@@ -35,7 +35,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
         )}
         <div className="flex flex-wrap items-center gap-3.5">
           <h1
-            className={`font-display text-3xl sm:text-4xl md:text-[44px] font-[330] tracking-[-0.015em] leading-[1.14] text-balance ${
+            className={`font-display text-3xl sm:text-4xl md:text-[44px] font-[330] tracking-[-0.02em] leading-[1.12] text-balance ${
               onDark ? "text-white" : "text-ink"
             }`}
           >

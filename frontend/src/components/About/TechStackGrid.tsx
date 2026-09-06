@@ -97,8 +97,7 @@ export const TechStackGrid = () => {
         <motion.div
           variants={container}
           initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, margin: "-40px" }}
+          animate="show"
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
         >
           {components.map((comp, idx) => {
@@ -132,40 +131,6 @@ export const TechStackGrid = () => {
             );
           })}
         </motion.div>
-      </div>
-
-      {/* Codebase Tree */}
-      <div className="surface-card-base">
-        <div className="flex items-center justify-between mb-4 pb-4 border-b border-hairline-light">
-          <div>
-            <span className="eyebrow-cap">Monorepo Layout</span>
-            <h4 className="text-xl font-display font-[330] text-ink">
-              Repository Architecture Tree
-            </h4>
-          </div>
-          <span className="text-[11px] font-mono text-shade-50 px-2.5 py-1 rounded-pill bg-canvas-cream border border-hairline-light">
-            Clean Architecture
-          </span>
-        </div>
-        <div className="bg-canvas-cream rounded-xl p-5 overflow-x-auto border border-hairline-light shadow-inner">
-          <pre className="text-[13px] font-mono text-ink leading-[1.6]">
-{`Semantic-Comment-Analyze/
-├── ARCHITECTURE.md          # 🏛️ Comprehensive technical specifications and data contracts
-├── README.md                # 📖 Public repository documentation & benchmarks
-├── run.bat                  # ⚡ One-click Windows startup script
-├── docs/API_REFERENCE.md    # 📡 Full REST API specification and curl examples
-├── src/
-│   ├── api/server.py        # 🌐 FastAPI gateway, lifespan warmup, static SPA mount
-│   ├── engine/
-│   │   ├── nlp_engine.py    # 🤖 Vectorizer, classifier head, and occlusion XAI
-│   │   ├── evaluation.py    # ⚖️ Business heuristics (Urgency, Tone, SOP Actions)
-│   │   ├── train_intent.py  # 🎓 Intent classifier training CLI
-│   │   └── train_sentiment.py# 🔬 RoBERTa sentiment fine-tuning
-│   └── data/data_handler.py # 🌊 High-throughput streaming CSV processor
-└── frontend/                # 💻 Modern React + Vite + Tailwind CSS SPA
-    └── src/components/About/# 🏛️ Interactive Architecture & Documentation Hub`}
-          </pre>
-        </div>
       </div>
     </div>
   );
