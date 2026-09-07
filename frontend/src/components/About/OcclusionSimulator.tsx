@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Eye, Info, Check, RefreshCw } from "lucide-react";
 
 interface SampleCase {
@@ -118,24 +119,34 @@ export const OcclusionSimulator = () => {
           </p>
         </div>
 
-        {/* Case selector pill buttons */}
+        {/* Case selector pill buttons with smooth sliding layoutId */}
         <div className="flex flex-wrap gap-2">
-          {Object.entries(SAMPLE_CASES).map(([key, item]) => (
-            <button
-              key={key}
-              onClick={() => {
-                setActiveKey(key);
-                setHoveredIdx(null);
-              }}
-              className={`px-4 py-2 rounded-pill text-[13px] font-sans font-medium transition-all duration-150 ease-out active:scale-[0.97] ${
-                activeKey === key
-                  ? "bg-black text-white font-semibold shadow-sm"
-                  : "bg-canvas-cream border border-hairline-light text-shade-60 hover:text-black hover:border-shade-40"
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
+          {Object.entries(SAMPLE_CASES).map(([key, item]) => {
+            const isSelected = activeKey === key;
+            return (
+              <button
+                key={key}
+                onClick={() => {
+                  setActiveKey(key);
+                  setHoveredIdx(null);
+                }}
+                className={`relative px-4 py-2 rounded-pill text-[13px] font-sans font-medium transition-colors duration-150 ease-out active:scale-[0.97] select-none ${
+                  isSelected
+                    ? "text-white font-semibold shadow-sm"
+                    : "bg-canvas-cream border border-hairline-light text-shade-60 hover:text-black hover:border-shade-40"
+                }`}
+              >
+                {isSelected && (
+                  <motion.div
+                    layoutId="occlusion-case-pill"
+                    className="absolute inset-0 rounded-pill bg-black"
+                    transition={{ type: "spring", stiffness: 450, damping: 35 }}
+                  />
+                )}
+                <span className="relative z-10">{item.label}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 

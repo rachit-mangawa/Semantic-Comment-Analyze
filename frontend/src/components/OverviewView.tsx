@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/Button";
 import { RouteView } from "@/router";
@@ -21,6 +22,9 @@ import {
   SlidersHorizontal,
   Cpu,
   Terminal,
+  Play,
+  Pause,
+  ArrowDownRight,
 } from "lucide-react";
 
 const getEmbeddingSparkline = (input: string) => {
@@ -220,6 +224,33 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate }) => {
   const [hoveredTokenIdx, setHoveredTokenIdx] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
 
+  // Dedicated state for Live Engine Telemetry hero widget to auto-cycle
+  const [heroIndex, setHeroIndex] = useState(0);
+  const [isHeroAutoPlaying, setIsHeroAutoPlaying] = useState(true);
+  const [isHeroHovered, setIsHeroHovered] = useState(false);
+  const heroDemo = PRESET_DEMOS[heroIndex];
+
+  // Auto-stream realistic customer comments every 3.8s; pauses on mouse hover or manual toggle
+  useEffect(() => {
+    if (!isHeroAutoPlaying || isHeroHovered) return;
+    const timer = setInterval(() => {
+      setHeroIndex((prev) => (prev + 1) % PRESET_DEMOS.length);
+    }, 3800);
+    return () => clearInterval(timer);
+  }, [isHeroAutoPlaying, isHeroHovered]);
+
+  const handleCycleHero = () => {
+    setHeroIndex((prev) => (prev + 1) % PRESET_DEMOS.length);
+  };
+
+  const handleInspectInSandbox = () => {
+    handleSelectPreset(heroDemo);
+    const sandboxEl = document.getElementById("benchmark-sandbox");
+    if (sandboxEl) {
+      sandboxEl.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
   const handleSelectPreset = (demo: DemoScenario) => {
     setSelectedDemo(demo);
     setCustomInput(demo.text);
@@ -344,26 +375,66 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate }) => {
             </div>
           </div>
 
-          {/* Right Column: Machined Engine Telemetry & Live Vector Flow Widget */}
+          {/* Right Column: Machined Engine Telemetry & Auto-Cycling Live Vector Flow Widget */}
           <div className="lg:col-span-5">
-            <div className="p-2 sm:p-2.5 rounded-2xl bg-canvas-cream/80 border border-hairline-light shadow-inner">
-              <div className="bg-white rounded-xl border border-hairline-light p-5 shadow-xs flex flex-col gap-3.5">
+            <div
+              onMouseEnter={() => setIsHeroHovered(true)}
+              onMouseLeave={() => setIsHeroHovered(false)}
+              className="p-2 sm:p-2.5 rounded-2xl bg-canvas-cream/80 border border-hairline-light shadow-inner transition-all"
+            >
+              <div className="bg-white rounded-xl border border-hairline-light p-5 shadow-xs flex flex-col gap-3.5 relative overflow-hidden">
                 {/* Telemetry Header */}
-                <div className="flex items-center justify-between pb-3 border-b border-hairline-light">
+                <div className="flex items-center justify-between pb-2.5 border-b border-hairline-light">
                   <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-600" />
+                    </span>
                     <span className="text-[11px] font-mono font-semibold text-ink uppercase tracking-wider">
                       Live Engine Telemetry
                     </span>
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-canvas-cream border border-hairline-light text-shade-60 hidden sm:inline-block">
+                      {isHeroHovered
+                        ? "Paused on hover"
+                        : isHeroAutoPlaying
+                        ? `Auto • ${heroIndex + 1}/${PRESET_DEMOS.length}`
+                        : "Paused"}
+                    </span>
                   </div>
-                  <button
-                    onClick={handleShuffle}
-                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-pill bg-canvas-cream hover:bg-white border border-hairline-light text-[11px] font-mono text-shade-60 hover:text-ink transition-all active:scale-95 shadow-2xs select-none"
-                    title="Cycle through realistic customer samples"
-                  >
-                    <Shuffle size={11} className="text-shade-50" />
-                    <span>Cycle Sample</span>
-                  </button>
+
+                  {/* Playback Controls & Cycle Action */}
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => setIsHeroAutoPlaying((p) => !p)}
+                      className="p-1 rounded-pill bg-canvas-cream hover:bg-white border border-hairline-light text-shade-60 hover:text-ink transition-all active:scale-[0.96] shadow-2xs select-none"
+                      title={isHeroAutoPlaying ? "Pause auto-streaming" : "Resume auto-streaming"}
+                      aria-label={isHeroAutoPlaying ? "Pause auto-streaming" : "Resume auto-streaming"}
+                    >
+                      {isHeroAutoPlaying ? <Pause size={11} /> : <Play size={11} />}
+                    </button>
+                    <button
+                      onClick={handleCycleHero}
+                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-pill bg-canvas-cream hover:bg-white border border-hairline-light text-[11px] font-mono text-shade-60 hover:text-ink transition-all active:scale-[0.96] shadow-2xs select-none"
+                      title="Advance to next customer sample immediately"
+                    >
+                      <Shuffle size={11} className="text-shade-50" />
+                      <span>Next</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Micro Streaming Countdown Timeline Bar */}
+                <div className="h-0.5 w-full bg-hairline-light rounded-full overflow-hidden -mt-2">
+                  <motion.div
+                    key={`${heroIndex}-${isHeroAutoPlaying}-${isHeroHovered}`}
+                    className="h-full bg-emerald-600 origin-left"
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: isHeroAutoPlaying && !isHeroHovered ? 1 : 0 }}
+                    transition={{
+                      duration: isHeroAutoPlaying && !isHeroHovered ? 3.8 : 0,
+                      ease: "linear",
+                    }}
+                  />
                 </div>
 
                 {/* Stage 1: Ingestion */}
@@ -377,9 +448,20 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate }) => {
                       FastAPI 0.2ms
                     </span>
                   </div>
-                  <p className="text-[13px] font-sans text-ink leading-snug line-clamp-2 italic">
-                    &ldquo;{selectedDemo.text}&rdquo;
-                  </p>
+                  <div className="min-h-[2.5rem] flex items-center">
+                    <AnimatePresence mode="wait">
+                      <motion.p
+                        key={heroDemo.id}
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -5 }}
+                        transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
+                        className="text-[13px] font-sans text-ink leading-snug line-clamp-2 italic"
+                      >
+                        &ldquo;{heroDemo.text}&rdquo;
+                      </motion.p>
+                    </AnimatePresence>
+                  </div>
                 </div>
 
                 {/* Stage 2: 384d Dense Vector Representation */}
@@ -392,16 +474,23 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate }) => {
                     <span className="text-shade-60">all-MiniLM-L6-v2</span>
                   </div>
 
-                  {/* Dynamic Vector Sparkline Bars */}
-                  <div className="flex items-end gap-1 h-6 w-full bg-white px-2 py-1 rounded border border-hairline-light overflow-hidden shadow-2xs">
-                    {getEmbeddingSparkline(selectedDemo.text).map((val, idx) => (
-                      <div
+                  {/* Dynamic Vector Sparkline Bars with animated wave transitions and scanning sweep */}
+                  <div className="relative flex items-end gap-1 h-6 w-full bg-white px-2 py-1 rounded border border-hairline-light overflow-hidden shadow-2xs">
+                    {getEmbeddingSparkline(heroDemo.text).map((val, idx) => (
+                      <motion.div
                         key={idx}
-                        className="flex-1 bg-black rounded-xs transition-all duration-300 ease-out"
-                        style={{ height: `${val * 100}%` }}
-                        title={`Dimension ${idx * 16}: ${val.toFixed(2)}`}
+                        className="flex-1 bg-black rounded-xs origin-bottom"
+                        animate={{ height: `${val * 100}%` }}
+                        transition={{ duration: 0.32, ease: [0.23, 1, 0.32, 1], delay: idx * 0.007 }}
+                        title={`Dimension ${idx * 16}: ${(val * 2 - 1).toFixed(2)}`}
                       />
                     ))}
+                    {/* Subtle horizontal laser sweep scan across coordinates */}
+                    <motion.div
+                      className="absolute inset-y-0 w-12 bg-gradient-to-r from-transparent via-emerald-400/25 to-transparent pointer-events-none"
+                      animate={{ x: ["-100%", "450%"] }}
+                      transition={{ repeat: Infinity, duration: 2.8, ease: "linear" }}
+                    />
                   </div>
 
                   <div className="flex items-center justify-between text-[10px] font-mono text-shade-50 mt-1.5">
@@ -420,48 +509,73 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate }) => {
                     <span className="text-emerald-700 font-semibold font-mono">150μs Head</span>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-white p-2.5 rounded border border-hairline-light shadow-2xs">
-                      <span className="text-[10px] font-sans uppercase tracking-wider text-shade-50 block mb-0.5">
-                        Intent Class
-                      </span>
-                      <div className="flex items-baseline gap-1.5">
-                        <span className="text-[13px] font-sans font-semibold text-ink">
-                          {selectedDemo.intent}
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={heroDemo.id}
+                      initial={{ opacity: 0, scale: 0.98 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.98 }}
+                      transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+                      className="grid grid-cols-2 gap-2"
+                    >
+                      <div className="bg-white p-2.5 rounded border border-hairline-light shadow-2xs">
+                        <span className="text-[10px] font-sans uppercase tracking-wider text-shade-50 block mb-0.5">
+                          Intent Class
                         </span>
-                        <span className="text-[11px] font-mono text-emerald-700 tabular-nums">
-                          {selectedDemo.confidence}%
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="text-[13px] font-sans font-semibold text-ink">
+                            {heroDemo.intent}
+                          </span>
+                          <span className="text-[11px] font-mono text-emerald-700 tabular-nums font-semibold">
+                            {heroDemo.confidence}%
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="bg-white p-2.5 rounded border border-hairline-light shadow-2xs">
+                        <span className="text-[10px] font-sans uppercase tracking-wider text-shade-50 block mb-0.5">
+                          SOP Dispatch
+                        </span>
+                        <span className="text-[13px] font-sans font-semibold text-ink block truncate">
+                          {heroDemo.action}
                         </span>
                       </div>
-                    </div>
+                    </motion.div>
+                  </AnimatePresence>
 
-                    <div className="bg-white p-2.5 rounded border border-hairline-light shadow-2xs">
-                      <span className="text-[10px] font-sans uppercase tracking-wider text-shade-50 block mb-0.5">
-                        SOP Dispatch
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={heroDemo.id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.18 }}
+                      className="mt-2 flex items-center justify-between text-[11px] font-mono text-shade-60"
+                    >
+                      <span className="flex items-center gap-1.5">
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full ${
+                            heroDemo.urgency === "High" ? "bg-rose-600 animate-pulse" : "bg-emerald-600"
+                          }`}
+                        />
+                        <span>{heroDemo.urgency} Urgency</span>
                       </span>
-                      <span className="text-[13px] font-sans font-semibold text-ink block truncate">
-                        {selectedDemo.action}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="mt-2 flex items-center justify-between text-[11px] font-mono text-shade-60">
-                    <span className="flex items-center gap-1">
-                      <span
-                        className={`w-1.5 h-1.5 rounded-full ${
-                          selectedDemo.urgency === "High" ? "bg-rose-600" : "bg-emerald-600"
-                        }`}
-                      />
-                      <span>{selectedDemo.urgency} Urgency</span>
-                    </span>
-                    <span>Tone: {selectedDemo.tone}</span>
-                  </div>
+                      <span>Tone: <strong className="font-semibold text-ink">{heroDemo.tone}</strong></span>
+                    </motion.div>
+                  </AnimatePresence>
                 </div>
 
-                {/* Telemetry Hardware Specs Footer */}
+                {/* Telemetry Hardware Specs Footer with Sandbox inspector action */}
                 <div className="flex items-center justify-between text-[11px] font-mono text-shade-50 pt-1.5 border-t border-hairline-light">
                   <span>RAM: ~45MB bound</span>
-                  <span className="text-emerald-800 font-medium">100% In-Memory Offline</span>
+                  <button
+                    onClick={handleInspectInSandbox}
+                    className="inline-flex items-center gap-1 text-[11px] font-sans font-medium text-shade-60 hover:text-ink transition-colors active:scale-[0.97]"
+                    title="Load this comment into the interactive benchmark sandbox below"
+                  >
+                    <span>Inspect in Sandbox</span>
+                    <ArrowDownRight size={11} />
+                  </button>
                 </div>
               </div>
             </div>
@@ -470,7 +584,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate }) => {
       </section>
 
       {/* Dedicated Interactive Triage Playground Section */}
-      <section className="surface-card-base flex flex-col gap-6">
+      <section id="benchmark-sandbox" className="surface-card-base flex flex-col gap-6 scroll-mt-24">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-hairline-light">
           <div>
             <div className="flex items-center gap-2 mb-1">
@@ -487,128 +601,143 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate }) => {
             </p>
           </div>
 
-            {/* Interactive Control Toolbar */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <button
-                onClick={handleShuffle}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-pill text-[12px] font-sans text-shade-60 hover:text-ink bg-canvas-cream hover:bg-white border border-hairline-light transition-all active:scale-95 shadow-xs select-none"
-                title="Shuffle through realistic sample cases"
-              >
-                <Shuffle size={13} className="text-shade-50" />
-                <span>Shuffle Case</span>
-              </button>
+          {/* Interactive Control Toolbar */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={handleShuffle}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-pill text-[12px] font-sans text-shade-60 hover:text-ink bg-canvas-cream hover:bg-white border border-hairline-light transition-all active:scale-[0.97] shadow-xs select-none"
+              title="Shuffle through realistic sample cases"
+            >
+              <Shuffle size={13} className="text-shade-50" />
+              <span>Shuffle Case</span>
+            </button>
 
-              <button
-                onClick={() => setIsEditing((prev) => !prev)}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-pill text-[12px] font-sans transition-all active:scale-95 select-none ${
-                  isEditing
-                    ? "bg-black text-white font-medium shadow-sm"
-                    : "bg-canvas-cream hover:bg-white border border-hairline-light text-shade-60 hover:text-ink"
-                }`}
-                title="Type your own custom comment"
-              >
-                <Edit3 size={13} />
-                <span>{isEditing ? "Done Editing" : "Custom Text"}</span>
-              </button>
+            <button
+              onClick={() => setIsEditing((prev) => !prev)}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-pill text-[12px] font-sans transition-all active:scale-[0.97] select-none ${
+                isEditing
+                  ? "bg-black text-white font-medium shadow-sm"
+                  : "bg-canvas-cream hover:bg-white border border-hairline-light text-shade-60 hover:text-ink"
+              }`}
+              title="Type your own custom comment"
+            >
+              <Edit3 size={13} />
+              <span>{isEditing ? "Done Editing" : "Custom Text"}</span>
+            </button>
 
+            <button
+              onClick={() => setShowHeatmap((prev) => !prev)}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-pill text-[12px] font-sans transition-all active:scale-[0.97] select-none ${
+                showHeatmap
+                  ? "bg-canvas-cream border border-shade-40 text-ink font-medium"
+                  : "bg-canvas-cream border border-hairline-light text-shade-50 hover:text-ink"
+              }`}
+              title="Toggle token importance attribution highlights"
+            >
+              <SlidersHorizontal size={13} />
+              <span>Token Heatmap</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Preset Selector Chips with smooth sliding pill layoutId */}
+        <div className="flex flex-wrap gap-2 mb-5">
+          {PRESET_DEMOS.map((demo) => {
+            const isSelected = selectedDemo.id === demo.id && !isEditing;
+            return (
               <button
-                onClick={() => setShowHeatmap((prev) => !prev)}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-pill text-[12px] font-sans transition-all active:scale-95 select-none ${
-                  showHeatmap
-                    ? "bg-canvas-cream border border-shade-40 text-ink font-medium"
-                    : "bg-canvas-cream border border-hairline-light text-shade-50 hover:text-ink"
+                key={demo.id}
+                onClick={() => handleSelectPreset(demo)}
+                className={`relative px-3.5 py-1.5 rounded-pill text-[13px] font-sans font-medium transition-colors duration-150 ease-out active:scale-[0.97] select-none ${
+                  isSelected
+                    ? "text-white font-semibold shadow-sm"
+                    : "bg-canvas-cream border border-hairline-light text-shade-60 hover:text-black hover:border-shade-40"
                 }`}
-                title="Toggle token importance attribution highlights"
               >
-                <SlidersHorizontal size={13} />
-                <span>Token Heatmap</span>
+                {isSelected && (
+                  <motion.div
+                    layoutId="overview-preset-pill"
+                    className="absolute inset-0 rounded-pill bg-black"
+                    transition={{ type: "spring", stiffness: 450, damping: 35 }}
+                  />
+                )}
+                <span className="relative z-10">{demo.label}</span>
               </button>
+            );
+          })}
+        </div>
+
+        {/* Verdict Preview Surface Card */}
+        <div className="bg-canvas-cream border border-hairline-light rounded-xl p-6 sm:p-7 flex flex-col gap-6 shadow-inner transition-all">
+          {/* Comment View / Edit Box */}
+          {isEditing ? (
+            <div className="flex flex-col gap-2">
+              <label className="text-[11px] font-sans uppercase tracking-[0.72px] text-shade-50 font-semibold">
+                Type or paste custom feedback to triage:
+              </label>
+              <textarea
+                value={customInput}
+                onChange={(e) => setCustomInput(e.target.value)}
+                rows={3}
+                className="w-full p-4 bg-white border border-hairline-light rounded-lg text-ink font-sans text-[16px] focus:outline-none focus:border-black transition-all resize-none shadow-sm"
+                placeholder="Enter feedback statement..."
+              />
             </div>
-          </div>
-
-          {/* Preset Selector Chips */}
-          <div className="flex flex-wrap gap-2 mb-5">
-            {PRESET_DEMOS.map((demo) => {
-              const isSelected = selectedDemo.id === demo.id && !isEditing;
-              return (
-                <button
-                  key={demo.id}
-                  onClick={() => handleSelectPreset(demo)}
-                  className={`px-3.5 py-1.5 rounded-pill text-[13px] font-sans font-medium transition-all duration-150 ease-out active:scale-[0.97] select-none ${
-                    isSelected
-                      ? "bg-black text-white font-semibold shadow-sm"
-                      : "bg-canvas-cream border border-hairline-light text-shade-60 hover:text-black hover:border-shade-40"
-                  }`}
-                >
-                  {demo.label}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Verdict Preview Surface Card */}
-          <div className="bg-canvas-cream border border-hairline-light rounded-xl p-6 sm:p-7 flex flex-col gap-6 shadow-inner transition-all">
-            {/* Comment View / Edit Box */}
-            {isEditing ? (
-              <div className="flex flex-col gap-2">
-                <label className="text-[11px] font-sans uppercase tracking-[0.72px] text-shade-50 font-semibold">
-                  Type or paste custom feedback to triage:
-                </label>
-                <textarea
-                  value={customInput}
-                  onChange={(e) => setCustomInput(e.target.value)}
-                  rows={3}
-                  className="w-full p-4 bg-white border border-hairline-light rounded-lg text-ink font-sans text-[16px] focus:outline-none focus:border-black transition-all resize-none shadow-sm"
-                  placeholder="Enter feedback statement..."
-                />
-              </div>
-            ) : (
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-sans uppercase tracking-[0.72px] text-shade-50 font-semibold select-none">
-                    Statement Under Analysis
+          ) : (
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-sans uppercase tracking-[0.72px] text-shade-50 font-semibold select-none">
+                  Statement Under Analysis
+                </span>
+                {showHeatmap && (
+                  <span className="text-[11px] font-mono text-shade-50 select-none">
+                    Hover words to inspect marginal attribution (ΔP)
                   </span>
-                  {showHeatmap && (
-                    <span className="text-[11px] font-mono text-shade-50 select-none">
-                      Hover words to inspect marginal attribution (ΔP)
-                    </span>
-                  )}
-                </div>
-
-                {showHeatmap ? (
-                  <div className="flex flex-wrap gap-1.5 leading-relaxed text-[17px] sm:text-[19px] font-sans text-ink select-text py-1">
-                    {selectedDemo.tokens.map((token, idx) => {
-                      const isHovered = hoveredTokenIdx === idx;
-                      const isSignificant = token.drop >= 10;
-                      return (
-                        <span
-                          key={idx}
-                          onMouseEnter={() => setHoveredTokenIdx(idx)}
-                          onMouseLeave={() => setHoveredTokenIdx(null)}
-                          className={`relative px-1.5 py-0.5 rounded cursor-pointer transition-all duration-150 ${
-                            isSignificant
-                              ? "bg-amber-100/70 border border-amber-300/60 font-medium text-ink"
-                              : "hover:bg-black/5"
-                          } ${isHovered ? "ring-2 ring-black bg-white shadow-xs" : ""}`}
-                          title={`Occlusion Impact: -${token.drop.toFixed(1)}% drop if masked`}
-                        >
-                          {token.word}
-                          {isHovered && (
-                            <span className="absolute -top-7 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-pill bg-black text-white text-[10px] font-mono whitespace-nowrap shadow-md z-20 pointer-events-none">
-                              ΔP: -{token.drop.toFixed(1)}%
-                            </span>
-                          )}
-                        </span>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <p className="font-display text-[18px] sm:text-[20px] font-[330] text-ink leading-relaxed">
-                    &ldquo;{selectedDemo.text}&rdquo;
-                  </p>
                 )}
               </div>
-            )}
+
+              {showHeatmap ? (
+                <div className="flex flex-wrap gap-1.5 leading-relaxed text-[17px] sm:text-[19px] font-sans text-ink select-text py-1">
+                  {selectedDemo.tokens.map((token, idx) => {
+                    const isHovered = hoveredTokenIdx === idx;
+                    const isSignificant = token.drop >= 10;
+                    return (
+                      <span
+                        key={idx}
+                        onMouseEnter={() => setHoveredTokenIdx(idx)}
+                        onMouseLeave={() => setHoveredTokenIdx(null)}
+                        className={`relative px-1.5 py-0.5 rounded cursor-pointer transition-all duration-150 ${
+                          isSignificant
+                            ? "bg-amber-100/70 border border-amber-300/60 font-medium text-ink"
+                            : "hover:bg-black/5"
+                        } ${isHovered ? "ring-2 ring-black bg-white shadow-xs" : ""}`}
+                        title={`Occlusion Impact: -${token.drop.toFixed(1)}% drop if masked`}
+                      >
+                        {token.word}
+                        <AnimatePresence>
+                          {isHovered && (
+                            <motion.span
+                              initial={{ opacity: 0, y: 3, scale: 0.94 }}
+                              animate={{ opacity: 1, y: 0, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.94 }}
+                              transition={{ duration: 0.14 }}
+                              className="absolute -top-7 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-pill bg-black text-white text-[10px] font-mono whitespace-nowrap shadow-md z-20 pointer-events-none"
+                            >
+                              ΔP: -{token.drop.toFixed(1)}%
+                            </motion.span>
+                          )}
+                        </AnimatePresence>
+                      </span>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="font-display text-[18px] sm:text-[20px] font-[330] text-ink leading-relaxed">
+                  &ldquo;{selectedDemo.text}&rdquo;
+                </p>
+              )}
+            </div>
+          )}
 
             {/* Structured Verdict Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-5 border-t border-hairline-light">
@@ -726,19 +855,35 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate }) => {
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleCopyJSON}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-pill bg-white border border-hairline-light text-shade-60 hover:text-ink active:scale-95 transition-all shadow-xs"
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-pill bg-white border border-hairline-light text-shade-60 hover:text-ink active:scale-[0.96] transition-all shadow-xs"
                 >
-                  {copied ? (
-                    <>
-                      <Check size={12} className="text-emerald-600" />
-                      <span className="text-emerald-700 font-medium">Copied JSON!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy size={12} />
-                      <span>Copy Triage JSON</span>
-                    </>
-                  )}
+                  <AnimatePresence mode="wait">
+                    {copied ? (
+                      <motion.span
+                        key="copied"
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        transition={{ duration: 0.15 }}
+                        className="flex items-center gap-1.5 text-emerald-700 font-medium"
+                      >
+                        <Check size={12} className="text-emerald-600" />
+                        <span>Copied JSON!</span>
+                      </motion.span>
+                    ) : (
+                      <motion.span
+                        key="copy"
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        transition={{ duration: 0.15 }}
+                        className="flex items-center gap-1.5"
+                      >
+                        <Copy size={12} />
+                        <span>Copy Triage JSON</span>
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
                 </button>
               </div>
 

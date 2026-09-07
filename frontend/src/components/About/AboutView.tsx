@@ -74,19 +74,28 @@ export const AboutView: React.FC<AboutViewProps> = ({ initialTab = "overview", o
             <button
               key={tab.id}
               onClick={() => handleTabSelect(tab.id)}
-              className={`relative flex items-center gap-2 px-4 py-2 rounded-pill text-[13px] font-sans font-medium transition-all duration-150 ease-out active:scale-[0.97] select-none ${
+              className={`relative flex items-center gap-2 px-4 py-2 rounded-pill text-[13px] font-sans font-medium transition-colors duration-150 ease-out active:scale-[0.97] select-none ${
                 isActive
-                  ? "bg-black text-white font-semibold shadow-sm"
+                  ? "text-white font-semibold"
                   : "text-shade-60 hover:text-black hover:bg-black/5"
               }`}
             >
-              <Icon
-                size={14}
-                strokeWidth={isActive ? 2 : 1.75}
-                className={isActive ? "text-white" : "text-shade-50"}
-              />
-              <span className="hidden sm:inline">{tab.label}</span>
-              <span className="sm:hidden">{tab.shortLabel}</span>
+              {isActive && (
+                <motion.div
+                  layoutId="about-subtab-pill"
+                  className="absolute inset-0 rounded-pill bg-black shadow-sm"
+                  transition={{ type: "spring", stiffness: 480, damping: 38 }}
+                />
+              )}
+              <span className="relative z-10 flex items-center gap-2">
+                <Icon
+                  size={14}
+                  strokeWidth={isActive ? 2 : 1.75}
+                  className={isActive ? "text-white" : "text-shade-50"}
+                />
+                <span className="hidden sm:inline">{tab.label}</span>
+                <span className="sm:hidden">{tab.shortLabel}</span>
+              </span>
             </button>
           );
         })}

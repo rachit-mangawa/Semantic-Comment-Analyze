@@ -235,13 +235,20 @@ export const SingleAnalysisView = () => {
                 <button
                   key={preset.label}
                   onClick={() => loadPreset(preset.text)}
-                  className={`px-4 py-2 rounded-pill text-[13px] font-sans font-medium transition-all duration-150 ease-out active:scale-[0.97] ${
+                  className={`relative px-4 py-2 rounded-pill text-[13px] font-sans font-medium transition-colors duration-150 ease-out active:scale-[0.97] select-none ${
                     isSelected
-                      ? "bg-black text-white shadow-sm"
+                      ? "text-white shadow-sm"
                       : "bg-canvas-cream border border-hairline-light text-shade-60 hover:text-black hover:border-shade-40"
                   }`}
                 >
-                  {preset.label}
+                  {isSelected && (
+                    <motion.div
+                      layoutId="single-preset-pill"
+                      className="absolute inset-0 rounded-pill bg-black"
+                      transition={{ type: "spring", stiffness: 450, damping: 35 }}
+                    />
+                  )}
+                  <span className="relative z-10">{preset.label}</span>
                 </button>
               );
             })}
