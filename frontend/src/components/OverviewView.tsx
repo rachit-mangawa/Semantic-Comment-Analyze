@@ -919,7 +919,11 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate }) => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Pillar 1 */}
-          <div className="surface-card-base flex flex-col justify-between hover:border-shade-40 transition-colors duration-150">
+          <motion.div
+            whileHover={{ y: -3 }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
+            className="surface-card-base flex flex-col justify-between hover:border-shade-40 transition-colors duration-150"
+          >
             <div>
               <div className="w-11 h-11 rounded-pill bg-canvas-cream border border-hairline-light flex items-center justify-center text-ink mb-5 shadow-sm">
                 <Zap size={20} strokeWidth={2} />
@@ -935,10 +939,14 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate }) => {
               <span>Execution</span>
               <strong className="text-ink">In-Memory Pipeline</strong>
             </div>
-          </div>
+          </motion.div>
 
           {/* Pillar 2 */}
-          <div className="surface-card-base flex flex-col justify-between hover:border-shade-40 transition-colors duration-150">
+          <motion.div
+            whileHover={{ y: -3 }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
+            className="surface-card-base flex flex-col justify-between hover:border-shade-40 transition-colors duration-150"
+          >
             <div>
               <div className="w-11 h-11 rounded-pill bg-canvas-cream border border-hairline-light flex items-center justify-center text-ink mb-5 shadow-sm">
                 <Layers size={20} strokeWidth={1.75} />
@@ -954,10 +962,14 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate }) => {
               <span>Explainability</span>
               <strong className="text-ink">Zero-Surrogate Math</strong>
             </div>
-          </div>
+          </motion.div>
 
           {/* Pillar 3 */}
-          <div className="surface-card-base flex flex-col justify-between hover:border-shade-40 transition-colors duration-150">
+          <motion.div
+            whileHover={{ y: -3 }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
+            className="surface-card-base flex flex-col justify-between hover:border-shade-40 transition-colors duration-150"
+          >
             <div>
               <div className="w-11 h-11 rounded-pill bg-canvas-cream border border-hairline-light flex items-center justify-center text-ink mb-5 shadow-sm">
                 <Database size={20} strokeWidth={1.75} />
@@ -973,7 +985,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate }) => {
               <span>Streaming</span>
               <strong className="text-ink">~45MB RAM Bound</strong>
             </div>
-          </div>
+          </motion.div>
         </div>
       </section>
 

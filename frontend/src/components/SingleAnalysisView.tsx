@@ -27,7 +27,10 @@ import {
   Clock, 
   SlidersHorizontal,
   Copy,
-  Check
+  Check,
+  Cpu,
+  Terminal,
+  Activity
 } from "lucide-react";
 
 type ExplainabilityData = { word: string; contribution: number; primary_intent: string }[];
@@ -353,9 +356,72 @@ export const SingleAnalysisView = () => {
         )}
       </div>
 
-      {/* Results Section */}
+      {/* Results Section with Intelligent State Transitions */}
       <AnimatePresence mode="wait">
-        {result && topMeta ? (
+        {loading ? (
+          <motion.div
+            key="pipeline-loading"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
+            className="flex flex-col gap-6"
+          >
+            <div className="surface-card-base p-6 sm:p-7 flex flex-col gap-5 border border-hairline-light shadow-level-2">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-hairline-light">
+                <div className="flex items-center gap-2.5">
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-600" />
+                  </span>
+                  <span className="text-[13px] font-mono font-semibold text-ink uppercase tracking-wider">
+                    Executing 3-Stage Inference Pipeline
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-[11px] font-mono text-shade-60">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
+                  <span>CPU In-Memory Engine Active</span>
+                </div>
+              </div>
+
+              {/* 3-Stage Progress Timeline */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="p-3.5 bg-canvas-cream border border-hairline-light rounded-lg flex items-center justify-between shadow-2xs">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-5 h-5 rounded-full bg-black text-white text-[10px] font-mono flex items-center justify-center font-bold">1</span>
+                    <span className="text-[12px] font-sans font-medium text-ink">Ingestion & Tokenizer</span>
+                  </div>
+                  <span className="text-[10px] font-mono text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">0.2ms</span>
+                </div>
+
+                <div className="p-3.5 bg-canvas-cream border border-hairline-light rounded-lg flex items-center justify-between shimmer-mask shadow-2xs">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-5 h-5 rounded-full bg-emerald-600 text-white text-[10px] font-mono flex items-center justify-center font-bold animate-pulse">2</span>
+                    <span className="text-[12px] font-sans font-medium text-ink">384d Dense Projection</span>
+                  </div>
+                  <span className="text-[10px] font-mono text-shade-50">all-MiniLM</span>
+                </div>
+
+                <div className="p-3.5 bg-canvas-cream/60 border border-hairline-light rounded-lg flex items-center justify-between opacity-80 shadow-2xs">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-5 h-5 rounded-full bg-shade-30 text-shade-70 text-[10px] font-mono flex items-center justify-center font-bold">3</span>
+                    <span className="text-[12px] font-sans font-medium text-shade-60">Calibration & LOO Math</span>
+                  </div>
+                  <span className="text-[10px] font-mono text-shade-40">150μs</span>
+                </div>
+              </div>
+
+              {/* Shimmering Skeleton Mockup */}
+              <div className="space-y-4 pt-2">
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-40 rounded-pill bg-canvas-cream border border-hairline-light shimmer-mask" />
+                  <div className="h-8 w-24 rounded-md bg-canvas-cream border border-hairline-light shimmer-mask" />
+                </div>
+                <div className="h-24 w-full rounded-lg bg-canvas-cream border border-hairline-light shimmer-mask" />
+              </div>
+            </div>
+          </motion.div>
+        ) : result && topMeta ? (
           <motion.div
             key="result"
             initial={{ opacity: 0, y: 12 }}
@@ -365,7 +431,12 @@ export const SingleAnalysisView = () => {
             className="flex flex-col gap-8"
           >
             {/* Primary Verdict Banner */}
-            <div className="surface-card-base">
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.24, ease: [0.23, 1, 0.32, 1] }}
+              className="surface-card-base"
+            >
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-hairline-light">
                 <div>
                   <span className="text-[12px] font-sans uppercase text-shade-50 tracking-[0.72px] block mb-1.5 font-medium">
@@ -462,10 +533,15 @@ export const SingleAnalysisView = () => {
                   </p>
                 </div>
               </div>
-            </div>
+            </motion.div>
 
             {/* Word Contribution Heatmap Surface */}
-            <div className="surface-card-base">
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.24, delay: 0.07, ease: [0.23, 1, 0.32, 1] }}
+              className="surface-card-base"
+            >
               <div className="flex items-center justify-between mb-5">
                 <div>
                   <span className="text-[12px] font-sans uppercase text-shade-50 tracking-[0.72px] block font-medium">
@@ -480,10 +556,15 @@ export const SingleAnalysisView = () => {
                 </span>
               </div>
               <WordContributionHeatmap data={result.explainability} />
-            </div>
+            </motion.div>
 
             {/* Diagnostics: Radar Chart & Sentiment */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.24, delay: 0.14, ease: [0.23, 1, 0.32, 1] }}
+              className="grid grid-cols-1 md:grid-cols-2 gap-6"
+            >
               {/* Radar Chart */}
               <div className="surface-card-base">
                 <div className="flex items-center justify-between mb-2">
@@ -539,10 +620,17 @@ export const SingleAnalysisView = () => {
                   </ResponsiveContainer>
                 </div>
               </div>
-            </div>
+            </motion.div>
           </motion.div>
         ) : (
-          <div className="surface-card-base flex flex-col gap-6">
+          <motion.div
+            key="starter-scenarios"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
+            className="surface-card-base flex flex-col gap-6"
+          >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-hairline-light">
               <div>
                 <span className="text-[11px] font-sans uppercase tracking-[0.72px] font-semibold text-shade-50 block mb-1">
@@ -560,8 +648,10 @@ export const SingleAnalysisView = () => {
             {/* 3 Interactive Starter Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {PRESETS.slice(0, 3).map((p) => (
-                <div
+                <motion.div
                   key={p.label}
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => loadPreset(p.text)}
                   className="p-5 rounded-xl bg-canvas-cream hover:bg-white border border-hairline-light hover:border-black/30 transition-all cursor-pointer group flex flex-col justify-between shadow-xs hover:shadow-md"
                 >
@@ -577,10 +667,10 @@ export const SingleAnalysisView = () => {
                     <span>Load sample</span>
                     <ArrowRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
-          </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

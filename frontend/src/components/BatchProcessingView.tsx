@@ -428,10 +428,54 @@ export const BatchProcessingView = () => {
         )}
       </div>
 
-      {/* Results Live Stream Preview Table */}
-      <AnimatePresence>
-        {previewRows.length > 0 && (
+      {/* Results Live Stream Preview Table or Streaming Skeleton */}
+      <AnimatePresence mode="wait">
+        {loading && previewRows.length === 0 ? (
           <motion.div
+            key="batch-loading-skeleton"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
+            className="flex flex-col gap-4"
+          >
+            <div className="surface-card-base p-6 flex flex-col gap-5 border border-hairline-light shadow-level-2">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-hairline-light">
+                <div className="flex items-center gap-2.5">
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-600" />
+                  </span>
+                  <span className="text-[13px] font-mono font-semibold text-ink uppercase tracking-wider">
+                    Streaming CSV Analysis (32-Sample Chunks)
+                  </span>
+                </div>
+                <div className="text-[11px] font-mono text-shade-60">
+                  Constant RAM Bound: ~45MB
+                </div>
+              </div>
+
+              {/* Shimmering Table Headers & Rows Skeleton */}
+              <div className="space-y-3">
+                <div className="grid grid-cols-4 gap-3 pb-2 border-b border-hairline-light">
+                  <div className="h-4 rounded bg-canvas-cream shimmer-mask" />
+                  <div className="h-4 rounded bg-canvas-cream shimmer-mask" />
+                  <div className="h-4 rounded bg-canvas-cream shimmer-mask" />
+                  <div className="h-4 rounded bg-canvas-cream shimmer-mask" />
+                </div>
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="grid grid-cols-4 gap-3 py-2 border-b border-hairline-light/50">
+                    <div className="h-5 rounded bg-canvas-cream/80 shimmer-mask col-span-2" />
+                    <div className="h-5 w-24 rounded-pill bg-canvas-cream shimmer-mask" />
+                    <div className="h-5 w-16 rounded bg-canvas-cream shimmer-mask" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        ) : previewRows.length > 0 ? (
+          <motion.div
+            key="batch-results"
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
@@ -478,8 +522,11 @@ export const BatchProcessingView = () => {
                   </thead>
                   <tbody className="divide-y divide-hairline-light">
                     {previewRows.map((row, rowIdx) => (
-                      <tr
+                      <motion.tr
                         key={rowIdx}
+                        initial={{ opacity: 0, y: 3 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.15, delay: Math.min(rowIdx * 0.015, 0.25) }}
                         className="hover:bg-canvas-cream/80 transition-colors"
                       >
                         {row.map((cell, colIdx) => {
@@ -597,14 +644,14 @@ export const BatchProcessingView = () => {
                             </td>
                           );
                         })}
-                      </tr>
+                      </motion.tr>
                     ))}
                   </tbody>
                 </table>
               </div>
             </div>
           </motion.div>
-        )}
+        ) : null}
       </AnimatePresence>
     </div>
   );
