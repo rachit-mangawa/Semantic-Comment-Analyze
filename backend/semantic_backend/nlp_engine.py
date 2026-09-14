@@ -5,8 +5,6 @@ from typing import Any
 
 import joblib
 import numpy as np
-from sentence_transformers import SentenceTransformer
-from transformers import pipeline
 
 DEFAULT_INTENT_LABELS = [
     "Bug Report",
@@ -45,6 +43,8 @@ def get_intent_labels() -> list[str]:
 
 @lru_cache(maxsize=1)
 def get_embedding_model():
+    from sentence_transformers import SentenceTransformer
+
     cache_dir = os.getenv("P2_MODEL_CACHE_DIR", None)
     return SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2", cache_folder=cache_dir)
 
@@ -77,12 +77,21 @@ def get_classifier_head():
 
 @lru_cache(maxsize=1)
 def get_ner_model():
+    from transformers import pipeline
+
     model_dir = os.getenv("P2_MODEL_CACHE_DIR", None)
-    return pipeline("ner", aggregation_strategy="simple", device=-1, model_kwargs={"cache_dir": model_dir} if model_dir else None)
+    return pipeline(
+        "ner",
+        aggregation_strategy="simple",
+        device=-1,
+        model_kwargs={"cache_dir": model_dir} if model_dir else None,
+    )
 
 
 @lru_cache(maxsize=1)
 def get_sentiment_model():
+    from transformers import pipeline
+
     model_dir = os.getenv("P2_MODEL_CACHE_DIR", None)
     return pipeline(
         "sentiment-analysis",

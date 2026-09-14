@@ -17,9 +17,6 @@ class AnalyzeRequest(BaseModel):
 
 
 @router.post("/analyze")
-@router.post("/semantic/analyze", include_in_schema=False)
-@router.post("/sementic/analyze", include_in_schema=False)
-@router.post("/api/analyze", include_in_schema=False)
 async def analyze_text(request: AnalyzeRequest):
     if not request.text or not request.text.strip():
         raise HTTPException(status_code=400, detail="Text cannot be empty")
@@ -44,9 +41,6 @@ async def analyze_text(request: AnalyzeRequest):
 
 
 @router.post("/batch")
-@router.post("/semantic/batch", include_in_schema=False)
-@router.post("/sementic/batch", include_in_schema=False)
-@router.post("/api/batch", include_in_schema=False)
 def process_batch(
     file: UploadFile = File(...),
     threshold: float = Form(0.5),
