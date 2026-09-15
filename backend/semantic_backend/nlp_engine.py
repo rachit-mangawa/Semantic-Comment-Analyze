@@ -1,10 +1,10 @@
-import asyncio
+import logging
 import os
+import tempfile
 from functools import lru_cache
-from typing import Any
+from pathlib import Path
 
-import joblib
-import numpy as np
+logger = logging.getLogger("sementic")
 
 DEFAULT_INTENT_LABELS = [
     "Bug Report",
@@ -15,46 +15,50 @@ DEFAULT_INTENT_LABELS = [
 ]
 
 
-def resolve_data_file(filename: str) -> str:
+def _get_data_dir() -> Path:
+    override = os.getenv("P2_DATA_DIR")
+    if override:
+        p = Path(override)
+        if p.exists():
+            return p
+    return Path(__file__).parent / "data"
+
+
+def resolve_data_file(filename: str) -> Path:
     env_override = os.getenv(f"P2_{filename.upper().replace('.', '_')}")
-    if env_override and os.path.exists(env_override):
-        return env_override
-
-    pkg_dir = os.path.dirname(os.path.abspath(__file__))
-    candidates = [
-        os.path.join(pkg_dir, "data", filename),
-        os.path.join(pkg_dir, "..", "..", "data", filename),
-        os.path.join(pkg_dir, filename),
-        os.path.join("/tmp/p2", filename),
-    ]
-    for c in candidates:
-        if os.path.exists(c):
-            return os.path.abspath(c)
-    return os.path.abspath(candidates[0])
+    if env_override:
+        p = Path(env_override)
+        if p.exists():
+            return p
+    return _get_data_dir() / filename
 
 
-def get_intent_labels() -> list[str]:
+def get_intent_labels():
     mapping_path = resolve_data_file("label_mapping.txt")
-    if os.path.exists(mapping_path):
+    if mapping_path.exists():
         with open(mapping_path, "r", encoding="utf-8") as f:
             return [line.strip() for line in f if line.strip()]
     return DEFAULT_INTENT_LABELS
+
+
+def _get_model_cache_dir():
+    return os.getenv("HF_HOME") or os.getenv("P2_MODEL_CACHE_DIR")
 
 
 @lru_cache(maxsize=1)
 def get_embedding_model():
     from sentence_transformers import SentenceTransformer
 
-    cache_dir = os.getenv("P2_MODEL_CACHE_DIR", None)
+    cache_dir = _get_model_cache_dir()
     return SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2", cache_folder=cache_dir)
 
 
-def train_head_if_missing(head_path: str):
+def train_head_if_missing(head_path: Path):
     import pandas as pd
     from sklearn.linear_model import LogisticRegression
 
     data_path = resolve_data_file("training_data.csv")
-    if not os.path.exists(data_path):
+    if not data_path.exists():
         raise FileNotFoundError(f"Training data not found at {data_path}")
 
     df = pd.read_csv(data_path)
@@ -62,15 +66,21 @@ def train_head_if_missing(head_path: str):
     y = df["label"].tolist()
     clf = LogisticRegression(max_iter=1000)
     clf.fit(X, y)
-    os.makedirs(os.path.dirname(head_path), exist_ok=True)
-    joblib.dump(clf, head_path)
+    import joblib
+
+    temp_dir = Path(tempfile.gettempdir()) / "p2"
+    temp_dir.mkdir(parents=True, exist_ok=True)
+    temp_head = temp_dir / "local_model_head.pkl"
+    joblib.dump(clf, temp_head)
     return clf
 
 
 @lru_cache(maxsize=1)
 def get_classifier_head():
+    import joblib
+
     head_path = resolve_data_file("local_model_head.pkl")
-    if not os.path.exists(head_path):
+    if not head_path.exists():
         return train_head_if_missing(head_path)
     return joblib.load(head_path)
 
@@ -79,12 +89,12 @@ def get_classifier_head():
 def get_ner_model():
     from transformers import pipeline
 
-    model_dir = os.getenv("P2_MODEL_CACHE_DIR", None)
+    cache_dir = _get_model_cache_dir()
     return pipeline(
         "ner",
         aggregation_strategy="simple",
         device=-1,
-        model_kwargs={"cache_dir": model_dir} if model_dir else None,
+        model_kwargs={"cache_dir": cache_dir} if cache_dir else None,
     )
 
 
@@ -92,28 +102,28 @@ def get_ner_model():
 def get_sentiment_model():
     from transformers import pipeline
 
-    model_dir = os.getenv("P2_MODEL_CACHE_DIR", None)
+    cache_dir = _get_model_cache_dir()
     return pipeline(
         "sentiment-analysis",
         model="cardiffnlp/twitter-roberta-base-sentiment-latest",
         device=-1,
-        model_kwargs={"cache_dir": model_dir} if model_dir else None,
+        model_kwargs={"cache_dir": cache_dir} if cache_dir else None,
     )
 
 
-def get_embeddings_batch(texts: list[str]) -> np.ndarray:
+def get_embeddings_batch(texts: list[str]):
     model = get_embedding_model()
     safe_texts = [t if t else "" for t in texts]
     return model.encode(safe_texts, batch_size=32)
 
 
-def classify_intent(text: str, threshold: float = 0.5) -> dict[str, Any]:
+def classify_intent(text: str, threshold: float = 0.5):
     if not text or not text.strip():
         raise ValueError("Input empty")
     return classify_intents_batch([text], threshold)[0]
 
 
-def classify_intents_batch(texts: list[str], threshold: float = 0.5, embeddings=None) -> list[dict[str, Any]]:
+def classify_intents_batch(texts: list[str], threshold: float = 0.5, embeddings=None):
     valid_texts, valid_indices = [], []
     for i, t in enumerate(texts):
         if t and t.strip() and t != "nan":
@@ -135,6 +145,8 @@ def classify_intents_batch(texts: list[str], threshold: float = 0.5, embeddings=
 
     clf = get_classifier_head()
     labels = clf.classes_
+
+    import numpy as np
 
     if embeddings is not None:
         embs = np.array([embeddings[i] for i in valid_indices])
@@ -160,7 +172,7 @@ def classify_intents_batch(texts: list[str], threshold: float = 0.5, embeddings=
     return results
 
 
-def explain_intent(text: str) -> list[dict[str, Any]]:
+def explain_intent(text: str):
     words = text.split()
     if not words:
         return []
@@ -200,41 +212,45 @@ def explain_intent(text: str) -> list[dict[str, Any]]:
     return contributions
 
 
-def analyze_sentiment(text: str) -> dict[str, Any]:
+def analyze_sentiment(text: str):
     if not text or not text.strip():
         return {"label": "NEUTRAL", "score": 0.0}
     return analyze_sentiments_batch([text])[0]
 
 
-def analyze_sentiments_batch(texts: list[str]) -> list[dict[str, Any]]:
+def analyze_sentiments_batch(texts: list[str]):
     valid_texts = [t if t and t.strip() and t != "nan" else "Neutral" for t in texts]
     model = get_sentiment_model()
     sentiments = model(valid_texts, truncation=True, max_length=512, batch_size=32)
     return [{"label": sent["label"].upper(), "score": float(sent["score"])} for sent in sentiments]
 
 
-def extract_entities(text: str) -> list[dict[str, Any]]:
+def extract_entities(text: str):
     if not text or not text.strip():
         return []
     return get_ner_model()(text[:2000])
 
 
-def extract_entities_batch(texts: list[str]) -> list[list[dict[str, Any]]]:
+def extract_entities_batch(texts: list[str]):
     valid_texts = [t[:2000] if t and t.strip() and t != "nan" else "" for t in texts]
     ner = get_ner_model()
     return ner([t[:2000] for t in valid_texts], batch_size=32)
 
 
-async def analyze_full(text: str, threshold: float = 0.5, include_explanation: bool = False) -> dict[str, Any]:
-    intent = await asyncio.to_thread(classify_intent, text, threshold)
-    sentiment = await asyncio.to_thread(analyze_sentiment, text)
+def analyze_sync(text: str, threshold: float = 0.5, include_explanation: bool = False):
+    intent = classify_intent(text, threshold)
+    sentiment = analyze_sentiment(text)
 
     explainability = []
     if include_explanation:
-        explainability = await asyncio.to_thread(explain_intent, text)
+        explainability = explain_intent(text)
 
     return {
         "intent": intent,
         "sentiment": sentiment,
         "explainability": explainability,
     }
+
+
+async def analyze_full(text: str, threshold: float = 0.5, include_explanation: bool = False):
+    return analyze_sync(text, threshold, include_explanation)

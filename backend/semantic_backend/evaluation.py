@@ -1,5 +1,3 @@
-from typing import Any
-
 TONE_MAP = {
     ("Bug Report", "NEGATIVE"): "Frustrated",
     ("Bug Report", "NEUTRAL"): "Concerned",
@@ -33,7 +31,7 @@ ACTION_MAP = {
 }
 
 
-def analyze_tone(intent: str, sentiment: dict[str, Any]) -> str:
+def analyze_tone(intent, sentiment):
     label = sentiment.get("label", "NEUTRAL")
     score = sentiment.get("score", 0.0)
     if intent == "Complaint":
@@ -41,7 +39,7 @@ def analyze_tone(intent: str, sentiment: dict[str, Any]) -> str:
     return TONE_MAP.get((intent, label), "Neutral")
 
 
-def calculate_urgency(intent: str, sentiment: dict[str, Any]) -> str:
+def calculate_urgency(intent, sentiment):
     label = sentiment.get("label", "NEUTRAL")
     score = sentiment.get("score", 0.0)
     if intent == "Complaint":
@@ -49,12 +47,12 @@ def calculate_urgency(intent: str, sentiment: dict[str, Any]) -> str:
     return URGENCY_MAP.get((intent, label), "Low")
 
 
-def recommend_action(intent: str, urgency: str, sentiment: dict[str, Any] = None) -> str:
+def recommend_action(intent, urgency, sentiment=None):
     handler = ACTION_MAP.get(intent)
     return handler(urgency) if handler else "No Action Needed"
 
 
-def evaluate_business_context(intent: str, sentiment: dict[str, Any]) -> dict[str, str]:
+def evaluate_business_context(intent, sentiment):
     tone = analyze_tone(intent, sentiment)
     urgency = calculate_urgency(intent, sentiment)
     return {

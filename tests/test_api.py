@@ -3,8 +3,9 @@ import pytest
 
 
 def test_docs_and_openapi(client):
+    # Swagger /docs is removed/disabled per architecture specification
     res_docs = client.get("/docs")
-    assert res_docs.status_code == 200
+    assert res_docs.status_code == 404
 
     res_openapi = client.get("/openapi.json")
     assert res_openapi.status_code == 200
@@ -132,3 +133,33 @@ def test_cors_preflight(client):
     res = client.options("/semantic/analyze", headers=headers)
     assert res.status_code == 200
     assert res.headers.get("access-control-allow-origin") == "*"
+
+
+def test_import_is_fast_and_creates_no_files():
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    backend_pkg = Path(__file__).resolve().parent.parent / "backend" / "semantic_backend"
+    files_before = set(backend_pkg.rglob("*"))
+
+    code = """
+import time
+t0 = time.perf_counter()
+import semantic_backend.router
+elapsed = time.perf_counter() - t0
+assert elapsed < 1.0, f"Import took {elapsed}s"
+print(f"OK:{elapsed:.4f}")
+"""
+    result = subprocess.run(
+        [sys.executable, "-c", code],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, f"Import failed: {result.stderr}"
+    assert "OK:" in result.stdout
+
+    files_after = set(backend_pkg.rglob("*"))
+    # Filter out pycache
+    new_files = [f for f in (files_after - files_before) if "__pycache__" not in str(f)]
+    assert len(new_files) == 0, f"New files created at import: {new_files}"

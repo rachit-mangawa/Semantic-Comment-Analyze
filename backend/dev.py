@@ -2,17 +2,25 @@ import os
 import sys
 import uvicorn
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
-pkg_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "backend")
-if os.path.exists(pkg_dir) and pkg_dir not in sys.path:
-    sys.path.insert(0, pkg_dir)
-elif os.path.dirname(os.path.abspath(__file__)) not in sys.path:
-    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+backend_dir = os.path.dirname(os.path.abspath(__file__))
+if backend_dir not in sys.path:
+    sys.path.insert(0, backend_dir)
 
 from semantic_backend.router import router
 
 app = FastAPI(title="Semantic Backend Dev Server")
-app.include_router(router)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(router, prefix="/semantic")
 
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=8000)

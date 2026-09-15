@@ -1,15 +1,21 @@
 import csv
 import io
 import os
-from typing import Generator
+import tempfile
+from pathlib import Path
 
 from . import evaluation, nlp_engine
 
-TEMP_DIR = os.getenv("P2_TEMP_DIR", "/tmp/p2")
-os.makedirs(TEMP_DIR, exist_ok=True)
+
+def _get_temp_dir() -> Path:
+    base = os.getenv("P2_TEMP_DIR") or str(Path(tempfile.gettempdir()) / "p2")
+    p = Path(base)
+    p.mkdir(parents=True, exist_ok=True)
+    return p
 
 
-def stream_csv(file_obj, target_column="text") -> Generator[str, None, None]:
+def stream_csv(file_obj, target_column="text"):
+    _get_temp_dir()
     try:
         decoded_file = io.TextIOWrapper(file_obj, encoding="utf-8", errors="replace")
         reader = csv.DictReader(decoded_file)
@@ -44,8 +50,18 @@ def stream_csv(file_obj, target_column="text") -> Generator[str, None, None]:
     yield output.getvalue()
 
     chunk = []
+    row_count = 0
+    max_rows = int(os.getenv("P2_MAX_BATCH_ROWS", "10000"))
+
     for row in reader:
+        row_count += 1
+        if row_count > max_rows:
+            yield f"Error: Exceeded maximum allowed rows ({max_rows}).\n"
+            return
         row.pop(None, None)
+        text_val = row.get(target_column_upper, "")
+        if len(text_val) > 5000:
+            row[target_column_upper] = text_val[:5000]
         chunk.append(row)
         if len(chunk) == 32:
             yield _process_chunk(chunk, target_column_upper, writer, output)
@@ -55,7 +71,7 @@ def stream_csv(file_obj, target_column="text") -> Generator[str, None, None]:
         yield _process_chunk(chunk, target_column_upper, writer, output)
 
 
-def _process_chunk(chunk: list[dict], target_column: str, writer: csv.DictWriter, output: io.StringIO) -> str:
+def _process_chunk(chunk, target_column, writer, output):
     texts = [row.get(target_column, "") for row in chunk]
 
     embeddings = nlp_engine.get_embeddings_batch(texts)
