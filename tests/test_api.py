@@ -136,25 +136,38 @@ def test_cors_preflight(client):
 
 
 def test_import_is_fast_and_creates_no_files():
+    import os
     import subprocess
     import sys
     from pathlib import Path
 
-    backend_pkg = Path(__file__).resolve().parent.parent / "backend" / "semantic_backend"
+    backend_dir = Path(__file__).resolve().parent.parent / "backend"
+    backend_pkg = backend_dir / "semantic_backend"
     files_before = set(backend_pkg.rglob("*"))
 
-    code = """
+    env = os.environ.copy()
+    existing_pp = env.get("PYTHONPATH", "")
+    env["PYTHONPATH"] = f"{backend_dir}{os.pathsep}{existing_pp}" if existing_pp else str(backend_dir)
+
+    code = f"""
+import os
+import sys
+backend_dir = r"{backend_dir}"
+if backend_dir not in sys.path:
+    sys.path.insert(0, backend_dir)
 import time
 t0 = time.perf_counter()
 import semantic_backend.router
 elapsed = time.perf_counter() - t0
-assert elapsed < 1.0, f"Import took {elapsed}s"
-print(f"OK:{elapsed:.4f}")
+assert elapsed < 1.0, f"Import took {{elapsed}}s"
+print(f"OK:{{elapsed:.4f}}")
 """
     result = subprocess.run(
         [sys.executable, "-c", code],
         capture_output=True,
         text=True,
+        env=env,
+        cwd=str(backend_dir),
     )
     assert result.returncode == 0, f"Import failed: {result.stderr}"
     assert "OK:" in result.stdout
