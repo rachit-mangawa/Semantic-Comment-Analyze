@@ -1,21 +1,11 @@
 import csv
 import io
 import os
-import tempfile
-from pathlib import Path
 
 from . import evaluation, nlp_engine
 
 
-def _get_temp_dir() -> Path:
-    base = os.getenv("P2_TEMP_DIR") or str(Path(tempfile.gettempdir()) / "p2")
-    p = Path(base)
-    p.mkdir(parents=True, exist_ok=True)
-    return p
-
-
 def stream_csv(file_obj, target_column="text"):
-    _get_temp_dir()
     try:
         decoded_file = io.TextIOWrapper(file_obj, encoding="utf-8", errors="replace")
         reader = csv.DictReader(decoded_file)

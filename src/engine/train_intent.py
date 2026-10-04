@@ -1,3 +1,4 @@
-"""Backward compatibility shim forwarding to backend.engine.train_intent."""
+from semantic_backend.nlp_engine import resolve_data_file, train_head_if_missing
 
-from backend.engine.train_intent import *
+if __name__ == "__main__":
+    train_head_if_missing(resolve_data_file("local_model_head.pkl"))

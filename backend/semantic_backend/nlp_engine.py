@@ -17,19 +17,15 @@ DEFAULT_INTENT_LABELS = [
 
 def _get_data_dir() -> Path:
     override = os.getenv("P2_DATA_DIR")
-    if override:
-        p = Path(override)
-        if p.exists():
-            return p
+    if override and Path(override).exists():
+        return Path(override)
     return Path(__file__).parent / "data"
 
 
 def resolve_data_file(filename: str) -> Path:
-    env_override = os.getenv(f"P2_{filename.upper().replace('.', '_')}")
-    if env_override:
-        p = Path(env_override)
-        if p.exists():
-            return p
+    override = os.getenv(f"P2_{filename.upper().replace('.', '_')}")
+    if override and Path(override).exists():
+        return Path(override)
     return _get_data_dir() / filename
 
 
@@ -84,18 +80,6 @@ def get_classifier_head():
         return train_head_if_missing(head_path)
     return joblib.load(head_path)
 
-
-@lru_cache(maxsize=1)
-def get_ner_model():
-    from transformers import pipeline
-
-    cache_dir = _get_model_cache_dir()
-    return pipeline(
-        "ner",
-        aggregation_strategy="simple",
-        device=-1,
-        model_kwargs={"cache_dir": cache_dir} if cache_dir else None,
-    )
 
 
 @lru_cache(maxsize=1)
@@ -158,9 +142,7 @@ def classify_intents_batch(texts: list[str], threshold: float = 0.5, embeddings=
 
     for idx, probs in zip(valid_indices, probs_batch):
         sorted_pairs = sorted(zip(labels, probs), key=lambda x: x[1], reverse=True)
-        filtered = [p for p in sorted_pairs if p[1] >= threshold]
-        if not filtered:
-            filtered = [sorted_pairs[0]]
+        filtered = [p for p in sorted_pairs if p[1] >= threshold] or [sorted_pairs[0]]
 
         results[idx] = {
             "labels": [str(item[0]) for item in filtered[:3]],
@@ -180,32 +162,25 @@ def explain_intent(text: str):
     orig_res = classify_intents_batch([text])[0]
     orig_intents = orig_res.get("all_intents", {})
 
-    masked_texts = []
-    for i in range(len(words)):
-        masked = words[:i] + words[i + 1 :]
-        masked_texts.append(" ".join(masked))
-
+    masked_texts = [" ".join(words[:i] + words[i + 1 :]) for i in range(len(words))]
     masked_results = classify_intents_batch(masked_texts)
 
     contributions = []
-    for i, res in enumerate(masked_results):
+    for word, res in zip(words, masked_results):
         masked_intents = res.get("all_intents", {})
-
-        best_intent = None
-        max_drop = 0.0
+        best_intent, max_drop = "None", 0.0
 
         for intent, orig_prob in orig_intents.items():
-            masked_prob = masked_intents.get(intent, 0.0)
-            drop = orig_prob - masked_prob
+            drop = orig_prob - masked_intents.get(intent, 0.0)
             if drop > max_drop:
                 max_drop = drop
                 best_intent = intent
 
         contributions.append(
             {
-                "word": words[i],
+                "word": word,
                 "contribution": float(max_drop),
-                "primary_intent": best_intent if best_intent else "None",
+                "primary_intent": best_intent,
             }
         )
 
@@ -225,30 +200,11 @@ def analyze_sentiments_batch(texts: list[str]):
     return [{"label": sent["label"].upper(), "score": float(sent["score"])} for sent in sentiments]
 
 
-def extract_entities(text: str):
-    if not text or not text.strip():
-        return []
-    return get_ner_model()(text[:2000])
-
-
-def extract_entities_batch(texts: list[str]):
-    valid_texts = [t[:2000] if t and t.strip() and t != "nan" else "" for t in texts]
-    ner = get_ner_model()
-    return ner([t[:2000] for t in valid_texts], batch_size=32)
-
-
 def analyze_sync(text: str, threshold: float = 0.5, include_explanation: bool = False):
-    intent = classify_intent(text, threshold)
-    sentiment = analyze_sentiment(text)
-
-    explainability = []
-    if include_explanation:
-        explainability = explain_intent(text)
-
     return {
-        "intent": intent,
-        "sentiment": sentiment,
-        "explainability": explainability,
+        "intent": classify_intent(text, threshold),
+        "sentiment": analyze_sentiment(text),
+        "explainability": explain_intent(text) if include_explanation else [],
     }
 
 

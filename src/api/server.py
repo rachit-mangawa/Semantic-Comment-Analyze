@@ -1,6 +1,4 @@
-import logging
 import os
-from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,13 +8,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from semantic_backend.router import router
 
-logger = logging.getLogger(__name__)
-
-app = FastAPI(
-    title="Semantic NLP Platform API",
-    docs_url=None,
-    redoc_url=None,
-)
+app = FastAPI(title="Semantic NLP Platform API", docs_url=None, redoc_url=None)
 
 app.add_middleware(
     CORSMiddleware,
@@ -38,14 +30,7 @@ frontend_dist = os.path.abspath(
 async def spa_fallback_handler(request: Request, exc: StarletteHTTPException):
     if exc.status_code == 404:
         path = request.url.path
-        if (
-            not path.startswith("/semantic")
-            and not path.startswith("/sementic")
-            and not path.startswith("/api")
-            and not path.startswith("/docs")
-            and not path.startswith("/redoc")
-            and not path.startswith("/openapi.json")
-        ):
+        if not path.startswith(("/semantic", "/sementic", "/api", "/docs", "/redoc", "/openapi.json")):
             index_path = os.path.join(frontend_dist, "index.html")
             if os.path.exists(index_path):
                 return FileResponse(index_path)
