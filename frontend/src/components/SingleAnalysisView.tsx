@@ -275,7 +275,7 @@ export const SingleAnalysisView = () => {
         </div>
 
         {/* Integrated Controls & Configuration Toolbar */}
-        <div className="mt-5 pt-4 border-t border-hairline-light flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 bg-canvas-cream/50 p-3.5 sm:p-4 rounded-xl border border-hairline-light">
+        <div className="mt-5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 bg-canvas-cream/50 p-3.5 sm:p-4 rounded-xl border border-hairline-light">
           {/* Left: Slider + Value + Quick Preset Pills */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 flex-1">
             <div className="flex items-center gap-2.5 shrink-0">
