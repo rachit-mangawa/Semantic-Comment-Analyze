@@ -150,14 +150,25 @@ export const BatchProcessingView = () => {
       formData.append("targetColumn", targetColumn);
       formData.append("column", targetColumn);
 
-      const res = await fetch("/semantic/batch", {
+      const res = await fetch("/sementic/batch", {
         method: "POST",
         body: formData,
       });
 
       if (!res.ok) {
         const errorText = await res.text();
-        throw new Error(errorText || "Batch streaming processing failed.");
+        let message = `Batch processing failed (HTTP ${res.status})`;
+        if (errorText && !errorText.trim().startsWith("<")) {
+          try {
+            const data = JSON.parse(errorText);
+            message = data.detail || errorText;
+          } catch {
+            message = errorText;
+          }
+        } else if (res.status === 405) {
+          message = "Batch endpoint not allowed (HTTP 405). Please verify backend routing.";
+        }
+        throw new Error(message);
       }
 
       const reader = res.body?.getReader();

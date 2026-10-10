@@ -23,7 +23,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(router, prefix="/semantic")
+app.include_router(router, prefix="/sementic")
 
 frontend_dist = os.path.abspath(os.path.join(backend_dir, "..", "frontend", "dist"))
 
@@ -32,7 +32,7 @@ frontend_dist = os.path.abspath(os.path.join(backend_dir, "..", "frontend", "dis
 async def spa_fallback_handler(request: Request, exc: StarletteHTTPException):
     if exc.status_code == 404:
         path = request.url.path
-        if not path.startswith(("/semantic", "/api", "/docs", "/redoc", "/openapi.json")):
+        if not path.startswith(("/sementic", "/docs", "/redoc", "/openapi.json")):
             index_path = os.path.join(frontend_dist, "index.html")
             if os.path.exists(index_path):
                 return FileResponse(index_path)

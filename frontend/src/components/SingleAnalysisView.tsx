@@ -139,13 +139,27 @@ export const SingleAnalysisView = () => {
     const startTime = performance.now();
 
     try {
-      const res = await fetch("/semantic/analyze", {
+      const res = await fetch("/sementic/single", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text, threshold, include_explanation: true }),
       });
 
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) {
+        const errorText = await res.text();
+        let message = `Analysis request failed (HTTP ${res.status})`;
+        if (errorText && !errorText.trim().startsWith("<")) {
+          try {
+            const data = JSON.parse(errorText);
+            message = data.detail || errorText;
+          } catch {
+            message = errorText;
+          }
+        } else if (res.status === 405) {
+          message = "Analysis endpoint not allowed (HTTP 405). Please verify backend routing.";
+        }
+        throw new Error(message);
+      }
       const data = await res.json();
       setLatencyMs(Math.round(performance.now() - startTime));
       setResult(data);
