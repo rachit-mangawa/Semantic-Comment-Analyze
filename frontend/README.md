@@ -70,4 +70,4 @@ npm run build
 Type-checks with `tsc` and compiles static assets into `dist/` with relative asset links (`base: "./"`).
 
 ### 4. GitHub Pages Deployment
-Assets build automatically via GitHub Actions on pushes to `main` using `.github/workflows/deploy.yml`. Because routing uses hash-based URLs (`#/overview`, `#/single`, `#/batch`, `#/architecture`), pages reload without requiring server-side fallback rules.
+Assets build automatically via GitHub Actions on pushes to `main` using `.github/workflows/deploy.yml`. Because routing uses hash-based URLs (`#/overview`, `#/analyze`, `#/batch`, `#/architecture`), pages reload without requiring server-side fallback rules.

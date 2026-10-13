@@ -29,9 +29,9 @@ import {
   Copy,
   Check,
   Cpu,
-  Terminal,
   Activity
 } from "lucide-react";
+import { API_BASE } from "@/config";
 
 type ExplainabilityData = { word: string; contribution: number; primary_intent: string }[];
 
@@ -45,9 +45,9 @@ type AnalysisResult = {
   };
   sentiment: { label: string; score: number };
   explainability: ExplainabilityData;
-  tone?: string;
-  urgency?: string;
-  recommended_action?: string;
+  tone: string;
+  urgency: string;
+  recommended_action: string;
 };
 
 const INTENT_COLORS: Record<string, { rgb: string; hex: string; text: string; bg: string }> = {
@@ -116,10 +116,26 @@ export const SingleAnalysisView = () => {
   const [text, setText] = useState("");
   const [threshold, setThreshold] = useState(0.5);
   const [loading, setLoading] = useState(false);
+  const [loadingSeconds, setLoadingSeconds] = useState(0);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState("");
   const [latencyMs, setLatencyMs] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval> | undefined;
+    if (loading) {
+      setLoadingSeconds(0);
+      interval = setInterval(() => {
+        setLoadingSeconds((prev) => prev + 1);
+      }, 1000);
+    } else {
+      setLoadingSeconds(0);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [loading]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -139,7 +155,7 @@ export const SingleAnalysisView = () => {
     const startTime = performance.now();
 
     try {
-      const res = await fetch("/sementic/single", {
+      const res = await fetch(`${API_BASE}/semantic/analyze`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text, threshold, include_explanation: true }),
@@ -157,6 +173,8 @@ export const SingleAnalysisView = () => {
           }
         } else if (res.status === 405) {
           message = "Analysis endpoint not allowed (HTTP 405). Please verify backend routing.";
+        } else if (res.status === 502 || res.status === 503 || res.status === 504) {
+          message = `Backend service cold-starting or temporarily unavailable (HTTP ${res.status}). If the Hugging Face Space is starting up, please wait a moment and try again.`;
         }
         throw new Error(message);
       }
@@ -164,7 +182,13 @@ export const SingleAnalysisView = () => {
       setLatencyMs(Math.round(performance.now() - startTime));
       setResult(data);
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Failed to connect to API.");
+      if (e instanceof TypeError && e.message.toLowerCase().includes("fetch")) {
+        setError(
+          `Network Error: Failed to reach backend at ${API_BASE || "http://127.0.0.1:8000"}/semantic/analyze. Verify the server is running, internet is connected, and CORS is permitted.`
+        );
+      } else {
+        setError(e instanceof Error ? e.message : "Failed to connect to API.");
+      }
     } finally {
       setLoading(false);
     }
@@ -357,15 +381,30 @@ export const SingleAnalysisView = () => {
                 )
               }
             >
-              {loading ? "Running Pipeline..." : "Run Semantic Analysis"}
+              {loading
+                ? loadingSeconds >= 5
+                  ? `Waking Space (${loadingSeconds}s)...`
+                  : `Running Pipeline (${loadingSeconds}s)...`
+                : "Run Semantic Analysis"}
             </Button>
           </div>
         </div>
 
         {error && (
-          <div className="mt-4 p-3.5 rounded-md bg-rose-50 border border-rose-200 text-rose-800 text-[13px] flex items-center gap-2">
-            <AlertCircle size={16} className="shrink-0" />
-            <span>{error}</span>
+          <div className="mt-4 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-[13px] flex items-start justify-between gap-3 shadow-xs">
+            <div className="flex items-start gap-2.5">
+              <AlertCircle size={18} className="shrink-0 text-rose-600 mt-0.5" />
+              <div>
+                <p className="font-semibold text-rose-950 mb-0.5">Analysis Failed</p>
+                <p className="leading-relaxed text-rose-800">{error}</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setError("")}
+              className="text-[12px] font-mono text-rose-600 hover:text-rose-900 underline ml-2 shrink-0 cursor-pointer"
+            >
+              Dismiss
+            </button>
           </div>
         )}
       </div>
@@ -397,6 +436,21 @@ export const SingleAnalysisView = () => {
                   <span>CPU In-Memory Engine Active</span>
                 </div>
               </div>
+
+              {/* Cold start reassurance banner for 60-180s Hugging Face Space boots */}
+              {loadingSeconds >= 5 && (
+                <div className="p-3.5 bg-amber-50/90 border border-amber-200 rounded-lg flex items-center justify-between text-[12px] text-amber-900 font-sans shadow-2xs">
+                  <div className="flex items-center gap-2.5">
+                    <Clock size={15} className="text-amber-700 animate-spin shrink-0" />
+                    <span>
+                      Hugging Face Space may be waking from cold start (~60–180s on initial wake). Your request is actively waiting for response...
+                    </span>
+                  </div>
+                  <span className="font-mono font-bold tabular-nums px-2.5 py-1 bg-amber-100 rounded border border-amber-300 shrink-0 ml-3">
+                    {loadingSeconds}s elapsed
+                  </span>
+                </div>
+              )}
 
               {/* 3-Stage Progress Timeline */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

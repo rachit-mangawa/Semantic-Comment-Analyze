@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/Button";
@@ -15,8 +15,10 @@ import {
   Play,
   RotateCcw,
   ArrowRight,
-  Database
+  Database,
+  Clock,
 } from "lucide-react";
+import { API_BASE } from "@/config";
 
 const SAMPLE_CSV_CONTENT = `id,text,source
 1,"The application crashes every time I click export on large PDF tables!",zendesk
@@ -66,6 +68,7 @@ export const BatchProcessingView = () => {
   const [targetColumn, setTargetColumn] = useState("text");
   const [threshold, setThreshold] = useState(0.5);
   const [loading, setLoading] = useState(false);
+  const [loadingSeconds, setLoadingSeconds] = useState(0);
   const [error, setError] = useState("");
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [previewRows, setPreviewRows] = useState<string[][]>([]);
@@ -76,6 +79,21 @@ export const BatchProcessingView = () => {
   const [elapsedMs, setElapsedMs] = useState<number | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval> | undefined;
+    if (loading) {
+      setLoadingSeconds(0);
+      interval = setInterval(() => {
+        setLoadingSeconds((prev) => prev + 1);
+      }, 1000);
+    } else {
+      setLoadingSeconds(0);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [loading]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -150,7 +168,7 @@ export const BatchProcessingView = () => {
       formData.append("targetColumn", targetColumn);
       formData.append("column", targetColumn);
 
-      const res = await fetch("/sementic/batch", {
+      const res = await fetch(`${API_BASE}/semantic/batch`, {
         method: "POST",
         body: formData,
       });
@@ -167,6 +185,8 @@ export const BatchProcessingView = () => {
           }
         } else if (res.status === 405) {
           message = "Batch endpoint not allowed (HTTP 405). Please verify backend routing.";
+        } else if (res.status === 502 || res.status === 503 || res.status === 504) {
+          message = `Backend service cold-starting or temporarily unavailable (HTTP ${res.status}). If the Hugging Face Space is starting up, please wait a moment and try again.`;
         }
         throw new Error(message);
       }
@@ -203,7 +223,13 @@ export const BatchProcessingView = () => {
       const finalBlob = new Blob([csvAccumulator], { type: "text/csv;charset=utf-8;" });
       setDownloadUrl(URL.createObjectURL(finalBlob));
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Batch streaming execution encountered an error.");
+      if (e instanceof TypeError && e.message.toLowerCase().includes("fetch")) {
+        setError(
+          `Network Error: Failed to reach backend at ${API_BASE || "http://127.0.0.1:8000"}/semantic/batch. Verify the server is running, internet is connected, and CORS is permitted.`
+        );
+      } else {
+        setError(e instanceof Error ? e.message : "Batch streaming execution encountered an error.");
+      }
     } finally {
       setLoading(false);
     }
@@ -397,7 +423,11 @@ export const BatchProcessingView = () => {
                 )
               }
             >
-              {loading ? "Streaming Analysis..." : "Start Batch Processing"}
+              {loading
+                ? loadingSeconds >= 5
+                  ? `Waking Space (${loadingSeconds}s)...`
+                  : `Streaming (${loadingSeconds}s)...`
+                : "Start Batch Processing"}
             </Button>
 
             {file && !loading && (
@@ -421,20 +451,27 @@ export const BatchProcessingView = () => {
               <span>
                 Processed <strong className="text-ink tabular-nums">{processedCount}</strong> rows
               </span>
-              {elapsedMs && (
-                <>
-                  <span>•</span>
-                  <span className="tabular-nums">{(elapsedMs / 1000).toFixed(1)}s</span>
-                </>
-              )}
+              <span>•</span>
+              <span className="tabular-nums">{loadingSeconds}s elapsed</span>
             </div>
           )}
         </div>
 
         {error && (
-          <div className="p-3.5 rounded-md bg-rose-50 border border-rose-200 text-rose-800 text-[13px] flex items-center gap-2.5">
-            <AlertCircle size={16} className="shrink-0" />
-            <span>{error}</span>
+          <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-[13px] flex items-start justify-between gap-3 shadow-xs">
+            <div className="flex items-start gap-2.5">
+              <AlertCircle size={18} className="shrink-0 text-rose-600 mt-0.5" />
+              <div>
+                <p className="font-semibold text-rose-950 mb-0.5">Batch Processing Failed</p>
+                <p className="leading-relaxed text-rose-800">{error}</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setError("")}
+              className="text-[12px] font-mono text-rose-600 hover:text-rose-900 underline ml-2 shrink-0 cursor-pointer"
+            >
+              Dismiss
+            </button>
           </div>
         )}
       </div>
@@ -465,6 +502,21 @@ export const BatchProcessingView = () => {
                   Constant RAM Bound: ~45MB
                 </div>
               </div>
+
+              {/* Cold start reassurance banner for 60-180s Hugging Face Space boots */}
+              {loadingSeconds >= 5 && (
+                <div className="p-3.5 bg-amber-50/90 border border-amber-200 rounded-lg flex items-center justify-between text-[12px] text-amber-900 font-sans shadow-2xs">
+                  <div className="flex items-center gap-2.5">
+                    <Clock size={15} className="text-amber-700 animate-spin shrink-0" />
+                    <span>
+                      Hugging Face Space may be waking from cold start (~60–180s on initial wake). Streaming chunks will initiate as soon as the container is ready...
+                    </span>
+                  </div>
+                  <span className="font-mono font-bold tabular-nums px-2.5 py-1 bg-amber-100 rounded border border-amber-300 shrink-0 ml-3">
+                    {loadingSeconds}s elapsed
+                  </span>
+                </div>
+              )}
 
               {/* Shimmering Table Headers & Rows Skeleton */}
               <div className="space-y-3">

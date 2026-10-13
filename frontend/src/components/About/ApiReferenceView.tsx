@@ -1,11 +1,14 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Copy, Check, Terminal, Code2 } from "lucide-react";
+import { API_BASE } from "@/config";
 
 export const ApiReferenceView = () => {
   const [activeEndpoint, setActiveEndpoint] = useState<"analyze" | "batch">("analyze");
   const [activeLang, setActiveLang] = useState<"curl" | "python" | "typescript">("curl");
   const [copied, setCopied] = useState<boolean>(false);
+
+  const baseEndpoint = API_BASE ? API_BASE : "http://127.0.0.1:8000";
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -17,7 +20,7 @@ export const ApiReferenceView = () => {
     if (activeEndpoint === "analyze") {
       switch (activeLang) {
         case "curl":
-          return `curl -X POST "http://127.0.0.1:8000/sementic/single" \\
+          return `curl -X POST "${baseEndpoint}/semantic/analyze" \\
   -H "Content-Type: application/json" \\
   -d '{
     "text": "The app freezes completely whenever I click export on large PDF tables!",
@@ -27,7 +30,7 @@ export const ApiReferenceView = () => {
         case "python":
           return `import requests
 
-url = "http://127.0.0.1:8000/sementic/single"
+url = "${baseEndpoint}/semantic/analyze"
 payload = {
     "text": "The app freezes completely whenever I click export on large PDF tables!",
     "threshold": 0.5,
@@ -43,7 +46,7 @@ print(f"Tone:       {data['tone']}")
 print(f"Urgency:    {data['urgency']}")
 print(f"Action:     {data['recommended_action']}")`;
         case "typescript":
-          return `const res = await fetch("/sementic/single", {
+          return `const res = await fetch(\`\${API_BASE}/semantic/analyze\`, {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
@@ -59,7 +62,7 @@ console.log("Analysis Result:", data);`;
     } else {
       switch (activeLang) {
         case "curl":
-          return `curl -X POST "http://127.0.0.1:8000/sementic/batch" \\
+          return `curl -X POST "${baseEndpoint}/semantic/batch" \\
   -F "file=@customer_tickets.csv" \\
   -F "targetColumn=feedback" \\
   -F "threshold=0.5" \\
@@ -67,7 +70,7 @@ console.log("Analysis Result:", data);`;
         case "python":
           return `import requests
 
-url = "http://127.0.0.1:8000/sementic/batch"
+url = "${baseEndpoint}/semantic/batch"
 
 with open("customer_tickets.csv", "rb") as f:
     files = {"file": f}
@@ -85,7 +88,7 @@ formData.append("file", fileInput.files[0]);
 formData.append("targetColumn", "feedback");
 formData.append("threshold", "0.5");
 
-const res = await fetch("/sementic/batch", {
+const res = await fetch(\`\${API_BASE}/semantic/batch\`, {
   method: "POST",
   body: formData,
 });
@@ -149,7 +152,7 @@ const reader = res.body?.getReader();
                 : "bg-canvas-cream border border-hairline-light text-shade-60 hover:text-ink hover:bg-white"
             }`}
           >
-            POST /sementic/single
+            POST /semantic/analyze
           </button>
           <button
             onClick={() => setActiveEndpoint("batch")}
@@ -159,7 +162,7 @@ const reader = res.body?.getReader();
                 : "bg-canvas-cream border border-hairline-light text-shade-60 hover:text-ink hover:bg-white"
             }`}
           >
-            POST /sementic/batch
+            POST /semantic/batch
           </button>
         </div>
       </div>

@@ -6,6 +6,7 @@ dist/
 
 # Env & OS
 .env*
+!.env.example
 .DS_Store
 Thumbs.db
 *.local
