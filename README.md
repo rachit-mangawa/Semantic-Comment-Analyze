@@ -100,7 +100,7 @@ Measurements on an 8-core x86 CPU:
 The frontend client is configured for GitHub Pages with automated builds via `.github/workflows/deploy.yml`:
 [https://rachit-mangawa.github.io/Semantic-Comment-Analyze/](https://rachit-mangawa.github.io/Semantic-Comment-Analyze/)
 
-Client-side hash routing (`#/overview`, `#/single`, `#/batch`, `#/architecture`) allows direct linking and browser history navigation without server redirects.
+Client-side hash routing (`#/overview`, `#/analyze`, `#/batch`, `#/architecture`) allows direct linking and browser history navigation without server redirects.
 
 ---
 

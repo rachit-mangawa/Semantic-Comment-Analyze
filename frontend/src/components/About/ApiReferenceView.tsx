@@ -8,7 +8,7 @@ export const ApiReferenceView = () => {
   const [activeLang, setActiveLang] = useState<"curl" | "python" | "typescript">("curl");
   const [copied, setCopied] = useState<boolean>(false);
 
-  const baseEndpoint = API_BASE ? API_BASE : "http://127.0.0.1:8000";
+  const baseEndpoint = API_BASE;
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);

@@ -163,18 +163,18 @@ export const SingleAnalysisView = () => {
 
       if (!res.ok) {
         const errorText = await res.text();
-        let message = `Analysis request failed (HTTP ${res.status})`;
+        let message = `HTTP ${res.status}: Analysis request failed`;
         if (errorText && !errorText.trim().startsWith("<")) {
           try {
             const data = JSON.parse(errorText);
-            message = data.detail || errorText;
+            message = data.detail ? `HTTP ${res.status}: ${data.detail}` : `HTTP ${res.status}: ${errorText}`;
           } catch {
-            message = errorText;
+            message = `HTTP ${res.status}: ${errorText}`;
           }
         } else if (res.status === 405) {
-          message = "Analysis endpoint not allowed (HTTP 405). Please verify backend routing.";
+          message = "HTTP 405 Method Not Allowed: Check endpoint routing.";
         } else if (res.status === 502 || res.status === 503 || res.status === 504) {
-          message = `Backend service cold-starting or temporarily unavailable (HTTP ${res.status}). If the Hugging Face Space is starting up, please wait a moment and try again.`;
+          message = `HTTP ${res.status}: Waking up the server, first request can take a minute. Please retry shortly.`;
         }
         throw new Error(message);
       }
@@ -184,7 +184,7 @@ export const SingleAnalysisView = () => {
     } catch (e: unknown) {
       if (e instanceof TypeError && e.message.toLowerCase().includes("fetch")) {
         setError(
-          `Network Error: Failed to reach backend at ${API_BASE || "http://127.0.0.1:8000"}/semantic/analyze. Verify the server is running, internet is connected, and CORS is permitted.`
+          `Network / CORS Error: Failed to reach backend at ${API_BASE}/semantic/analyze. The server may be waking up, offline, or cross-origin headers may be missing.`
         );
       } else {
         setError(e instanceof Error ? e.message : "Failed to connect to API.");
@@ -443,7 +443,7 @@ export const SingleAnalysisView = () => {
                   <div className="flex items-center gap-2.5">
                     <Clock size={15} className="text-amber-700 animate-spin shrink-0" />
                     <span>
-                      Hugging Face Space may be waking from cold start (~60–180s on initial wake). Your request is actively waiting for response...
+                      Waking up the server, first request can take a minute (~60–180s cold start). Your request is actively waiting for response...
                     </span>
                   </div>
                   <span className="font-mono font-bold tabular-nums px-2.5 py-1 bg-amber-100 rounded border border-amber-300 shrink-0 ml-3">
