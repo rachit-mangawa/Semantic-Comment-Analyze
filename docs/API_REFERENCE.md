@@ -1,70 +1,62 @@
-# REST API Reference & Specification
+# REST API reference and specification
 
-Complete API reference for the Semantic Comment Analysis platform. All endpoints are hosted locally via FastAPI with OpenAPI 3.1 documentation available interactively at `/docs`.
+This document specifies the HTTP endpoints for the Semantic Comment Analysis backend. You can access the API locally or via the hosted Hugging Face Space.
 
----
+## Base URLs
 
-## Base URL
+- Local development: `http://127.0.0.1:8000`
+- Hosted deployment: `https://idkhowtocodefr-hf-backend.hf.space`
 
-```http
-http://127.0.0.1:8000
-```
+Interactive OpenAPI documentation runs at `/docs` when the server is started locally.
 
----
+## Endpoints overview
 
-## Endpoints Summary
-
-| Method | Endpoint | Description | Content-Type | Response Type |
+| Method | Endpoint | Request format | Response format | Purpose |
 | :--- | :--- | :--- | :--- | :--- |
-| `POST` | `/semantic/analyze` | Single comment semantic analysis & explainability | `application/json` | `application/json` |
-| `POST` | `/semantic/batch` | High-throughput streaming CSV processor | `multipart/form-data` | `text/csv` (Chunked) |
-| `GET` | `/` | Web Application Static Mount (React SPA) | — | `text/html` |
-| `GET` | `/docs` | Interactive Swagger API documentation | — | `text/html` |
+| `POST` | `/semantic/analyze` | `application/json` | `application/json` | Analyzes single feedback text with optional token attribution |
+| `POST` | `/semantic/batch` | `multipart/form-data` | `text/csv` (streamed) | Streams processed CSV rows in 32-sample micro-batches |
+| `GET` | `/semantic/health` | None | `application/json` | Returns service health and in-memory model status |
 
-> **Note on Aliases & Backward Compatibility:**
-> - `/sementic/analyze` and `/sementic/batch` are directly supported aliases.
-> - Legacy `/api/analyze` and `/api/batch` paths remain supported for backward compatibility.
+## 1. Single comment analysis (`POST /semantic/analyze`)
 
----
+Evaluates input text for intent, sentiment, token attribution (explainability), and business action rules.
 
-## 1. Single Text Analysis (`POST /semantic/analyze`)
+### Headers
 
-Executes intent classification, sentiment analysis, entity extraction, optional token occlusion explainability, and deterministic business context evaluation.
-
-### Request Headers
 ```http
 Content-Type: application/json
 ```
 
-### Request Parameters
+### Request body
 
 | Field | Type | Required | Default | Description |
 | :--- | :--- | :--- | :--- | :--- |
-| `text` | `string` | **Yes** | — | Raw feedback, customer comment, or support ticket. Must not be empty or whitespace. |
-| `threshold` | `float` | No | `0.5` | Confidence cutoff threshold $[0.0, 1.0]$. Intents below this score are filtered out. |
-| `include_explanation` | `boolean` | No | `false` | When `true`, runs the leave-one-out Occlusion Algorithm to generate token-level attribution. |
+| `text` | string | Yes | None | Feedback or comment string, up to 5,000 characters. Must not be empty. |
+| `threshold` | float | No | `0.5` | Minimum confidence score (0.0 to 1.0) required to include a label in top predictions. |
+| `include_explanation` | boolean | No | `false` | When true, runs token-level leave-one-out occlusion to compute word attribution. |
 
-### Example Request (`curl`)
+### Example request
+
 ```bash
 curl -X POST "http://127.0.0.1:8000/semantic/analyze" \
-     -H "Content-Type: application/json" \
-     -d '{
-       "text": "The app freezes completely whenever I try to export reports to PDF format.",
-       "threshold": 0.5,
-       "include_explanation": true
-     }'
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "The app freezes completely whenever I click export on large PDF tables.",
+    "threshold": 0.5,
+    "include_explanation": true
+  }'
 ```
 
-### Response Schema (`200 OK`)
+### Success response (`200 OK`)
 
 ```json
 {
-  "text": "The app freezes completely whenever I try to export reports to PDF format.",
+  "text": "The app freezes completely whenever I click export on large PDF tables.",
   "intent": {
     "top_intent": "Bug Report",
     "top_confidence": 0.9412,
-    "labels": ["Bug Report", "Complaint", "Question"],
-    "scores": [0.9412, 0.0418, 0.0121],
+    "labels": ["Bug Report", "Complaint"],
+    "scores": [0.9412, 0.0418],
     "all_intents": {
       "Bug Report": 0.9412,
       "Complaint": 0.0418,
@@ -77,12 +69,22 @@ curl -X POST "http://127.0.0.1:8000/semantic/analyze" \
     "label": "NEGATIVE",
     "score": 0.9654
   },
-  "entities": [],
   "explainability": [
-    { "word": "freezes", "contribution": 0.412, "primary_intent": "Bug Report" },
-    { "word": "completely", "contribution": 0.128, "primary_intent": "Bug Report" },
-    { "word": "export", "contribution": 0.084, "primary_intent": "Bug Report" },
-    { "word": "PDF", "contribution": 0.041, "primary_intent": "Bug Report" }
+    {
+      "word": "freezes",
+      "contribution": 0.412,
+      "primary_intent": "Bug Report"
+    },
+    {
+      "word": "completely",
+      "contribution": 0.128,
+      "primary_intent": "Bug Report"
+    },
+    {
+      "word": "export",
+      "contribution": 0.084,
+      "primary_intent": "Bug Report"
+    }
   ],
   "tone": "Frustrated",
   "urgency": "High",
@@ -90,16 +92,22 @@ curl -X POST "http://127.0.0.1:8000/semantic/analyze" \
 }
 ```
 
-### Error Responses
+### Error responses
 
-#### `400 Bad Request` (Empty input)
+#### `400 Bad Request`
+
+Returned when the text input is missing or consists only of whitespace.
+
 ```json
 {
   "detail": "Text cannot be empty"
 }
 ```
 
-#### `422 Unprocessable Entity` (Schema validation failure)
+#### `422 Unprocessable Entity`
+
+Returned when payload validation fails (for example, missing body or incorrect field types).
+
 ```json
 {
   "detail": [
@@ -112,48 +120,72 @@ curl -X POST "http://127.0.0.1:8000/semantic/analyze" \
 }
 ```
 
----
+## 2. Streaming batch processing (`POST /semantic/batch`)
 
-## 2. Streaming Batch CSV Processing (`POST /semantic/batch`)
+Processes CSV files using Python generators. It streams annotated rows back to the client in 32-sample micro-batches rather than accumulating the entire dataset in RAM.
 
-Processes multi-thousand-row CSV feedback files using a generator-based chunking pipeline. Streams annotated CSV rows back in real time over HTTP without loading the complete dataset into server RAM.
+### Headers
 
-### Request Headers
 ```http
 Content-Type: multipart/form-data
 ```
 
-### Form Parameters
+### Form fields
 
 | Field | Type | Required | Default | Description |
 | :--- | :--- | :--- | :--- | :--- |
-| `file` | `binary` (file) | **Yes** | — | Uploaded `.csv` file. Must contain a text header column. |
-| `targetColumn` | `string` | No | `"text"` | Name of the column containing feedback text. Case-insensitive matching. |
-| `threshold` | `float` | No | `0.5` | Confidence cutoff threshold $[0.0, 1.0]$. |
+| `file` | file | Yes | None | CSV file upload (maximum 10 MB). Must contain a header row. |
+| `targetColumn` | string | No | `"text"` | Name of the column containing the text to evaluate (case-insensitive). |
+| `threshold` | float | No | `0.5` | Minimum confidence cutoff (0.0 to 1.0). |
 
-### Example Request (`curl`)
+### Example request
+
 ```bash
 curl -X POST "http://127.0.0.1:8000/semantic/batch" \
-     -F "file=@customer_feedback.csv" \
-     -F "targetColumn=feedback" \
-     -F "threshold=0.5" \
-     --output analyzed_feedback.csv
+  -F "file=@customer_tickets.csv" \
+  -F "targetColumn=feedback" \
+  -F "threshold=0.5" \
+  --output analyzed_results.csv
 ```
 
-### Streaming Behavior & Appended Headers
+### Output format
 
-The response stream immediately yields the CSV header followed by 32-sample micro-batches. The following metadata columns are appended:
+The response stream writes the original CSV headers followed by seven computed columns:
 
 ```csv
 ORIGINAL_COLS...,INTENT,CONFIDENCE,SENTIMENT,SENTIMENT_SCORE,TONE,URGENCY,RECOMMENDED_ACTION
-"Your service was phenomenal today!",Praise,0.98,POSITIVE,0.99,Appreciative,Low,Share with Team
-"Where can I find the billing invoices?",Question,0.91,NEUTRAL,0.85,Curious,Low,Update Docs/FAQ
-"Billing charged me twice and system error 500!",Bug Report,0.95,NEGATIVE,0.97,Frustrated,High,Log Jira Ticket
+"The export button drops connection on big tables",Bug Report,0.96,NEGATIVE,0.94,Frustrated,High,Log Jira Ticket
+"Can we add automated weekly exports?",Feature Request,0.91,POSITIVE,0.85,Excited,Low,Add to Roadmap
+"Billing charged me twice and no reply from support",Complaint,0.95,NEGATIVE,0.92,Angry,High,Route to Support
 ```
 
----
+## 3. Service health check (`GET /semantic/health`)
 
-## 3. Python SDK / Client Example
+Checks if the FastAPI service is running and confirms whether PyTorch and scikit-learn models are loaded in memory.
+
+### Example request
+
+```bash
+curl -X GET "http://127.0.0.1:8000/semantic/health"
+```
+
+### Success response (`200 OK`)
+
+```json
+{
+  "status": "healthy",
+  "service": "semantic_backend",
+  "models_loaded": {
+    "embedding": true,
+    "classifier_head": true,
+    "sentiment": true
+  }
+}
+```
+
+## 4. Code integration examples
+
+### Python
 
 ```python
 import requests
@@ -161,48 +193,27 @@ import requests
 API_URL = "http://127.0.0.1:8000/semantic/analyze"
 
 payload = {
-    "text": "The analytics exports are clean and much faster to navigate now.",
+    "text": "The app freezes completely whenever I click export on large PDF tables.",
     "threshold": 0.5,
-    "include_explanation": True
+    "include_explanation": True,
 }
 
-response = requests.post(API_URL, json=payload)
+response = requests.post(API_URL, json=payload, timeout=30)
+response.raise_for_status()
 data = response.json()
 
 print(f"Top Intent: {data['intent']['top_intent']} ({data['intent']['top_confidence'] * 100:.1f}%)")
 print(f"Sentiment:  {data['sentiment']['label']} ({data['sentiment']['score'] * 100:.1f}%)")
-print(f"Tone:       {data['tone']}")
-print(f"Urgency:    {data['urgency']}")
 print(f"Action:     {data['recommended_action']}")
 ```
 
----
-
-## 4. TypeScript / React Client Example
+### TypeScript / Browser
 
 ```typescript
-interface AnalysisResponse {
-  intent: {
-    top_intent: string;
-    top_confidence: number;
-    all_intents: Record<string, number>;
-  };
-  sentiment: {
-    label: "POSITIVE" | "NEUTRAL" | "NEGATIVE";
-    score: number;
-  };
-  explainability: Array<{
-    word: string;
-    contribution: number;
-    primary_intent: string;
-  }>;
-  tone: string;
-  urgency: "High" | "Medium" | "Low";
-  recommended_action: string;
-}
+const API_BASE = "http://127.0.0.1:8000";
 
-export async function analyzeFeedback(text: string): Promise<AnalysisResponse> {
-  const res = await fetch("/semantic/analyze", {
+export async function analyzeFeedback(text: string) {
+  const response = await fetch(`${API_BASE}/semantic/analyze`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -212,10 +223,10 @@ export async function analyzeFeedback(text: string): Promise<AnalysisResponse> {
     }),
   });
 
-  if (!res.ok) {
-    throw new Error(`API Error: ${await res.text()}`);
+  if (!response.ok) {
+    throw new Error(`API error ${response.status}: ${await response.text()}`);
   }
 
-  return res.json();
+  return response.json();
 }
 ```

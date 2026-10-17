@@ -83,7 +83,7 @@ export const BusinessHeuristicsMatrix = () => {
             Business Heuristics &amp; SOP Matrix
           </h3>
           <p className="text-[14px] text-shade-60 mt-1 font-sans">
-            Test how probabilistic ML predictions are translated into deterministic operational decisions (<code className="text-xs font-mono bg-canvas-cream px-1.5 py-0.5 rounded border border-hairline-light text-ink">src/engine/evaluation.py</code>).
+            Test how probabilistic ML predictions are translated into deterministic operational decisions (<code className="text-xs font-mono bg-canvas-cream px-1.5 py-0.5 rounded border border-hairline-light text-ink">backend/semantic_backend/evaluation.py</code>).
           </p>
         </div>
 

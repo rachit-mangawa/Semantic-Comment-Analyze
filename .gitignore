@@ -2,7 +2,6 @@
 .venv
 __pycache__
 .pytest_cache
-DESIGN.md
 .ruff_cache
 # Heavy/Useless Modules & OS Files
 node_modules/

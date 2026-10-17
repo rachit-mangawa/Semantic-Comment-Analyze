@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { RouteView } from "@/router";
+import { API_BASE } from "@/config";
 
 export type ViewType = RouteView;
 
@@ -159,16 +160,20 @@ export const Navbar: React.FC<NavbarProps> = ({ activeView, onViewChange }) => {
     },
 
     // --- 3. Developer Resources & External Docs ---
-    {
-      id: "swagger",
-      category: "Developer Resources",
-      title: "FastAPI Swagger Documentation",
-      description: "Live interactive OpenAPI specification and endpoint sandbox at /docs",
-      view: "architecture",
-      external: "/docs",
-      icon: FileText,
-      badge: "Swagger /docs",
-    },
+    ...(import.meta.env.DEV
+      ? [
+          {
+            id: "swagger",
+            category: "Developer Resources" as const,
+            title: "FastAPI Swagger Documentation",
+            description: "Live interactive OpenAPI specification and endpoint sandbox at /docs",
+            view: "architecture" as const,
+            external: `${API_BASE}/docs`,
+            icon: FileText,
+            badge: "Swagger /docs",
+          },
+        ]
+      : []),
     {
       id: "github",
       category: "Developer Resources",

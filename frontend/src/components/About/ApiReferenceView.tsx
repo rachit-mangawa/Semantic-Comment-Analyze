@@ -4,7 +4,7 @@ import { Copy, Check, Terminal, Code2 } from "lucide-react";
 import { API_BASE } from "@/config";
 
 export const ApiReferenceView = () => {
-  const [activeEndpoint, setActiveEndpoint] = useState<"analyze" | "batch">("analyze");
+  const [activeEndpoint, setActiveEndpoint] = useState<"analyze" | "batch" | "health">("analyze");
   const [activeLang, setActiveLang] = useState<"curl" | "python" | "typescript">("curl");
   const [copied, setCopied] = useState<boolean>(false);
 
@@ -59,7 +59,7 @@ print(f"Action:     {data['recommended_action']}")`;
 const data = await res.json();
 console.log("Analysis Result:", data);`;
       }
-    } else {
+    } else if (activeEndpoint === "batch") {
       switch (activeLang) {
         case "curl":
           return `curl -X POST "${baseEndpoint}/semantic/batch" \\
@@ -95,6 +95,21 @@ const res = await fetch(\`\${API_BASE}/semantic/batch\`, {
 
 const reader = res.body?.getReader();
 // Stream processed CSV chunks in real time...`;
+      }
+    } else {
+      switch (activeLang) {
+        case "curl":
+          return `curl -X GET "${baseEndpoint}/semantic/health"`;
+        case "python":
+          return `import requests
+
+url = "${baseEndpoint}/semantic/health"
+response = requests.get(url)
+print(response.json())`;
+        case "typescript":
+          return `const res = await fetch(\`\${API_BASE}/semantic/health\`);
+const data = await res.json();
+console.log("Health Status:", data);`;
       }
     }
   };
@@ -143,7 +158,7 @@ const reader = res.body?.getReader();
         </div>
 
         {/* Endpoint Selector Pills */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => setActiveEndpoint("analyze")}
             className={`px-3.5 py-1.5 rounded-pill text-[12px] font-mono transition-all duration-150 ease-out active:scale-[0.97] select-none ${
@@ -163,6 +178,16 @@ const reader = res.body?.getReader();
             }`}
           >
             POST /semantic/batch
+          </button>
+          <button
+            onClick={() => setActiveEndpoint("health")}
+            className={`px-3.5 py-1.5 rounded-pill text-[12px] font-mono transition-all duration-150 ease-out active:scale-[0.97] select-none ${
+              activeEndpoint === "health"
+                ? "bg-black text-white font-semibold shadow-xs"
+                : "bg-canvas-cream border border-hairline-light text-shade-60 hover:text-ink hover:bg-white"
+            }`}
+          >
+            GET /semantic/health
           </button>
         </div>
       </div>
@@ -236,7 +261,7 @@ const reader = res.body?.getReader();
             </pre>
           </div>
         </div>
-      ) : (
+      ) : activeEndpoint === "batch" ? (
         <div className="pt-2">
           <span className="eyebrow-cap mb-3">
             Streaming CSV Output Schema
@@ -247,6 +272,25 @@ const reader = res.body?.getReader();
 "Your application crashed when exporting to PDF",Bug Report,0.96,NEGATIVE,0.94,Frustrated,High,Log Jira Ticket
 "Can we add automated weekly exports?",Feature Request,0.91,POSITIVE,0.85,Excited,Low,Add to Roadmap
 "Billing charged me twice and no reply from support",Complaint,0.95,NEGATIVE,0.92,Angry,High,Route to Support`}</code>
+            </pre>
+          </div>
+        </div>
+      ) : (
+        <div className="pt-2">
+          <span className="eyebrow-cap mb-3">
+            Health Check Response Schema
+          </span>
+          <div className="bg-canvas-cream border border-hairline-light rounded-xl p-5 overflow-x-auto shadow-inner">
+            <pre className="text-[12px] font-mono text-ink leading-relaxed">
+              <code>{`{
+  "status": "healthy",
+  "service": "semantic_backend",
+  "models_loaded": {
+    "embedding": true,
+    "classifier_head": true,
+    "sentiment": true
+  }
+}`}</code>
             </pre>
           </div>
         </div>

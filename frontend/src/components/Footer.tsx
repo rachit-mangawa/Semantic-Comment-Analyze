@@ -1,6 +1,7 @@
 import React from "react";
 import { ArrowUp, ExternalLink } from "lucide-react";
 import { RouteView } from "@/router";
+import { API_BASE } from "@/config";
 
 const GithubIcon: React.FC<{ size?: number; className?: string }> = ({ size = 14, className = "" }) => (
   <svg
@@ -79,15 +80,17 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             >
               REST API
             </button>
-            <a
-              href="/docs"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-black transition-colors inline-flex items-center gap-1"
-            >
-              <span>Swagger</span>
-              <ExternalLink size={11} className="text-shade-40" />
-            </a>
+            {import.meta.env.DEV && (
+              <a
+                href={`${API_BASE}/docs`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-black transition-colors inline-flex items-center gap-1"
+              >
+                <span>Swagger</span>
+                <ExternalLink size={11} className="text-shade-40" />
+              </a>
+            )}
             <a
               href="https://github.com/rachit-mangawa/Semantic-Comment-Analyze"
               target="_blank"

@@ -32,19 +32,19 @@ const STAGES: PipelineStage[] = [
   {
     id: "ingest",
     number: "01",
-    name: "FastAPI Ingestion & Warmup",
+    name: "FastAPI Ingestion & Gateway",
     subtitle: "Non-blocking async request gateway",
     latency: "< 0.2ms",
-    file: "src/api/server.py",
+    file: "backend/semantic_backend/router.py",
     badge: "Gateway",
-    description: "Accepts incoming REST or multipart CSV requests. Evaluates Pydantic schemas and offloads heavy inference to background worker threads via asyncio.to_thread, guaranteeing zero event-loop lock.",
+    description: "Accepts incoming REST or multipart CSV requests under /semantic. Evaluates Pydantic schemas and offloads inference to background worker threads via asyncio.to_thread to maintain an open event loop.",
     input: "Raw JSON string or multipart/form-data CSV stream",
     output: "Validated Python request payload passed to threadpool",
     details: [
-      "FastAPI lifespan context manager pre-warms all model weights at application boot",
-      "Full CORS wildcard headers for seamless cross-domain integration",
-      "Zero cold-start penalty for incoming client connections",
-      "Mounts production React static assets directly on root /"
+      "Models cached in memory as singletons via @lru_cache",
+      "Full CORS wildcard headers for flexible client integration",
+      "Low-latency response on repeated client requests",
+      "Exposes /semantic/analyze, /semantic/batch, and /semantic/health"
     ]
   },
   {
@@ -53,16 +53,16 @@ const STAGES: PipelineStage[] = [
     name: "SentenceTransformer Embeddings",
     subtitle: "384-dimensional dense semantic mapping",
     latency: "~ 3.2ms",
-    file: "src/engine/nlp_engine.py",
+    file: "backend/semantic_backend/nlp_engine.py",
     badge: "Vector Space",
-    description: "Transforms unstructured natural language text into a highly dense 384-dimensional vector space using all-MiniLM-L6-v2 with mean pooling over token embeddings.",
+    description: "Transforms natural language text into a 384-dimensional dense vector space using all-MiniLM-L6-v2 with mean pooling over token embeddings.",
     input: "Sanitized string (truncated up to 256 tokens)",
     output: "Normalized dense float vector: shape (384,)",
     details: [
       "Cached in memory as a singleton via @lru_cache(maxsize=1)",
-      "Batch-vectorized in micro-chunks of 32 for SIMD CPU efficiency",
-      "Captures deep semantic context far beyond simple bag-of-words or TF-IDF",
-      "Enables linear separability across categorical intents"
+      "Batch-vectorized in micro-chunks of 32 for CPU efficiency",
+      "Captures semantic intent across vocabulary variations",
+      "Provides linearly separable representations across intent classes"
     ]
   },
   {
@@ -71,7 +71,7 @@ const STAGES: PipelineStage[] = [
     name: "Custom Logistic Intent Head",
     subtitle: "Microsecond hyperplane classification",
     latency: "~ 0.15ms",
-    file: "data/local_model_head.pkl",
+    file: "backend/semantic_backend/data/local_model_head.pkl",
     badge: "Classifier",
     description: "Computes multi-class softmax probabilities across intent categories using an L2-regularized Logistic Regression head evaluated against sentence embeddings.",
     input: "384-dimensional semantic embedding vector",
@@ -86,18 +86,18 @@ const STAGES: PipelineStage[] = [
   {
     id: "sentiment",
     number: "04",
-    name: "Twitter-RoBERTa Sentiment & NER",
-    subtitle: "Fine-grained affective polarity & entity extraction",
+    name: "Twitter-RoBERTa Sentiment",
+    subtitle: "Fine-grained affective polarity analysis",
     latency: "~ 5.1ms",
-    file: "src/engine/nlp_engine.py",
+    file: "backend/semantic_backend/nlp_engine.py",
     badge: "Affect Analysis",
-    description: "Runs Cardiff NLP's Twitter-RoBERTa model for sentiment classification alongside a Hugging Face NER pipeline to identify named entities (Organizations, People, Locations).",
+    description: "Runs Cardiff NLP's Twitter-RoBERTa model for sentiment classification into POSITIVE, NEUTRAL, and NEGATIVE labels with calibrated confidence.",
     input: "Text truncated to 512 tokens",
     output: "Normalized sentiment: { label: POSITIVE|NEUTRAL|NEGATIVE, score: float }",
     details: [
       "Pre-trained on 124M tweets for realistic customer feedback understanding",
       "Calibrated probability score reflecting emotional intensity",
-      "Contextual NER tagger with simple span aggregation",
+      "Runs locally on CPU with batch inference support",
       "Non-generative deterministic scoring"
     ]
   },
@@ -107,16 +107,16 @@ const STAGES: PipelineStage[] = [
     name: "Leave-One-Out (LOO) XAI Math",
     subtitle: "Zero-surrogate marginal attribution",
     latency: "~ 14.5ms",
-    file: "src/engine/nlp_engine.py",
+    file: "backend/semantic_backend/nlp_engine.py",
     badge: "Explainability",
-    description: "Systematically occludes individual words from the prompt and measures the marginal drop (ΔP) in intent confidence without surrogate model hallucinations.",
+    description: "Systematically occludes individual words from the prompt and measures the marginal drop (ΔP) in intent confidence without surrogate model approximations.",
     input: "Original text tokens + baseline top-intent probability",
     output: "Attribution array: [{ word: string, contribution: float, primary_intent: string }]",
     details: [
       "Exact mathematical formulation: ΔP = P(Intent|S) - P(Intent|S \\ {w})",
       "Zero random sampling error unlike LIME/SHAP approximations",
-      "Pinpoints exact root-cause tokens triggering customer sentiment shifts",
-      "Operates fully in parallel across token chunks"
+      "Pinpoints exact tokens driving confidence shifts",
+      "Operates efficiently in SIMD CPU batches"
     ]
   },
   {
@@ -125,7 +125,7 @@ const STAGES: PipelineStage[] = [
     name: "Business Heuristics Evaluator",
     subtitle: "Deterministic enterprise decision matrix",
     latency: "< 0.05ms",
-    file: "src/engine/evaluation.py",
+    file: "backend/semantic_backend/evaluation.py",
     badge: "Business Rules",
     description: "Translates model predictions into operational metrics (urgency, customer tone, and SOP routing) using deterministic lookup tables.",
     input: "Top Intent + Sentiment Object (label, score)",
@@ -143,14 +143,14 @@ const STAGES: PipelineStage[] = [
     name: "Response Aggregation / CSV Stream",
     subtitle: "Structured JSON or chunked streaming generator",
     latency: "< 0.1ms",
-    file: "src/data/data_handler.py",
+    file: "backend/semantic_backend/data_handler.py",
     badge: "Delivery",
     description: "Combines model predictions, explainability heatmaps, and business context into a clean JSON payload for single analyses, or yields chunked CSV rows in 32-sample batches for high-throughput batch jobs.",
     input: "Consolidated ML predictions & business context objects",
     output: "HTTP 200 JSON Response or Chunked text/csv Stream",
     details: [
       "Memory-invariant batch streaming: constant ~45MB RAM regardless of dataset rows",
-      "Seamless integration with enterprise microservices, CRMs, or data lakes",
+      "Seamless integration with microservices, CRMs, or analytics pipelines",
       "Client UI visualizes results with Radar charts, Heatmaps, and progress meters"
     ]
   }

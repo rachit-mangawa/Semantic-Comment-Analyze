@@ -5,31 +5,31 @@ export const HowItWorks = () => {
   const steps = [
     {
       num: "01",
-      title: "Lifespan Boot & Pre-Warming",
+      title: "FastAPI Ingestion and Model Warmup",
       icon: Zap,
-      desc: "FastAPI lifespan initializes singleton SentenceTransformer and RoBERTa weights into system RAM immediately on server boot. This eliminates cold starts, ensuring sub-5ms response times on the very first request.",
-      tag: "src/api/server.py"
+      desc: "FastAPI loads SentenceTransformer and RoBERTa weights into memory as singletons. This avoids repeated weight loading and preserves low latency on incoming requests.",
+      tag: "backend/semantic_backend/router.py"
     },
     {
       num: "02",
       title: "Dense Vector Space Mapping",
       icon: Cpu,
-      desc: "Text inputs are tokenized and mapped to a 384-dimensional dense semantic embedding space via all-MiniLM-L6-v2. This captures deep semantic intent without relying on slow bag-of-words or heavy LLMs.",
-      tag: "src/engine/nlp_engine.py"
+      desc: "Text inputs are tokenized and mapped into a 384-dimensional dense semantic embedding space with all-MiniLM-L6-v2, capturing semantic meaning across vocabulary variations.",
+      tag: "backend/semantic_backend/nlp_engine.py"
     },
     {
       num: "03",
-      title: "Microsecond Hyperplane & XAI",
+      title: "Logistic Intent Classification and XAI",
       icon: Sparkles,
-      desc: "Embeddings are classified through an L2-regularized Logistic Regression head in under 150 microseconds. An optional Leave-One-Out occlusion algorithm masks individual words to produce exact attribution heatmaps.",
-      tag: "data/local_model_head.pkl"
+      desc: "Embeddings pass into an L2-regularized logistic regression head in roughly 0.15ms. An optional leave-one-out occlusion step masks individual tokens to calculate attribution heatmaps.",
+      tag: "backend/semantic_backend/data/local_model_head.pkl"
     },
     {
       num: "04",
       title: "Deterministic Business Heuristics",
       icon: ShieldCheck,
-      desc: "Probabilistic predictions are fed into evaluation.py matrices, generating deterministic operational metrics: Customer Tone (Frustrated, Excited), Urgency (High/Med/Low), and Recommended SOP Actions.",
-      tag: "src/engine/evaluation.py"
+      desc: "Model predictions pass through rule matrices in evaluation.py, assigning customer tone, urgency levels, and recommended standard operating actions.",
+      tag: "backend/semantic_backend/evaluation.py"
     }
   ];
 
@@ -43,7 +43,7 @@ export const HowItWorks = () => {
           How the Pipeline Operates
         </h3>
         <p className="text-[14px] text-shade-60 mt-1 font-sans">
-          From cold boot to streaming response: four coordinated phases ensuring microsecond speed, total explainability, and deterministic safety.
+          From model loading to streaming response: four coordinated phases handling classification, token attribution, and action routing.
         </p>
       </div>
 
