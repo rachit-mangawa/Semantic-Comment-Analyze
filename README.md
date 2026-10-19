@@ -55,11 +55,10 @@ run.bat
 ```
 
 The script performs the following actions:
-1. Configures `frontend/.env.local` to point to the local backend at `http://127.0.0.1:8000`.
-2. Checks and installs npm dependencies if missing.
-3. Detects if the backend is already running on port 8000 (avoiding port conflicts). If not running, it launches `backend/dev.py`.
-4. Opens your browser to `http://localhost:3000`.
-5. Starts the Vite dev server with hot reload.
+1. Checks and installs npm dependencies if missing.
+2. Detects if the backend is already running on port 8000 (avoiding port conflicts). If not running, it launches `backend/dev.py`.
+3. Opens your browser to `http://localhost:3000`.
+4. Starts the Vite dev server with hot reload (dev mode connects directly to `http://127.0.0.1:8000`).
 
 ### Option 2: Manual setup
 
