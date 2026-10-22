@@ -40,10 +40,10 @@ def test_semantic_analyze_standard_flow(client, sample_comments):
     assert data["intent"]["top_intent"] == "Bug Report"
     assert data["explainability"] == []
 
-    # Test /sementic alias endpoint
-    res_alias = client.post("/sementic/analyze", json=payload)
-    assert res_alias.status_code == 200
-    assert res_alias.json()["intent"]["top_intent"] == "Bug Report"
+    # Test /semantic endpoint
+    res_repeat = client.post("/semantic/analyze", json=payload)
+    assert res_repeat.status_code == 200
+    assert res_repeat.json()["intent"]["top_intent"] == "Bug Report"
 
     # Test backward-compatible /api endpoint
     res_legacy = client.post("/api/analyze", json=payload)
@@ -102,11 +102,11 @@ def test_semantic_batch_csv_upload_success(client):
     assert "URGENCY" in content
     assert "RECOMMENDED_ACTION" in content
 
-    # Test /sementic alias endpoint
-    files_alias = {"file": ("comments.csv", io.BytesIO(csv_bytes), "text/csv")}
-    res_alias = client.post("/sementic/batch", files=files_alias, data=data)
-    assert res_alias.status_code == 200
-    assert "INTENT" in res_alias.text
+    # Test /semantic batch endpoint
+    files_repeat = {"file": ("comments.csv", io.BytesIO(csv_bytes), "text/csv")}
+    res_repeat = client.post("/semantic/batch", files=files_repeat, data=data)
+    assert res_repeat.status_code == 200
+    assert "INTENT" in res_repeat.text
 
 
 def test_semantic_batch_missing_column_error(client):

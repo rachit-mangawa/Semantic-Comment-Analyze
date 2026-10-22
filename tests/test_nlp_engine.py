@@ -1,5 +1,5 @@
 import pytest
-from src.engine import nlp_engine
+from semantic_backend import nlp_engine
 
 
 def test_classify_intent_standard(sample_comments):

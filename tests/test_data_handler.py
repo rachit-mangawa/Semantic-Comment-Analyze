@@ -1,7 +1,7 @@
 import csv
 import io
 import pytest
-from src.data import data_handler
+from semantic_backend import data_handler
 
 
 def test_stream_csv_valid_single_chunk():
