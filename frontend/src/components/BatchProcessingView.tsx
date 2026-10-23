@@ -79,13 +79,10 @@ export const BatchProcessingView = () => {
   return (
     <div className="py-24 px-8 max-w-[1200px] mx-auto flex flex-col gap-12">
       <div>
-        <div className="flex items-center justify-between pb-2">
+        <div className="pb-2">
           <h2 className="font-serif text-[36px] font-[300] tracking-[-0.36px] text-ink">
             Batch Processing
           </h2>
-          <span className="bg-surface-strong text-ink text-[12px] font-semibold tracking-[0.96px] uppercase rounded-full px-[10px] py-[4px]">
-            Sarcasm Engine Active
-          </span>
         </div>
         <p className="font-sans text-[16px] text-body tracking-[0.16px]">
           Upload a CSV file to process multiple texts simultaneously.

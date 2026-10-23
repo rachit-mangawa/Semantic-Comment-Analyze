@@ -19,9 +19,7 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     nlp_engine.get_embedding_model()
     nlp_engine.get_classifier_head()
-    nlp_engine.get_ner_model()
     nlp_engine.get_sentiment_model()
-    nlp_engine.get_irony_model()
     yield
 
 app = FastAPI(title="Semantic NLP Platform API", lifespan=lifespan)
@@ -42,6 +40,8 @@ class AnalyzeRequest(BaseModel):
 
 @app.post("/api/analyze")
 async def analyze_text(request: AnalyzeRequest):
+    if not request.text or not request.text.strip():
+        raise HTTPException(status_code=400, detail="Text cannot be empty")
     try:
         ml_results = await nlp_engine.analyze_full(
             request.text, 

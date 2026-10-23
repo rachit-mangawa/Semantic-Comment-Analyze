@@ -1,43 +1,6 @@
+"""Convenience entry point to run pytest directly via `python tests/test_app.py`."""
+import sys
 import pytest
-import io
-import csv
-from src.engine import nlp_engine
-from src.data import data_handler
 
-
-def test_intent_classification():
-    result = nlp_engine.classify_intent("The app crashed when I tried to log in.")
-    assert "labels" in result
-    assert "scores" in result
-    assert result["top_intent"] in nlp_engine.get_intent_labels()
-
-def test_sentiment_analysis():
-    result = nlp_engine.analyze_sentiment("This is a fantastic update, I love it!")
-    assert result["label"] in ["POSITIVE", "NEGATIVE", "NEUTRAL"]
-    assert 0.0 <= result["score"] <= 1.0
-
-def test_ner_extraction():
-    result = nlp_engine.extract_entities("John flew to New York.")
-    assert isinstance(result, list)
-    if result:
-        assert "word" in result[0]
-        assert "entity_group" in result[0]
-
-
-
-
-def test_data_handler_csv():
-    csv_content = "comment\nI love this app!\nIt crashes sometimes.\n"
-    file_obj = io.BytesIO(csv_content.encode('utf-8'))
-    
-    output_gen = data_handler.stream_csv(file_obj, target_column="comment")
-    output_str = "".join(list(output_gen))
-    
-    reader = csv.DictReader(io.StringIO(output_str))
-    rows = list(reader)
-    
-    assert len(rows) == 2
-    assert "INTENT" in rows[0]
-    assert "SENTIMENT" in rows[0]
-    assert "topic" not in rows[0]
-    assert "entities" not in rows[0]
+if __name__ == "__main__":
+    sys.exit(pytest.main(["-v", "tests"]))

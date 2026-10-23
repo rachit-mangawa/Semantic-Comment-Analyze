@@ -32,15 +32,31 @@ def get_embedding_model():
     return SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
 
 
+def train_head_if_missing(head_path: str):
+    import pandas as pd
+    from sklearn.linear_model import LogisticRegression
+    data_path = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "../../data/training_data.csv")
+    )
+    if not os.path.exists(data_path):
+        raise FileNotFoundError(f"Training data not found at {data_path}")
+    df = pd.read_csv(data_path)
+    X = get_embeddings_batch(df["text"].tolist())
+    y = df["label"].tolist()
+    clf = LogisticRegression(max_iter=1000)
+    clf.fit(X, y)
+    os.makedirs(os.path.dirname(head_path), exist_ok=True)
+    joblib.dump(clf, head_path)
+    return clf
+
+
 @lru_cache(maxsize=1)
 def get_classifier_head():
     head_path = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "../../data/local_model_head.pkl")
     )
     if not os.path.exists(head_path):
-        raise FileNotFoundError(
-            "data/local_model_head.pkl not found. Run train_intent.py first."
-        )
+        return train_head_if_missing(head_path)
     return joblib.load(head_path)
 
 
@@ -53,10 +69,6 @@ def get_ner_model():
 def get_sentiment_model():
     return pipeline("sentiment-analysis", model="cardiffnlp/twitter-roberta-base-sentiment-latest", device=-1)  # type: ignore
 
-
-@lru_cache(maxsize=1)
-def get_irony_model():
-    return pipeline("text-classification", model="cardiffnlp/twitter-roberta-base-irony", device=-1)  # type: ignore
 
 
 def get_embeddings_batch(texts: list[str]) -> np.ndarray:
@@ -173,19 +185,7 @@ def analyze_sentiments_batch(texts: list[str]) -> list[dict[str, Any]]:
     ]
     model = get_sentiment_model()
     sentiments = model(valid_texts, truncation=True, max_length=512, batch_size=32)
-
-    irony_model = get_irony_model()
-    ironies = irony_model(valid_texts, truncation=True, max_length=512, batch_size=32)
-
-    results = []
-    for sent, irony in zip(sentiments, ironies):
-        label = sent["label"].upper()
-        if (irony["label"] == "irony" or irony["label"] == "LABEL_1") and irony["score"] > 0.5:
-            if label == "POSITIVE":
-                label = "NEGATIVE (SARCASTIC)"
-        results.append({"label": label, "score": sent["score"]})
-
-    return results
+    return [{"label": sent["label"].upper(), "score": float(sent["score"])} for sent in sentiments]
 
 
 def extract_entities(text: str) -> list[dict[str, Any]]:
