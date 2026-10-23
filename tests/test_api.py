@@ -45,11 +45,6 @@ def test_semantic_analyze_standard_flow(client, sample_comments):
     assert res_repeat.status_code == 200
     assert res_repeat.json()["intent"]["top_intent"] == "Bug Report"
 
-    # Test backward-compatible /api endpoint
-    res_legacy = client.post("/api/analyze", json=payload)
-    assert res_legacy.status_code == 200
-    assert res_legacy.json()["intent"]["top_intent"] == "Bug Report"
-
 
 def test_semantic_analyze_with_explanation(client):
     payload = {

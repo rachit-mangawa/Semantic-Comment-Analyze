@@ -23,7 +23,6 @@ app.add_middleware(
 )
 
 app.include_router(router, prefix="/semantic")
-app.include_router(router, prefix="/api")
 
 frontend_dist = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "..", "frontend", "dist")
