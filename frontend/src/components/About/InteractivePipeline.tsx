@@ -98,25 +98,25 @@ const STAGES: PipelineStage[] = [
       "Pre-trained on 124M tweets for realistic customer feedback understanding",
       "Calibrated probability score reflecting emotional intensity",
       "Contextual NER tagger with simple span aggregation",
-      "Runs parallel to intent prediction in the background threadpool"
+      "Non-generative deterministic scoring"
     ]
   },
   {
     id: "occlusion",
     number: "05",
-    name: "Occlusion Explainability Engine",
-    subtitle: "Leave-One-Out (LOO) token perturbation",
-    latency: "~ 8.5ms",
+    name: "Leave-One-Out (LOO) XAI Math",
+    subtitle: "Zero-surrogate marginal attribution",
+    latency: "~ 14.5ms",
     file: "src/engine/nlp_engine.py",
-    badge: "Explainability (XAI)",
-    description: "Systematically masks each token and measures the confidence drop (ΔP) to identify which words contributed to the predicted intent.",
-    input: "Word-tokenized sentence array",
-    output: "Token attribution list with marginal contribution scores",
+    badge: "Explainability",
+    description: "Systematically occludes individual words from the prompt and measures the marginal drop (ΔP) in intent confidence without surrogate model hallucinations.",
+    input: "Original text tokens + baseline top-intent probability",
+    output: "Attribution array: [{ word: string, contribution: float, primary_intent: string }]",
     details: [
-      "Marginal formula: C(w_i) = P(intent | sentence) - P(intent | sentence without w_i)",
-      "Exact attribution without surrogate approximations (unlike LIME or SHAP)",
-      "Directly drives the client heatmap visualization with categorical colors",
-      "Optional execution: only triggered when include_explanation=true"
+      "Exact mathematical formulation: ΔP = P(Intent|S) - P(Intent|S \\ {w})",
+      "Zero random sampling error unlike LIME/SHAP approximations",
+      "Pinpoints exact root-cause tokens triggering customer sentiment shifts",
+      "Operates fully in parallel across token chunks"
     ]
   },
   {
@@ -160,62 +160,55 @@ export const InteractivePipeline = () => {
   const [selectedStage, setSelectedStage] = useState<PipelineStage>(STAGES[1]);
 
   return (
-    <div className="bg-surface-card border border-hairline rounded-2xl p-6 md:p-8 mb-16 shadow-sm">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 pb-6 border-b border-hairline">
+    <div className="surface-card-base w-full flex flex-col gap-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-hairline-light">
         <div>
-          <span className="text-[12px] font-mono uppercase tracking-wider text-muted font-semibold">
+          <span className="eyebrow-cap">
             Interactive Deep Dive
           </span>
-          <h3 className="text-2xl font-serif font-light text-ink mt-1">
+          <h3 className="section-heading mt-1">
             End-to-End Inference Pipeline
           </h3>
-          <p className="text-[14px] text-body mt-1">
+          <p className="text-[14px] text-shade-60 mt-1 font-sans">
             Click any processing stage to inspect its mathematical role, latency footprint, and source implementation.
           </p>
         </div>
-        <div className="flex items-center gap-2 bg-canvas-soft border border-hairline px-3 py-1.5 rounded-full text-[12px] font-mono text-muted self-start md:self-auto">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        <div className="flex items-center gap-2 bg-canvas-cream border border-hairline-light px-3 py-1.5 rounded-pill text-[12px] font-mono text-shade-60 self-start md:self-auto select-none shadow-xs">
+          <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
           <span>Local In-Memory Execution</span>
         </div>
       </div>
 
       {/* Pipeline Stage Buttons */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
         {STAGES.map((stage) => {
           const isSelected = selectedStage.id === stage.id;
           return (
             <button
               key={stage.id}
               onClick={() => setSelectedStage(stage)}
-              className={`p-3 rounded-xl border text-left transition-[color,background-color,border-color,box-shadow,transform] duration-150 ease-out enabled:active:scale-[0.96] relative overflow-hidden flex flex-col justify-between h-28 ${
+              className={`p-3 rounded-xl border text-left transition-all duration-150 ease-out active:scale-[0.97] relative overflow-hidden flex flex-col justify-between h-28 select-none ${
                 isSelected
-                  ? "bg-surface-strong border-ink text-ink shadow-xs"
-                  : "bg-canvas-soft border-hairline text-body hover:border-hairline-strong hover:bg-canvas"
+                  ? "bg-black text-white border-black shadow-sm"
+                  : "bg-canvas-cream border-hairline-light text-shade-60 hover:text-ink hover:bg-white"
               }`}
             >
               <div className="flex items-center justify-between w-full">
-                <span className={`text-[11px] font-mono font-semibold tabular-nums ${isSelected ? "text-ink" : "text-muted"}`}>
+                <span className={`text-[11px] font-mono font-semibold tabular-nums ${isSelected ? "text-white/80" : "text-shade-50"}`}>
                   {stage.number}
                 </span>
-                <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded tabular-nums select-none ${isSelected ? "bg-ink text-white" : "bg-hairline text-muted"}`}>
+                <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded-pill tabular-nums select-none ${isSelected ? "bg-white/20 text-white" : "bg-white border border-hairline-light text-shade-60"}`}>
                   {stage.latency}
                 </span>
               </div>
               <div>
-                <p className={`text-[13px] font-medium leading-tight line-clamp-2 ${isSelected ? "text-ink font-semibold" : "text-ink"}`}>
+                <p className={`text-[13px] font-sans font-medium leading-tight line-clamp-2 ${isSelected ? "text-white font-semibold" : "text-ink"}`}>
                   {stage.name.split(" ")[0]} {stage.name.split(" ")[1]}
                 </p>
-                <span className="text-[11px] text-muted block mt-1 truncate">
+                <span className={`text-[11px] block mt-1 truncate ${isSelected ? "text-white/70" : "text-shade-50"}`}>
                   {stage.badge}
                 </span>
               </div>
-              {isSelected && (
-                <motion.div
-                  layoutId="stage-indicator"
-                  className="absolute bottom-0 left-0 right-0 h-1 bg-ink"
-                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                />
-              )}
             </button>
           );
         })}
@@ -225,61 +218,61 @@ export const InteractivePipeline = () => {
       <AnimatePresence mode="wait">
         <motion.div
           key={selectedStage.id}
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.25 }}
-          className="bg-canvas-soft rounded-2xl border border-hairline p-6 md:p-8"
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.2 }}
+          className="bg-canvas-cream border border-hairline-light rounded-xl p-6 sm:p-7 shadow-inner"
         >
-          <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6 mb-6">
+          <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-5 mb-5 pb-5 border-b border-hairline-light">
             <div>
-              <div className="flex items-center gap-3 mb-2">
-                <span className="text-xl font-mono font-bold text-muted">
+              <div className="flex items-center gap-2.5 mb-1.5 flex-wrap">
+                <span className="text-lg font-mono font-bold text-shade-40">
                   {selectedStage.number}
                 </span>
-                <h4 className="text-2xl font-serif font-medium text-ink">
+                <h4 className="text-2xl font-display font-[330] text-ink">
                   {selectedStage.name}
                 </h4>
-                <span className="text-[12px] font-sans font-medium px-2.5 py-1 rounded-full bg-surface-card border border-hairline text-body">
+                <span className="text-[11px] font-sans font-medium px-2.5 py-0.5 rounded-pill bg-white border border-hairline-light text-shade-70 shadow-xs">
                   {selectedStage.badge}
                 </span>
               </div>
-              <p className="text-[15px] text-muted font-sans font-medium">
+              <p className="text-[14px] text-shade-60 font-sans">
                 {selectedStage.subtitle}
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-2 bg-surface-card border border-hairline px-3 py-1.5 rounded-lg text-[13px] font-mono text-ink">
-                <Clock size={15} className="text-muted" />
-                <span>Execution: {selectedStage.latency}</span>
+            <div className="flex flex-wrap items-center gap-2.5 text-[12px] font-mono">
+              <div className="flex items-center gap-1.5 bg-white border border-hairline-light px-3 py-1 rounded-pill text-ink shadow-xs">
+                <Clock size={13} className="text-shade-40" />
+                <span>Latency: {selectedStage.latency}</span>
               </div>
-              <div className="flex items-center gap-2 bg-surface-card border border-hairline px-3 py-1.5 rounded-lg text-[13px] font-mono text-ink">
-                <FileCode size={15} className="text-muted" />
+              <div className="flex items-center gap-1.5 bg-white border border-hairline-light px-3 py-1 rounded-pill text-ink shadow-xs">
+                <FileCode size={13} className="text-shade-40" />
                 <span>{selectedStage.file}</span>
               </div>
             </div>
           </div>
 
-          <p className="text-[16px] text-body leading-relaxed mb-6 font-sans">
+          <p className="text-[15px] text-shade-70 leading-relaxed mb-6 font-sans">
             {selectedStage.description}
           </p>
 
           {/* I/O Schemas */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div className="bg-surface-card p-4 rounded-xl border border-hairline">
-              <span className="text-[11px] font-mono uppercase text-muted tracking-wider block mb-1">
+            <div className="bg-white p-4 rounded-lg border border-hairline-light shadow-xs">
+              <span className="text-[11px] font-sans uppercase text-shade-50 tracking-[0.72px] font-medium block mb-1">
                 Input Data
               </span>
-              <code className="text-[13px] font-mono text-ink font-medium block">
+              <code className="text-[12px] font-mono text-ink font-medium block">
                 {selectedStage.input}
               </code>
             </div>
-            <div className="bg-surface-card p-4 rounded-xl border border-hairline">
-              <span className="text-[11px] font-mono uppercase text-muted tracking-wider block mb-1">
+            <div className="bg-white p-4 rounded-lg border border-hairline-light shadow-xs">
+              <span className="text-[11px] font-sans uppercase text-shade-50 tracking-[0.72px] font-medium block mb-1">
                 Output Representation
               </span>
-              <code className="text-[13px] font-mono text-ink font-medium block">
+              <code className="text-[12px] font-mono text-ink font-medium block">
                 {selectedStage.output}
               </code>
             </div>
@@ -287,13 +280,13 @@ export const InteractivePipeline = () => {
 
           {/* Engineering Highlights */}
           <div>
-            <span className="text-[12px] font-mono uppercase tracking-wider text-muted font-semibold block mb-3">
+            <span className="text-[11px] font-sans uppercase tracking-[0.72px] text-shade-50 font-semibold block mb-3">
               Key Engineering Guarantees
             </span>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
               {selectedStage.details.map((detail, idx) => (
-                <div key={idx} className="flex items-start gap-2.5 text-[14px] text-body">
-                  <CheckCircle2 size={16} className="text-emerald-600 shrink-0 mt-0.5" />
+                <div key={idx} className="flex items-start gap-2 text-[13px] font-sans text-shade-60">
+                  <CheckCircle2 size={15} className="text-emerald-600 shrink-0 mt-0.5" />
                   <span>{detail}</span>
                 </div>
               ))}

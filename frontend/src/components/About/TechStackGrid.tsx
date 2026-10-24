@@ -1,51 +1,63 @@
 import React from "react";
-import { motion, Variants } from "framer-motion";
-import { Cpu, Zap, Activity, Sparkles, ShieldCheck, Database, Layout, Layers } from "lucide-react";
+import { 
+  Cpu, 
+  Layers, 
+  Sparkles, 
+  ShieldCheck, 
+  Database, 
+  Zap, 
+  Workflow, 
+  Layout, 
+  Server
+} from "lucide-react";
+import { motion } from "framer-motion";
 
 export const TechStackGrid = () => {
-  const container: Variants = {
+  const container = {
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
-      transition: { staggerChildren: 0.08 }
+      transition: {
+        staggerChildren: 0.08
+      }
     }
   };
 
-  const item: Variants = {
+  const item = {
     hidden: { opacity: 0, y: 15 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } }
+    show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" as const } }
   };
 
   const components = [
     {
-      title: "SentenceTransformer Embeddings",
+      title: "Dense Semantic Vectorizer",
       icon: Cpu,
       tech: "all-MiniLM-L6-v2 (384d)",
-      desc: "Maps text into 384-dimensional dense semantic vectors using mean-pooled contextual embeddings. Fast, lightweight, and robust across diverse customer vocabularies."
+      desc: "Singleton CPU embedding engine producing continuous semantic vectors. Computes cosine embeddings in ~3.2ms without external network latency."
     },
     {
-      title: "Custom Intent Classifier Head",
-      icon: Zap,
-      tech: "Logistic Regression / SVM Head",
-      desc: "Evaluates dense vectors against an L2-regularized linear decision hyperplane in under 150 microseconds on standard CPU hardware."
+      title: "Logistic Intent Head",
+      icon: Sparkles,
+      tech: "Scikit-Learn Head (L2 Regularized)",
+      desc: "Calibrated multi-class classification head trained across enterprise feedback categories. Evaluates probabilities in under 150 microseconds."
     },
     {
       title: "Twitter-RoBERTa Sentiment",
-      icon: Activity,
-      tech: "cardiffnlp/twitter-roberta-base",
-      desc: "Transformer pipeline trained on 124M tweets providing calibrated positive, neutral, and negative confidence scores tuned for customer text."
+      icon: Zap,
+      tech: "Cardiff NLP Twitter-RoBERTa",
+      desc: "Deep 3-class sentiment polarity analysis (Positive, Neutral, Negative) fine-tuned on real customer conversations to gauge user emotion and satisfaction."
     },
     {
-      title: "Occlusion Explainability (XAI)",
-      icon: Sparkles,
-      tech: "Leave-One-Out Token Perturbation",
-      desc: "Systematically occludes tokens and measures marginal probability drops (ΔP) to generate exact, color-coded attribution heatmaps without surrogate approximations."
-    },
-    {
-      title: "Deterministic Business Layer",
+      title: "Deterministic Heuristic Matrix",
       icon: ShieldCheck,
-      tech: "evaluation.py Heuristics Engine",
-      desc: "Maps predicted intent and sentiment to customer tones, urgency levels, and recommended operating actions via lookup tables."
+      tech: "Pure Python Matrix (Zero LLM)",
+      desc: "Maps probabilistic intent and sentiment into deterministic business rules: Priority (High/Med/Low), Tone (Frustrated, Excited), and SOP Actions."
+    },
+    {
+      title: "Leave-One-Out (LOO) Occlusion XAI",
+      icon: Workflow,
+      tech: "Mathematical Perturbation Engine",
+      desc: "Computes exact word-level contribution attribution by measuring marginal probability delta across masked token permutations without LIME/SHAP."
     },
     {
       title: "Streaming CSV Batch Pipeline",
@@ -60,77 +72,82 @@ export const TechStackGrid = () => {
       desc: "Pre-warms all model weights at lifespan startup. Dispatches CPU-bound inferences via asyncio.to_thread to maintain non-blocking concurrency."
     },
     {
-      title: "Swiss-Style Analytical Client",
+      title: "Design System Analytical Client",
       icon: Layout,
-      tech: "React 18 + Vite + Tailwind + Framer",
+      tech: "React SPA + Vite + Tailwind + Framer",
       desc: "A responsive, single-page dashboard featuring interactive radar charts, word-level heatmaps, live batch progress meters, and documentation explorers."
     }
   ];
 
   return (
-    <section className="mb-16">
-      <div className="text-center max-w-2xl mx-auto mb-12">
-        <span className="text-[12px] font-mono uppercase tracking-wider text-muted font-semibold">
-          Component Breakdown
-        </span>
-        <h2 className="text-3xl font-serif font-light text-ink tracking-tight mt-1">
-          System Components & Technologies
-        </h2>
-        <p className="text-[14px] text-body mt-2">
-          Modular, independently testable layers engineered for enterprise scale, low resource footprint, and zero cloud lock-in.
-        </p>
+    <div className="flex flex-col gap-8 w-full">
+      <div className="surface-card-base">
+        <div className="mb-8 pb-6 border-b border-hairline-light">
+          <span className="eyebrow-cap">
+            Component Breakdown
+          </span>
+          <h3 className="section-heading mt-1">
+            System Components &amp; Technologies
+          </h3>
+          <p className="text-[14px] text-shade-60 mt-1 font-sans">
+            Modular, independently testable layers engineered for enterprise scale, low resource footprint, and zero cloud lock-in.
+          </p>
+        </div>
+
+        <motion.div
+          variants={container}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: "-40px" }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+        >
+          {components.map((comp, idx) => {
+            const Icon = comp.icon;
+            return (
+              <motion.div
+                key={idx}
+                variants={item}
+                className="bg-canvas-cream/60 p-5 rounded-xl border border-hairline-light hover:border-black/30 transition-all shadow-xs flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="p-2 rounded-pill bg-white border border-hairline-light text-ink shadow-xs">
+                      <Icon size={16} />
+                    </span>
+                    <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded-pill bg-white border border-hairline-light text-shade-60">
+                      Active
+                    </span>
+                  </div>
+                  <h4 className="text-[15px] font-sans font-semibold text-ink mb-1">
+                    {comp.title}
+                  </h4>
+                  <span className="text-[12px] font-mono text-shade-50 block mb-2.5">
+                    {comp.tech}
+                  </span>
+                  <p className="text-[13px] font-sans text-shade-60 leading-relaxed">
+                    {comp.desc}
+                  </p>
+                </div>
+              </motion.div>
+            );
+          })}
+        </motion.div>
       </div>
 
-      <motion.div
-        variants={container}
-        initial="hidden"
-        whileInView="show"
-        viewport={{ once: true, margin: "-40px" }}
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto mb-12"
-      >
-        {components.map((comp, idx) => {
-          const Icon = comp.icon;
-          return (
-            <motion.div
-              key={idx}
-              variants={item}
-              className="bg-surface-card p-6 rounded-2xl border border-hairline hover:border-hairline-strong transition-all shadow-sm flex flex-col justify-between"
-            >
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <span className="p-2.5 rounded-xl bg-canvas-soft border border-hairline text-ink">
-                    <Icon size={18} />
-                  </span>
-                  <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded bg-canvas-soft border border-hairline text-muted">
-                    Active
-                  </span>
-                </div>
-                <h3 className="text-[16px] font-serif font-medium text-ink mb-1">
-                  {comp.title}
-                </h3>
-                <span className="text-[12px] font-mono text-muted block mb-3">
-                  {comp.tech}
-                </span>
-                <p className="text-[13px] font-sans text-body leading-relaxed">
-                  {comp.desc}
-                </p>
-              </div>
-            </motion.div>
-          );
-        })}
-      </motion.div>
-
       {/* Codebase Tree */}
-      <div className="max-w-6xl mx-auto bg-surface-card rounded-2xl p-6 md:p-8 border border-hairline shadow-sm">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-[16px] font-serif font-medium text-ink">
-            Repository Architecture Tree
-          </h3>
-          <span className="text-[11px] font-mono text-muted">
-            Monorepo Layout
+      <div className="surface-card-base">
+        <div className="flex items-center justify-between mb-4 pb-4 border-b border-hairline-light">
+          <div>
+            <span className="eyebrow-cap">Monorepo Layout</span>
+            <h4 className="text-xl font-display font-[330] text-ink">
+              Repository Architecture Tree
+            </h4>
+          </div>
+          <span className="text-[11px] font-mono text-shade-50 px-2.5 py-1 rounded-pill bg-canvas-cream border border-hairline-light">
+            Clean Architecture
           </span>
         </div>
-        <div className="bg-canvas-soft rounded-xl p-4 overflow-x-auto border border-hairline">
+        <div className="bg-canvas-cream rounded-xl p-5 overflow-x-auto border border-hairline-light shadow-inner">
           <pre className="text-[13px] font-mono text-ink leading-[1.6]">
 {`Semantic-Comment-Analyze/
 ├── ARCHITECTURE.md          # 🏛️ Comprehensive technical specifications and data contracts
@@ -145,11 +162,11 @@ export const TechStackGrid = () => {
 │   │   ├── train_intent.py  # 🎓 Intent classifier training CLI
 │   │   └── train_sentiment.py# 🔬 RoBERTa sentiment fine-tuning
 │   └── data/data_handler.py # 🌊 High-throughput streaming CSV processor
-└── frontend/                # 💻 Modern React 18 + Vite + Tailwind CSS SPA
+└── frontend/                # 💻 Modern React + Vite + Tailwind CSS SPA
     └── src/components/About/# 🏛️ Interactive Architecture & Documentation Hub`}
           </pre>
         </div>
       </div>
-    </section>
+    </div>
   );
 };

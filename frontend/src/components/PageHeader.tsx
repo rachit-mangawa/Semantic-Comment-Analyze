@@ -6,6 +6,7 @@ interface PageHeaderProps {
   description: string;
   badge?: React.ReactNode;
   action?: React.ReactNode;
+  onDark?: boolean;
 }
 
 export const PageHeader: React.FC<PageHeaderProps> = ({
@@ -14,22 +15,39 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   description,
   badge,
   action,
+  onDark = false,
 }) => {
   return (
-    <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-2 border-b border-hairline">
-      <div>
+    <div
+      className={`flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b transition-colors ${
+        onDark ? "border-hairline-dark text-on-primary" : "border-hairline-light text-ink"
+      }`}
+    >
+      <div className="max-w-3xl">
         {eyebrow && (
-          <span className="text-[11px] font-mono uppercase tracking-[0.2em] font-semibold text-muted mb-2 block select-none">
+          <span
+            className={`text-[12px] font-sans font-medium tracking-[0.72px] uppercase mb-2.5 block select-none ${
+              onDark ? "text-shade-40" : "text-shade-50"
+            }`}
+          >
             {eyebrow}
           </span>
         )}
-        <div className="flex flex-wrap items-center gap-3">
-          <h1 className="font-serif text-3xl sm:text-4xl font-light text-ink tracking-tight leading-tight">
+        <div className="flex flex-wrap items-center gap-3.5">
+          <h1
+            className={`font-display text-3xl sm:text-4xl md:text-[44px] font-[330] tracking-[-0.015em] leading-[1.14] text-balance ${
+              onDark ? "text-white" : "text-ink"
+            }`}
+          >
             {title}
           </h1>
           {badge}
         </div>
-        <p className="text-[15px] sm:text-[16px] font-sans text-body mt-2 max-w-2xl text-pretty leading-relaxed">
+        <p
+          className={`text-[15px] sm:text-[16px] font-sans mt-3 text-pretty leading-relaxed ${
+            onDark ? "text-shade-30" : "text-shade-60"
+          }`}
+        >
           {description}
         </p>
       </div>

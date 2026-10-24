@@ -1,28 +1,32 @@
 # System Architecture & Technical Specifications
 
 > **Semantic Comment Analysis Platform**  
-> *Production-grade Natural Language Processing pipeline combining dense transformer embeddings, ultra-low latency linear classifier heads, token perturbation explainability, and deterministic business heuristics.*
+> High-throughput NLP service combining 384-dimensional dense vector embeddings, a regularized logistic classifier head, leave-one-out token attribution, and deterministic business routing on standard CPU hardware.
 
 ---
 
-## 1. System Overview & Design Principles
+## 1. System Overview & Architecture Decision Records (ADRs)
 
-This platform processes unstructured feedback, support tickets, and open text using pre-computed dense embeddings and an L2-regularized linear classification head. It replaces slow, prompt-based LLMs and heavy zero-shot cross-encoders with a sub-4ms pipeline that provides exact token-level attribution and deterministic business routing.
+Production triage systems often default to cloud-hosted generative LLMs. For high-volume customer feedback and support queues, that choice introduces three operational liabilities: high latency (800ms to 2.5s network round trips), compounding token costs ($15 to $60 per million items), and non-deterministic prompt degradation.
+
+This service takes a deliberate engineering approach: project raw input text into a 384-dimensional dense semantic space (`all-MiniLM-L6-v2`), evaluate class probabilities with an L2-regularized linear head in under 150 microseconds, and route actions through deterministic lookup rules.
 
 ```
 Raw Input Text ───► Dense Vector Space (MiniLM-L6-v2) ───► Classifier Head (Logistic Regression)
                              │                                             │
                              ▼                                             ▼
-                     384-dim Embedding                             Sub-4ms Inference
+                     384-dim Embedding                             Sub-4ms Dot Product
 ```
 
-### Core Design Principles
+### Architectural Decisions & Tradeoffs
 
-1. **Low-Latency Inference**: Pre-computed 384-dimensional dense vectors evaluated against an optimized linear head in under **4ms per inference** on standard CPU hardware.
-2. **Deterministic Business Logic**: Separates probabilistic ML predictions (Intent, Sentiment) from deterministic operational decisions (Urgency, Tone, Standard Operating Procedures).
-3. **Leave-One-Out (LOO) Explainability**: Systematic token perturbation calculates exact word-level attribution without surrogate approximations.
-4. **Constant-Memory Batch Streaming**: Generator-based streaming CSV pipeline that handles large feedback dumps with constant ~45MB memory usage.
-5. **Decoupled Architecture**: Asynchronous FastAPI service paired with a focused React analytical client.
+| Decision ID | Choice | Replaced Alternative | Core Rationale & Tradeoff |
+| :--- | :--- | :--- | :--- |
+| **ADR-01** | **Dense Projections + Linear Head** | Generative LLMs / Large Zero-Shot | Cuts inference latency from 1,200ms to under 4ms on standard CPUs. Eliminates recurring token costs and external API outages at the cost of requiring a pre-defined set of intent classes. |
+| **ADR-02** | **Leave-One-Out (LOO) Occlusion** | Synthetic Surrogates (LIME / SHAP) | Perturbs the exact model directly rather than training a local surrogate approximation that can hallucinate attribution artifacts. $N$ tokens require $N$ lightweight forward passes (~15ms total for typical sentences). |
+| **ADR-03** | **Deterministic Business Rules** | LLM Prompt Function Calling | Guarantees operational SLA compliance. A bug with negative sentiment routes to Jira Ticket every single time, rather than 98% of the time with probabilistic prompts. |
+| **ADR-04** | **Streaming Generator Pipeline** | In-Memory Pandas DataFrames | Bounds memory usage to a constant ~45MB regardless of whether the CSV has 50 rows or 500,000 rows. Prevents Out-Of-Memory (OOM) process termination. |
+| **ADR-05** | **Threadpool Offloading (`asyncio.to_thread`)** | Blocking In-Loop Execution | Prevents GIL-bound PyTorch and NumPy matrix operations from blocking FastAPI's ASGI event loop, preserving concurrent socket handling. |
 
 ---
 
@@ -385,31 +389,41 @@ flowchart LR
 
 ## 7. Frontend Architecture & Design System
 
-The frontend is a single-page application engineered with a clean, Swiss-inspired typographic aesthetic:
+The frontend is a single-page application built around the design specifications defined in `DESIGN.md`:
 
 ```
 frontend/src/
 ├── components/
-│   ├── About/                     # Architecture & Documentation Hub
-│   │   ├── AboutView.tsx          # Master tabbed documentation controller
-│   │   ├── ArchitectureDiagram.tsx # Flow diagram renderer & SVG inspect
-│   │   ├── HeroSection.tsx        # Architectural mission & badges
-│   │   ├── HowItWorks.tsx         # Technical lifecycle steps
-│   │   └── TechStackGrid.tsx      # Subsystem breakdown cards
-│   ├── SingleAnalysisView.tsx     # Interactive single text analyzer with Heatmap & Radar
-│   ├── BatchProcessingView.tsx    # Chunked streaming CSV uploader & live preview
-│   ├── FeatureCard.tsx            # Visual container component
-│   ├── Sidebar.tsx                # Navigation sidebar with active state tracking
-│   └── Button.tsx                 # Standardized button design tokens
-├── index.css                      # Tailwind base layers & CSS variables
-├── main.tsx                       # React DOM entry point
-└── App.tsx                        # Master layout & view router
+│   ├── About/                         # Specifications & Architecture Hub
+│   │   ├── AboutView.tsx              # Consolidated 6-tab specifications hub
+│   │   ├── ArchitectureDiagram.tsx    # Subsystem SVG topology inspector
+│   │   ├── HowItWorks.tsx             # 4-stage execution lifecycle
+│   │   ├── InteractivePipeline.tsx    # 7-stage pipeline inspector with latency metrics
+│   │   ├── OcclusionSimulator.tsx     # Leave-One-Out token occlusion simulator
+│   │   ├── BusinessHeuristicsMatrix.tsx # Deterministic rule matrix sandbox
+│   │   ├── BenchmarkComparison.tsx    # Latency, throughput, and compute benchmarks
+│   │   ├── ApiReferenceView.tsx       # REST API reference with copyable snippets
+│   │   └── TechStackGrid.tsx          # Subsystem component catalog
+│   ├── OverviewView.tsx               # Editorial Split Hero with live telemetry and sandbox
+│   ├── SingleAnalysisView.tsx         # Real-time comment analysis and token heatmap
+│   ├── BatchProcessingView.tsx        # Chunked CSV batch upload and live stream table
+│   ├── Navbar.tsx                     # Floating capsule navigation with search shortcut
+│   ├── Footer.tsx                     # Unified footer with site links and license
+│   ├── PageHeader.tsx                 # Standardized view header
+│   └── Button.tsx                     # Pill button component
+├── router.ts                          # Client hash-based view router
+├── index.css                          # Universal design tokens and utility layers
+├── App.tsx                            # Root application shell
+└── main.tsx                           # Application entry point
 ```
 
-### Typographic and Color System
-- **Serif Display**: *EB Garamond* for editorial authority and clean visual hierarchy.
-- **Sans Interface**: *Inter* for legible data tables and analytical interfaces.
-- **Palette**: Neutral Stone/Canvas background (`#f5f5f5`), deep ink typography (`#0c0a09`), subtle hairlines (`#e7e5e4`), and categorical intent color accents.
+### Typographic and Visual System
+- **Display Typography**: *Inter Tight* at thin weight (330), negative letter spacing (`-0.015em`), and OpenType `ss03` stylistic set enabled globally.
+- **Interface Body**: *Inter Variable* (weights 420–550) for readable analytical views, controls, and data tables.
+- **Code & Numbers**: System monospace (`ui-monospace`) for JSON payloads, token attribution drops, and vector dimensions.
+- **Palette**: Canvas Cream (`#fbfbf5`), pure white card surfaces (`#ffffff`), ink typography (`#000000`), hairline zinc dividers (`#e4e4e7`), and aloe mint (`#c1fbd4`) feature accents.
+- **Elevation**: Level 3 stacked soft paper shadows (`0 8px 8px rgba(0,0,0,0.03), 0 4px 4px rgba(0,0,0,0.03), 0 2px 2px rgba(0,0,0,0.03), 0 0 0 1px rgba(0,0,0,0.06)`).
+- **Geometry**: Pill geometry (`rounded.pill` / 9999px) for all buttons, tags, and active tabs.
 
 ---
 
@@ -417,16 +431,20 @@ frontend/src/
 
 ```text
 Semantic-Comment-Analyze/
-├── ARCHITECTURE.md           # This document (System specifications & architecture)
+├── .github/
+│   └── workflows/
+│       └── deploy.yml        # GitHub Pages automated deployment workflow
+├── ARCHITECTURE.md           # System architecture and technical specifications
+├── DESIGN.md                 # Design system specifications and token dictionary
 ├── README.md                 # Public repository overview and quickstart
-├── run.bat                   # Automated Windows launcher (uv/pip + npm build + server)
+├── run.bat                   # Windows startup script (sync, build, and launch)
 ├── pyproject.toml            # Python packaging and dependency declarations
 ├── requirements.txt          # Frozen pip dependencies
 ├── uv.lock                   # Deterministic lockfile for uv package manager
 ├── data/
 │   ├── local_model_head.pkl  # Trained Logistic Regression classifier weights
 │   ├── label_mapping.txt     # Dynamic intent labels
-│   └── training_data.csv     # Synthetic and annotated training dataset
+│   └── training_data.csv     # Annotated training dataset
 ├── src/
 │   ├── api/
 │   │   ├── __init__.py
@@ -441,13 +459,13 @@ Semantic-Comment-Analyze/
 │       ├── __init__.py
 │       └── data_handler.py   # Streaming CSV generator and micro-batch processor
 ├── frontend/
-│   ├── dist/                 # Production static bundle served by FastAPI
-│   ├── public/               # Public assets (arch.svg, favicon.ico)
+│   ├── dist/                 # Production static bundle served by FastAPI / GitHub Pages
+│   ├── public/               # Public assets (arch.svg, favicon.svg)
 │   ├── src/                  # React + TypeScript source code
 │   ├── package.json          # Node dependencies and scripts
-│   ├── tailwind.config.ts    # Tailwind styling tokens
+│   ├── tailwind.config.ts    # Tailwind styling tokens adhering to DESIGN.md
 │   ├── tsconfig.json         # TypeScript compiler configuration
-│   └── vite.config.ts        # Vite development server and API proxy configuration
+│   └── vite.config.ts        # Vite build configuration with relative asset paths
 ├── docs/
 │   └── API_REFERENCE.md      # Detailed REST API endpoints and schema documentation
 └── tests/

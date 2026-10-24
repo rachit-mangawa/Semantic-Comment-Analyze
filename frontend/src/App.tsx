@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Navbar } from "@/components/Navbar";
 import { OverviewView } from "@/components/OverviewView";
-import { MethodologyView } from "@/components/MethodologyView";
 import { SingleAnalysisView } from "@/components/SingleAnalysisView";
 import { BatchProcessingView } from "@/components/BatchProcessingView";
 import { AboutView } from "@/components/About/AboutView";
@@ -36,21 +35,19 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-canvas text-ink flex flex-col font-sans">
+    <div className="min-h-screen bg-canvas-cream text-ink flex flex-col font-sans selection:bg-black selection:text-white">
       <Navbar activeView={route.view} onViewChange={handleNavigate} />
       <main className="flex-1 w-full flex flex-col">
         <div className="flex-1">
           {route.view === "overview" ? (
             <OverviewView onNavigate={handleNavigate} />
-          ) : route.view === "methodology" ? (
-            <MethodologyView onNavigate={handleNavigate} />
           ) : route.view === "single" ? (
             <SingleAnalysisView />
           ) : route.view === "batch" ? (
             <BatchProcessingView />
           ) : (
             <AboutView
-              initialTab={route.subTab || "overview"}
+              initialTab={route.subTab || (route.view === "methodology" ? "pipeline" : "overview")}
               onTabChange={handleArchitectureTabChange}
             />
           )}

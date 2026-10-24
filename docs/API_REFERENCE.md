@@ -161,7 +161,7 @@ import requests
 API_URL = "http://127.0.0.1:8000/semantic/analyze"
 
 payload = {
-    "text": "The new dark mode looks gorgeous! Fantastic work by the design team.",
+    "text": "The analytics exports are clean and much faster to navigate now.",
     "threshold": 0.5,
     "include_explanation": True
 }

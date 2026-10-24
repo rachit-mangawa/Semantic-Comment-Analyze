@@ -9,7 +9,7 @@ Fast, explainable NLP pipeline for customer feedback, support tickets, and open-
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=flat&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue?style=flat)](LICENSE)
 
-[Architecture](ARCHITECTURE.md) • [API Reference](docs/API_REFERENCE.md) • [Quickstart](#quickstart) • [Benchmarks](#benchmarks)
+[Architecture](ARCHITECTURE.md) • [API Reference](docs/API_REFERENCE.md) • [Quickstart](#quickstart) • [Benchmarks](#benchmarks) • [Live Demo](https://rachit-mangawa.github.io/Semantic-Comment-Analyze/)
 
 ---
 
@@ -77,9 +77,9 @@ Measurements on an 8-core x86 CPU:
 
 | Metric | Cloud LLMs (GPT-4 / Claude) | Local Zero-Shot (BART-Large) | This Platform (MiniLM + Head) |
 | :--- | :--- | :--- | :--- |
-| **Inference Latency** | 800ms – 2,500ms | 120ms – 350ms | **~10ms – 25ms** |
+| **Inference Latency** | 800ms - 2,500ms | 120ms - 350ms | **~10ms - 25ms** |
 | **Throughput (CPU)** | ~2 req/s (rate limited) | ~8 req/s | **280+ req/s** |
-| **Cost per 1M queries** | $15 – $60 | Cloud compute | **$0.00 (Self-hosted)** |
+| **Cost per 1M queries** | $15 - $60 | Cloud compute | **$0.00 (Self-hosted)** |
 | **Explainability** | Generative rationale | Surrogate model needed | **Exact token $\Delta P$ drop** |
 | **Network Dependency** | Required | None | **100% Offline ready** |
 | **Batch Memory** | External API | High GPU VRAM | **Constant ~45MB RAM** |
@@ -92,6 +92,15 @@ Measurements on an 8-core x86 CPU:
 - Python 3.13+
 - Node.js 18+ and npm
 - `uv` (recommended) or standard `pip`
+
+---
+
+### GitHub Pages (Static Interface)
+
+The frontend client is configured for GitHub Pages with automated builds via `.github/workflows/deploy.yml`:
+[https://rachit-mangawa.github.io/Semantic-Comment-Analyze/](https://rachit-mangawa.github.io/Semantic-Comment-Analyze/)
+
+Client-side hash routing (`#/overview`, `#/single`, `#/batch`, `#/architecture`) allows direct linking and browser history navigation without server redirects.
 
 ---
 

@@ -1,20 +1,5 @@
 import React from "react";
-import {
-  ExternalLink,
-  BookOpen,
-  Code2,
-  Layers,
-  Cpu,
-  Activity,
-  Workflow,
-  ShieldCheck,
-  Zap,
-  Database,
-  Sparkles,
-  FileText,
-  Terminal,
-  ArrowUp
-} from "lucide-react";
+import { ArrowUp, ExternalLink } from "lucide-react";
 import { RouteView } from "@/router";
 
 const GithubIcon: React.FC<{ size?: number; className?: string }> = ({ size = 14, className = "" }) => (
@@ -41,7 +26,7 @@ interface FooterProps {
   onNavigate: (view: RouteView, subTab?: string) => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ activeView, activeSubTab, onNavigate }) => {
+export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
   const scrollToTop = () => {
     if (typeof window !== "undefined") {
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -49,334 +34,93 @@ export const Footer: React.FC<FooterProps> = ({ activeView, activeSubTab, onNavi
   };
 
   return (
-    <footer className="w-full border-t border-hairline/80 bg-surface-card/90 backdrop-blur-xl mt-auto transition-colors">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-        {/* Main 4-Column Balanced Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 pb-12 border-b border-hairline">
-          
-          {/* Column 1: Brand & Philosophy (Span 5 on large screens) */}
-          <div className="lg:col-span-5 max-w-md flex flex-col justify-between">
-            <div>
-              <div className="flex items-center gap-3 mb-3.5">
-                <div className="w-8 h-8 rounded-xl bg-ink text-canvas flex items-center justify-center font-serif text-[15px] font-bold select-none shadow-xs ring-1 ring-ink/10">
-                  S
-                </div>
-                <div className="flex flex-col">
-                  <span className="font-serif text-[19px] font-medium tracking-tight text-ink leading-tight">
-                    Semantic Analysis
-                  </span>
-                  <span className="text-[11px] font-mono text-muted tracking-wide">
-                    Explainable NLP Intelligence Platform
-                  </span>
-                </div>
-              </div>
-
-              <p className="text-[14px] font-sans text-body leading-relaxed text-pretty mb-5">
-                Deterministic intent classification, Leave-One-Out token occlusion explainability, and Twitter-RoBERTa sentiment analysis engineered to run on standard CPU without cloud LLM dependencies.
-              </p>
-
-              {/* Status Badges */}
-              <div className="flex flex-wrap items-center gap-2 text-[12px] font-mono text-muted">
-                <span className="inline-flex items-center gap-2 bg-canvas-soft border border-hairline px-2.5 py-1 rounded-md">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span>CPU In-Memory Pipeline</span>
-                </span>
-                <span className="inline-flex items-center gap-1.5 bg-canvas-soft border border-hairline px-2.5 py-1 rounded-md">
-                  <span>384d Dense Vectorizer</span>
-                </span>
-                <span className="inline-flex items-center gap-1.5 bg-canvas-soft border border-hairline px-2.5 py-1 rounded-md">
-                  <span>Zero Cloud Token Cost</span>
-                </span>
-              </div>
+    <footer className="w-full bg-white text-ink border-t border-hairline-light mt-auto transition-colors">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 flex flex-col gap-6">
+        {/* Row 1: Brand & Subtitle + Primary Navigation */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
+          {/* Brand Identity */}
+          <div className="flex items-center gap-3">
+            <div className="w-7 h-7 rounded-pill bg-black text-white flex items-center justify-center font-display text-[13px] font-bold select-none shadow-xs shrink-0">
+              S
             </div>
-
-            <div className="pt-6 mt-6 border-t border-hairline/60 text-[12px] font-mono text-muted flex items-center gap-2">
-              <span>FastAPI 0.115</span>
-              <span>•</span>
-              <span>SentenceTransformers</span>
-              <span>•</span>
-              <span>React 18</span>
+            <div className="flex flex-col">
+              <span className="font-display text-[16px] font-[400] text-ink tracking-tight leading-snug">
+                Semantic Comment Analysis
+              </span>
+              <span className="text-[12px] font-sans text-shade-50">
+                Explainable NLP &amp; Deterministic Triage Intelligence
+              </span>
             </div>
           </div>
 
-          {/* Column 2: Workspace Navigation (Span 2 on large screens) */}
-          <div className="lg:col-span-2">
-            <span className="text-[11px] font-mono uppercase tracking-[0.2em] font-semibold text-muted block mb-4 select-none">
-              Workspace
-            </span>
-            <ul className="space-y-1.5 text-[13px] font-sans">
-              <li>
-                <a
-                  href="#/overview"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    onNavigate("overview");
-                  }}
-                  className={`group flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg transition-all duration-150 ease-out select-none ${
-                    activeView === "overview"
-                      ? "bg-canvas-soft text-ink font-medium border border-hairline"
-                      : "text-body hover:text-ink hover:bg-canvas-soft/60"
-                  }`}
-                >
-                  <Sparkles size={14} strokeWidth={1.75} className={`shrink-0 transition-colors ${activeView === "overview" ? "text-ink" : "text-muted group-hover:text-ink"}`} />
-                  <span>Overview</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#/methodology"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    onNavigate("methodology");
-                  }}
-                  className={`group flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg transition-all duration-150 ease-out select-none ${
-                    activeView === "methodology"
-                      ? "bg-canvas-soft text-ink font-medium border border-hairline"
-                      : "text-body hover:text-ink hover:bg-canvas-soft/60"
-                  }`}
-                >
-                  <BookOpen size={14} strokeWidth={1.75} className={`shrink-0 transition-colors ${activeView === "methodology" ? "text-ink" : "text-muted group-hover:text-ink"}`} />
-                  <span>Methodology</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#/single"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    onNavigate("single");
-                  }}
-                  className={`group flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg transition-all duration-150 ease-out select-none ${
-                    activeView === "single"
-                      ? "bg-canvas-soft text-ink font-medium border border-hairline"
-                      : "text-body hover:text-ink hover:bg-canvas-soft/60"
-                  }`}
-                >
-                  <Zap size={14} strokeWidth={1.75} className={`shrink-0 transition-colors ${activeView === "single" ? "text-ink" : "text-muted group-hover:text-ink"}`} />
-                  <span>Single Analysis</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#/batch"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    onNavigate("batch");
-                  }}
-                  className={`group flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg transition-all duration-150 ease-out select-none ${
-                    activeView === "batch"
-                      ? "bg-canvas-soft text-ink font-medium border border-hairline"
-                      : "text-body hover:text-ink hover:bg-canvas-soft/60"
-                  }`}
-                >
-                  <Database size={14} strokeWidth={1.75} className={`shrink-0 transition-colors ${activeView === "batch" ? "text-ink" : "text-muted group-hover:text-ink"}`} />
-                  <span>Batch Streaming</span>
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Column 3: Architecture in Pieces (Span 3 on large screens) */}
-          <div className="lg:col-span-3">
-            <span className="text-[11px] font-mono uppercase tracking-[0.2em] font-semibold text-muted block mb-4 select-none">
-              Architecture Pieces
-            </span>
-            <ul className="space-y-1.5 text-[13px] font-sans">
-              <li>
-                <a
-                  href="#/architecture/overview"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    onNavigate("architecture", "overview");
-                  }}
-                  className={`group flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg transition-all duration-150 ease-out select-none ${
-                    activeView === "architecture" && activeSubTab === "overview"
-                      ? "bg-canvas-soft text-ink font-medium border border-hairline"
-                      : "text-body hover:text-ink hover:bg-canvas-soft/60"
-                  }`}
-                >
-                  <Layers size={14} strokeWidth={1.75} className={`shrink-0 transition-colors ${activeView === "architecture" && activeSubTab === "overview" ? "text-ink" : "text-muted group-hover:text-ink"}`} />
-                  <span>System Blueprint</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#/architecture/pipeline"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    onNavigate("architecture", "pipeline");
-                  }}
-                  className={`group flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg transition-all duration-150 ease-out select-none ${
-                    activeView === "architecture" && activeSubTab === "pipeline"
-                      ? "bg-canvas-soft text-ink font-medium border border-hairline"
-                      : "text-body hover:text-ink hover:bg-canvas-soft/60"
-                  }`}
-                >
-                  <Workflow size={14} strokeWidth={1.75} className={`shrink-0 transition-colors ${activeView === "architecture" && activeSubTab === "pipeline" ? "text-ink" : "text-muted group-hover:text-ink"}`} />
-                  <span>Inference Pipeline</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#/architecture/occlusion"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    onNavigate("architecture", "occlusion");
-                  }}
-                  className={`group flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg transition-all duration-150 ease-out select-none ${
-                    activeView === "architecture" && activeSubTab === "occlusion"
-                      ? "bg-canvas-soft text-ink font-medium border border-hairline"
-                      : "text-body hover:text-ink hover:bg-canvas-soft/60"
-                  }`}
-                >
-                  <Cpu size={14} strokeWidth={1.75} className={`shrink-0 transition-colors ${activeView === "architecture" && activeSubTab === "occlusion" ? "text-ink" : "text-muted group-hover:text-ink"}`} />
-                  <span>Occlusion XAI Math</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#/architecture/heuristics"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    onNavigate("architecture", "heuristics");
-                  }}
-                  className={`group flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg transition-all duration-150 ease-out select-none ${
-                    activeView === "architecture" && activeSubTab === "heuristics"
-                      ? "bg-canvas-soft text-ink font-medium border border-hairline"
-                      : "text-body hover:text-ink hover:bg-canvas-soft/60"
-                  }`}
-                >
-                  <ShieldCheck size={14} strokeWidth={1.75} className={`shrink-0 transition-colors ${activeView === "architecture" && activeSubTab === "heuristics" ? "text-ink" : "text-muted group-hover:text-ink"}`} />
-                  <span>Heuristics Matrix</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#/architecture/benchmarks"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    onNavigate("architecture", "benchmarks");
-                  }}
-                  className={`group flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg transition-all duration-150 ease-out select-none ${
-                    activeView === "architecture" && activeSubTab === "benchmarks"
-                      ? "bg-canvas-soft text-ink font-medium border border-hairline"
-                      : "text-body hover:text-ink hover:bg-canvas-soft/60"
-                  }`}
-                >
-                  <Activity size={14} strokeWidth={1.75} className={`shrink-0 transition-colors ${activeView === "architecture" && activeSubTab === "benchmarks" ? "text-ink" : "text-muted group-hover:text-ink"}`} />
-                  <span>Benchmark Comparison</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://github.com/rachit-mangawa/Semantic-Comment-Analyze/blob/main/ARCHITECTURE.md"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group flex items-center justify-between px-2.5 py-1.5 rounded-lg text-body hover:text-ink hover:bg-canvas-soft/60 transition-all duration-150 ease-out font-mono text-[12px]"
-                >
-                  <span className="flex items-center gap-2">
-                    <FileText size={14} strokeWidth={1.75} className="text-muted group-hover:text-ink transition-colors shrink-0" />
-                    <span>ARCHITECTURE.md</span>
-                  </span>
-                  <ExternalLink size={11} strokeWidth={1.75} className="text-muted group-hover:text-ink transition-colors shrink-0" />
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Column 4: API & Developer (Span 2 on large screens) */}
-          <div className="lg:col-span-2">
-            <span className="text-[11px] font-mono uppercase tracking-[0.2em] font-semibold text-muted block mb-4 select-none">
-              API &amp; Docs
-            </span>
-            <ul className="space-y-1.5 text-[13px] font-sans">
-              <li>
-                <a
-                  href="#/architecture/api"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    onNavigate("architecture", "api");
-                  }}
-                  className={`group flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg transition-all duration-150 ease-out select-none ${
-                    activeView === "architecture" && activeSubTab === "api"
-                      ? "bg-canvas-soft text-ink font-medium border border-hairline"
-                      : "text-body hover:text-ink hover:bg-canvas-soft/60"
-                  }`}
-                >
-                  <Code2 size={14} strokeWidth={1.75} className={`shrink-0 transition-colors ${activeView === "architecture" && activeSubTab === "api" ? "text-ink" : "text-muted group-hover:text-ink"}`} />
-                  <span>REST API Reference</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/docs"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group flex items-center justify-between px-2.5 py-1.5 rounded-lg text-body hover:text-ink hover:bg-canvas-soft/60 transition-all duration-150 ease-out select-none"
-                >
-                  <span className="flex items-center gap-2">
-                    <Terminal size={14} strokeWidth={1.75} className="text-muted group-hover:text-ink transition-colors shrink-0" />
-                    <span>Swagger (/docs)</span>
-                  </span>
-                  <ExternalLink size={11} strokeWidth={1.75} className="text-muted group-hover:text-ink transition-colors shrink-0" />
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://github.com/rachit-mangawa/Semantic-Comment-Analyze/blob/main/docs/API_REFERENCE.md"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group flex items-center justify-between px-2.5 py-1.5 rounded-lg text-body hover:text-ink hover:bg-canvas-soft/60 transition-all duration-150 ease-out font-mono text-[12px]"
-                >
-                  <span className="flex items-center gap-2">
-                    <FileText size={14} strokeWidth={1.75} className="text-muted group-hover:text-ink transition-colors shrink-0" />
-                    <span>API_REFERENCE.md</span>
-                  </span>
-                  <ExternalLink size={11} strokeWidth={1.75} className="text-muted group-hover:text-ink transition-colors shrink-0" />
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://github.com/rachit-mangawa/Semantic-Comment-Analyze"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group flex items-center justify-between px-2.5 py-1.5 rounded-lg text-body hover:text-ink hover:bg-canvas-soft/60 transition-all duration-150 ease-out select-none"
-                >
-                  <span className="flex items-center gap-2">
-                    <GithubIcon size={14} className="text-muted group-hover:text-ink transition-colors shrink-0" />
-                    <span>GitHub Repo</span>
-                  </span>
-                  <ExternalLink size={11} strokeWidth={1.75} className="text-muted group-hover:text-ink transition-colors shrink-0" />
-                </a>
-              </li>
-            </ul>
-          </div>
-
-        </div>
-
-        {/* Bottom Bar: Copyright, License, Back to Top */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-[12px] font-mono text-muted">
-          <div className="flex flex-wrap items-center gap-2">
-            <span>Semantic Comment Analysis Platform</span>
-            <span>•</span>
-            <span>MIT License</span>
-            <span>•</span>
-            <span className="text-body font-medium">Standard CPU Inference</span>
-          </div>
-
-          <div className="flex items-center gap-5">
+          {/* Core Navigation Links */}
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-[13px] font-sans text-shade-60">
+            <button
+              onClick={() => onNavigate("architecture", "overview")}
+              className="hover:text-black transition-colors"
+            >
+              Blueprint
+            </button>
+            <button
+              onClick={() => onNavigate("architecture", "pipeline")}
+              className="hover:text-black transition-colors"
+            >
+              Pipeline
+            </button>
+            <button
+              onClick={() => onNavigate("architecture", "occlusion")}
+              className="hover:text-black transition-colors"
+            >
+              Occlusion XAI
+            </button>
+            <button
+              onClick={() => onNavigate("architecture", "api")}
+              className="hover:text-black transition-colors"
+            >
+              REST API
+            </button>
+            <a
+              href="/docs"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-black transition-colors inline-flex items-center gap-1"
+            >
+              <span>Swagger</span>
+              <ExternalLink size={11} className="text-shade-40" />
+            </a>
             <a
               href="https://github.com/rachit-mangawa/Semantic-Comment-Analyze"
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-ink transition-colors underline-offset-4 hover:underline"
+              className="hover:text-black transition-colors inline-flex items-center gap-1.5"
+            >
+              <GithubIcon size={14} className="text-shade-50" />
+              <span>GitHub</span>
+            </a>
+          </div>
+        </div>
+
+        {/* Row 2: Secondary Metadata, License & Back to Top */}
+        <div className="pt-5 border-t border-hairline-light flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-[12px] font-sans text-shade-50">
+          <div className="flex flex-wrap items-center gap-2">
+            <span>Open-source software licensed under MIT</span>
+            <span className="text-shade-30 hidden xs:inline">•</span>
+            <span className="hidden xs:inline">Standard CPU execution with air-gapped data privacy</span>
+          </div>
+
+          <div className="flex items-center gap-4 self-end sm:self-auto">
+            <a
+              href="https://github.com/rachit-mangawa/Semantic-Comment-Analyze"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-ink transition-colors font-mono text-[11px]"
             >
               rachit-mangawa/Semantic-Comment-Analyze
             </a>
 
             <button
               onClick={scrollToTop}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono text-muted hover:text-ink hover:bg-canvas-soft border border-hairline transition-all active:scale-95 select-none"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-pill text-[12px] font-sans text-shade-60 hover:text-ink bg-canvas-cream hover:bg-white border border-hairline-light transition-all active:scale-95 select-none shadow-xs"
               title="Scroll smoothly back to top"
             >
               <ArrowUp size={12} strokeWidth={2} />

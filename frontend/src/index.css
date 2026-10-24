@@ -3,9 +3,9 @@
 @tailwind utilities;
 
 :root {
+  --font-display: 'Inter Tight', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-inter: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-garamond: 'EB Garamond', Georgia, serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   color-scheme: light;
 }
 
@@ -22,62 +22,104 @@
   }
 
   body {
-    background-color: #fbfbfa;
-    color: #0c0a09;
+    background-color: #fbfbf5;
+    color: #000000;
     font-family: var(--font-inter);
+    font-feature-settings: "ss03";
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
   ::selection {
-    background-color: #1c1917;
-    color: #fafaf9;
+    background-color: #000000;
+    color: #ffffff;
   }
 
-  /* Accessible focus indicators adhering to better-ui / WCAG */
+  /* Accessible focus indicators adhering to WCAG / baseline-ui */
   :focus-visible {
-    outline: 2px solid #0c0a09;
+    outline: 2px solid #000000;
     outline-offset: 2px;
+  }
+
+  /* Thin-weight display typography per DESIGN.md */
+  .font-display {
+    font-family: var(--font-display);
+    font-weight: 330;
+    letter-spacing: -0.015em;
+    font-feature-settings: "ss03";
   }
 }
 
 @layer components {
   /* Universal page layout container ensuring visual harmony across all views */
   .page-container {
-    max-width: 72rem;
+    width: 100%;
+    max-width: 80rem;
     margin-left: auto;
     margin-right: auto;
-    padding-left: 1rem;
-    padding-right: 1rem;
-    padding-top: 2.5rem;
-    padding-bottom: 2.5rem;
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+    padding-top: 2rem;
+    padding-bottom: 3.5rem;
     display: flex;
     flex-direction: column;
-    gap: 2.5rem;
+    gap: 2rem;
   }
 
   @media (min-width: 640px) {
     .page-container {
-      padding-left: 1.5rem;
-      padding-right: 1.5rem;
+      padding-left: 2rem;
+      padding-right: 2rem;
+      gap: 2.25rem;
     }
   }
 
   @media (min-width: 1024px) {
     .page-container {
-      padding-left: 2rem;
-      padding-right: 2rem;
+      padding-left: 2.5rem;
+      padding-right: 2.5rem;
+      gap: 2.5rem;
     }
   }
 
-  /* Universal elevated card surface with 1px hairline border */
+  /* Universal section header typography */
+  .section-heading {
+    font-family: var(--font-display);
+    font-weight: 330;
+    font-size: 1.75rem;
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+    color: #000000;
+  }
+
+  .eyebrow-cap {
+    font-size: 12px;
+    font-family: var(--font-inter);
+    text-transform: uppercase;
+    letter-spacing: 0.72px;
+    font-weight: 600;
+    color: #71717a;
+    display: block;
+    margin-bottom: 0.25rem;
+    user-select: none;
+  }
+
+  /* Fallback aliases for legacy tokens to preserve unified theme */
+  .text-muted { color: #71717a; }
+  .text-body { color: #52525b; }
+  .bg-surface-card { background-color: #ffffff; }
+  .bg-canvas-soft { background-color: #fbfbf5; }
+  .border-hairline { border-color: #e4e4e7; }
+  .border-hairline-strong { border-color: #d4d4d8; }
+
+  /* Universal elevated card surface with Level 3 stacked soft paper shadows */
   .surface-card-base {
     background-color: #ffffff;
-    border: 1px solid #e7e5e4;
-    border-radius: 1rem;
+    border: 1px solid #e4e4e7;
+    border-radius: 12px;
     padding: 1.5rem;
-    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+    box-shadow: 0 8px 8px rgba(0, 0, 0, 0.03), 0 4px 4px rgba(0, 0, 0, 0.03), 0 2px 2px rgba(0, 0, 0, 0.03), 0 0 0 1px rgba(0, 0, 0, 0.06);
   }
 
   @media (min-width: 768px) {
@@ -86,14 +128,58 @@
     }
   }
 
-  /* Universal micro-interaction press scale and duration */
+  /* Cinematic elevated dark card with Level 1 sheen */
+  .surface-card-dark {
+    background-color: #0a0a0a;
+    border: 1px solid #1e2c31;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 2px rgba(255, 255, 255, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+
+  @media (min-width: 768px) {
+    .surface-card-dark {
+      padding: 2rem;
+    }
+  }
+
+  /* Universal micro-interaction press scale and duration adhering to Emil Kowalski framework */
   .btn-interactive {
     transition-property: color, background-color, border-color, box-shadow, transform;
     transition-duration: 150ms;
     transition-timing-function: cubic-bezier(0, 0, 0.2, 1);
   }
   .btn-interactive:enabled:active {
-    transform: scale(0.96);
+    transform: scale(0.97);
+  }
+
+  /* Signature DESIGN.md Pill Tags */
+  .pill-tag-mint {
+    background-color: #c1fbd4;
+    color: #000000;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: 0.72px;
+    padding: 4px 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .pill-tag-shade {
+    background-color: #d4d4d8;
+    color: #000000;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: 0.72px;
+    padding: 4px 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
   }
 }
 
