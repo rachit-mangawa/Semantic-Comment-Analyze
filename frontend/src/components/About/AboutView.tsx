@@ -66,7 +66,7 @@ export const AboutView: React.FC<AboutViewProps> = ({ initialTab = "overview", o
       />
 
       {/* Floating Pill Sub-navigation Dock */}
-      <div className="flex flex-wrap items-center gap-1.5 p-1.5 bg-white border border-hairline-light rounded-pill self-start shadow-level-3">
+      <div className="flex flex-wrap items-center gap-1.5 p-1.5 bg-white border border-hairline-light rounded-pill self-start shadow-level-3 my-1 sm:my-2">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
