@@ -210,3 +210,13 @@ def analyze_sync(text: str, threshold: float = 0.5, include_explanation: bool = 
 
 async def analyze_full(text: str, threshold: float = 0.5, include_explanation: bool = False):
     return analyze_sync(text, threshold, include_explanation)
+
+
+def warmup():
+    """Warm up all lazy loaders and execute one dummy inference."""
+    get_intent_labels()
+    get_embedding_model()
+    get_classifier_head()
+    get_sentiment_model()
+    analyze_sync("warmup", threshold=0.5, include_explanation=False)
+    return True

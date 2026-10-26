@@ -171,3 +171,19 @@ print(f"OK:{{elapsed:.4f}}")
     # Filter out pycache
     new_files = [f for f in (files_after - files_before) if "__pycache__" not in str(f)]
     assert len(new_files) == 0, f"New files created at import: {new_files}"
+
+
+def test_warmup_and_health_models_loaded(client):
+    from semantic_backend import warmup
+
+    res_warmup = warmup()
+    assert res_warmup is True
+
+    res = client.get("/semantic/health")
+    assert res.status_code == 200
+    data = res.json()
+    assert data["status"] == "healthy"
+    assert data["service"] == "semantic_backend"
+    assert data["models_loaded"]["embedding"] is True
+    assert data["models_loaded"]["classifier_head"] is True
+    assert data["models_loaded"]["sentiment"] is True
