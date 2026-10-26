@@ -74,7 +74,7 @@ const WordContributionHeatmap = ({ data }: { data: ExplainabilityData }) => {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="leading-relaxed whitespace-pre-wrap text-[16px] p-6 bg-canvas-cream rounded-lg border border-hairline-light font-sans text-ink flex flex-wrap gap-x-1.5 gap-y-2 select-text shadow-inner">
+      <div className="leading-relaxed whitespace-pre-wrap text-[15px] sm:text-[16px] p-4 sm:p-6 bg-canvas-cream rounded-lg border border-hairline-light font-sans text-ink flex flex-wrap gap-x-1.5 gap-y-2 select-text shadow-inner">
         {data.map((item, idx) => {
           const alpha = Math.min(Math.abs(item.contribution) / maxAbs, 1);
           const colorMeta = INTENT_COLORS[item.primary_intent];
@@ -96,17 +96,17 @@ const WordContributionHeatmap = ({ data }: { data: ExplainabilityData }) => {
       </div>
 
       {/* Categorical Intent Legend */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pt-3 border-t border-hairline-light text-[12px] font-mono text-shade-50">
-        <div className="flex flex-wrap gap-4 items-center">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-hairline-light text-[11px] sm:text-[12px] font-mono text-shade-50">
+        <div className="flex flex-wrap gap-3 sm:gap-4 items-center">
           <span className="font-semibold uppercase tracking-wider text-shade-50">Token Attribution:</span>
           {Object.entries(INTENT_COLORS).map(([intent, meta]) => (
             <div key={intent} className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: meta.hex }} />
-              <span className="text-shade-60 font-sans text-[13px]">{intent}</span>
+              <span className="text-shade-60 font-sans text-[12px] sm:text-[13px]">{intent}</span>
             </div>
           ))}
         </div>
-        <span>Hover words to view marginal drop</span>
+        <span>Hover/tap words to view marginal drop</span>
       </div>
     </div>
   );
@@ -269,14 +269,14 @@ export const SingleAnalysisView = () => {
               </button>
             )}
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5 sm:gap-2">
             {PRESETS.map((preset) => {
               const isSelected = text === preset.text;
               return (
                 <button
                   key={preset.label}
                   onClick={() => loadPreset(preset.text)}
-                  className={`relative px-4 py-2 rounded-pill text-[13px] font-sans font-medium transition-colors duration-150 ease-out active:scale-[0.97] select-none ${
+                  className={`relative px-3 sm:px-4 py-1.5 sm:py-2 rounded-pill text-[12px] sm:text-[13px] font-sans font-medium transition-colors duration-150 ease-out active:scale-[0.97] select-none ${
                     isSelected
                       ? "text-white shadow-sm"
                       : "bg-canvas-cream border border-hairline-light text-shade-60 hover:text-black hover:border-shade-40"
@@ -304,9 +304,9 @@ export const SingleAnalysisView = () => {
             onChange={(e) => setText(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Type or paste customer feedback, support ticket, or review text here... (Ctrl+Enter to analyze)"
-            className="w-full bg-canvas-cream rounded-md p-4 text-[15px] font-sans text-ink border border-hairline-light focus:border-black focus:bg-white focus:outline-none transition-colors duration-150 resize-none shadow-inner leading-relaxed"
+            className="w-full bg-canvas-cream rounded-md p-3.5 sm:p-4 text-[14px] sm:text-[15px] font-sans text-ink border border-hairline-light focus:border-black focus:bg-white focus:outline-none transition-colors duration-150 resize-none shadow-inner leading-relaxed"
           />
-          <div className="flex items-center justify-between mt-2.5 text-[12px] font-mono text-shade-50">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 mt-2.5 text-[11px] sm:text-[12px] font-mono text-shade-50">
             <span>Press <kbd className="bg-white px-2 py-0.5 rounded border border-hairline-light text-ink">Ctrl</kbd> + <kbd className="bg-white px-2 py-0.5 rounded border border-hairline-light text-ink">Enter</kbd></span>
             <span className="tabular-nums">{text.length} characters • {text.trim() ? text.trim().split(/\s+/).length : 0} words</span>
           </div>
@@ -367,12 +367,13 @@ export const SingleAnalysisView = () => {
           </div>
 
           {/* Right: Submit Button */}
-          <div className="flex items-center justify-end gap-3 shrink-0">
+          <div className="flex items-center justify-stretch sm:justify-end gap-3 w-full md:w-auto shrink-0">
             <Button
               variant="primary"
               size="md"
               onClick={handleAnalyze}
               disabled={loading || !text.trim()}
+              className="w-full sm:w-auto"
               icon={
                 loading ? (
                   <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
@@ -505,14 +506,14 @@ export const SingleAnalysisView = () => {
               transition={{ duration: 0.24, ease: [0.23, 1, 0.32, 1] }}
               className="surface-card-base"
             >
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-hairline-light">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 sm:pb-6 border-b border-hairline-light">
                 <div>
-                  <span className="text-[12px] font-sans uppercase text-shade-50 tracking-[0.72px] block mb-1.5 font-medium">
+                  <span className="text-[11px] sm:text-[12px] font-sans uppercase text-shade-50 tracking-[0.72px] block mb-1.5 font-medium">
                     Primary Verdict
                   </span>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
                     <span
-                      className="px-4 py-1.5 rounded-pill text-[16px] font-sans font-semibold border flex items-center gap-2"
+                      className="px-3 sm:px-4 py-1 sm:py-1.5 rounded-pill text-[14px] sm:text-[16px] font-sans font-semibold border flex items-center gap-2"
                       style={{
                         borderColor: topMeta.hex,
                         backgroundColor: `rgba(${topMeta.rgb}, 0.1)`,
@@ -522,27 +523,27 @@ export const SingleAnalysisView = () => {
                       <span className="w-2 h-2 rounded-full" style={{ backgroundColor: topMeta.hex }} />
                       {result.intent.top_intent}
                     </span>
-                    <span className="text-3xl font-display font-[330] text-ink tabular-nums">
+                    <span className="text-2xl sm:text-3xl font-display font-[330] text-ink tabular-nums">
                       {((result.intent.all_intents[result.intent.top_intent] || 0) * 100).toFixed(1)}%
                     </span>
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                   {latencyMs && (
-                    <span className="flex items-center gap-1.5 text-[12px] font-mono text-shade-60 bg-canvas-cream border border-hairline-light px-3.5 py-1.5 rounded-pill select-none">
+                    <span className="flex items-center gap-1.5 text-[11px] sm:text-[12px] font-mono text-shade-60 bg-canvas-cream border border-hairline-light px-3 py-1.5 rounded-pill select-none">
                       <Clock size={13} />
                       <span className="tabular-nums">{latencyMs}ms latency</span>
                     </span>
                   )}
-                  <span className="text-[12px] font-sans font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 px-3.5 py-1.5 rounded-pill flex items-center gap-1.5 select-none">
+                  <span className="text-[11px] sm:text-[12px] font-sans font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-pill flex items-center gap-1.5 select-none">
                     <CheckCircle2 size={13} />
                     <span>Deterministic Head Match</span>
                   </span>
 
                   <button
                     onClick={handleCopySummary}
-                    className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-pill border border-hairline-light bg-canvas-cream text-[12px] font-sans font-medium text-shade-70 hover:text-ink hover:bg-white transition-all active:scale-95"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-pill border border-hairline-light bg-canvas-cream text-[11px] sm:text-[12px] font-sans font-medium text-shade-70 hover:text-ink hover:bg-white transition-all active:scale-95"
                     title="Copy analysis summary to clipboard"
                   >
                     {copied ? (

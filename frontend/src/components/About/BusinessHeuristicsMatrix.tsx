@@ -233,12 +233,12 @@ export const BusinessHeuristicsMatrix = () => {
 
       {/* Full Reference Table (Collapsible) */}
       {showTable && (
-        <div className="pt-6 border-t border-hairline-light overflow-x-auto">
+        <div className="pt-6 border-t border-hairline-light">
           <span className="eyebrow-cap mb-3">
             Complete Business Rule Matrix
           </span>
-          <div className="border border-hairline-light rounded-xl overflow-hidden">
-            <table className="w-full text-left border-collapse text-[13px] font-sans">
+          <div className="border border-hairline-light rounded-xl overflow-x-auto">
+            <table className="w-full text-left border-collapse text-[12px] sm:text-[13px] font-sans whitespace-nowrap min-w-[550px]">
               <thead>
                 <tr className="border-b border-hairline-light bg-canvas-cream/60 text-shade-50 font-mono uppercase text-[11px]">
                   <th className="py-2.5 px-3">Top Intent</th>

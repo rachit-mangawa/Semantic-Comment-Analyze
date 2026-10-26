@@ -132,7 +132,7 @@ export const ArchitectureDiagram: React.FC = () => {
       <div className="relative w-full border border-hairline-light rounded-xl bg-white overflow-hidden shadow-inner flex flex-col">
         {/* Subtle dot-grid paper background */}
         <div
-          className="w-full h-[560px] overflow-auto p-4 sm:p-8 flex items-center justify-center transition-all bg-[radial-gradient(#e4e4e7_1px,transparent_1px)] [background-size:20px_20px]"
+          className="w-full h-[340px] sm:h-[480px] lg:h-[560px] overflow-auto p-3 sm:p-8 flex items-center justify-center transition-all bg-[radial-gradient(#e4e4e7_1px,transparent_1px)] [background-size:20px_20px]"
         >
           <div
             style={{
@@ -140,7 +140,7 @@ export const ArchitectureDiagram: React.FC = () => {
               transformOrigin: "center center",
               transition: "transform 150ms cubic-bezier(0, 0, 0.2, 1)",
             }}
-            className="w-full max-w-[940px] flex items-center justify-center select-none [&>svg]:w-full [&>svg]:h-auto [&>svg]:max-h-[520px] [&>svg]:drop-shadow-xs"
+            className="w-full max-w-[940px] flex items-center justify-center select-none min-w-[500px] sm:min-w-0 [&>svg]:w-full [&>svg]:h-auto [&>svg]:max-h-[300px] sm:[&>svg]:max-h-[520px] [&>svg]:drop-shadow-xs"
             dangerouslySetInnerHTML={{ __html: ARCHITECTURE_SVG }}
           />
         </div>

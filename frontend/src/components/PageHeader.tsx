@@ -23,7 +23,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.28, ease: [0.23, 1, 0.32, 1] }}
-      className={`flex flex-col md:flex-row md:items-end justify-between gap-6 pb-7 sm:pb-8 border-b transition-colors ${
+      className={`flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6 pb-5 sm:pb-8 border-b transition-colors ${
         onDark ? "border-hairline-dark text-on-primary" : "border-hairline-light text-ink"
       }`}
     >
@@ -33,19 +33,19 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
             initial={{ opacity: 0, y: 3 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.22, delay: 0.03, ease: "easeOut" }}
-            className={`text-[12px] font-sans font-medium tracking-[0.72px] uppercase mb-2 block select-none ${
+            className={`text-[11px] sm:text-[12px] font-sans font-medium tracking-[0.72px] uppercase mb-1.5 sm:mb-2 block select-none ${
               onDark ? "text-shade-40" : "text-shade-50"
             }`}
           >
             {eyebrow}
           </motion.span>
         )}
-        <div className="flex flex-wrap items-center gap-3.5">
+        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3.5">
           <motion.h1
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.26, delay: 0.06, ease: [0.23, 1, 0.32, 1] }}
-            className={`font-display text-3xl sm:text-4xl md:text-[44px] font-[330] tracking-[-0.02em] leading-[1.12] text-balance ${
+            className={`font-display text-2xl sm:text-4xl md:text-[44px] font-[330] tracking-[-0.02em] leading-[1.15] sm:leading-[1.12] text-balance ${
               onDark ? "text-white" : "text-ink"
             }`}
           >

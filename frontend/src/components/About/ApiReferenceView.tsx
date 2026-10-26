@@ -158,10 +158,10 @@ console.log("Health Status:", data);`;
         </div>
 
         {/* Endpoint Selector Pills */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
           <button
             onClick={() => setActiveEndpoint("analyze")}
-            className={`px-3.5 py-1.5 rounded-pill text-[12px] font-mono transition-all duration-150 ease-out active:scale-[0.97] select-none ${
+            className={`px-2.5 sm:px-3.5 py-1.5 rounded-pill text-[11px] sm:text-[12px] font-mono transition-all duration-150 ease-out active:scale-[0.97] select-none ${
               activeEndpoint === "analyze"
                 ? "bg-black text-white font-semibold shadow-xs"
                 : "bg-canvas-cream border border-hairline-light text-shade-60 hover:text-ink hover:bg-white"
@@ -171,7 +171,7 @@ console.log("Health Status:", data);`;
           </button>
           <button
             onClick={() => setActiveEndpoint("batch")}
-            className={`px-3.5 py-1.5 rounded-pill text-[12px] font-mono transition-all duration-150 ease-out active:scale-[0.97] select-none ${
+            className={`px-2.5 sm:px-3.5 py-1.5 rounded-pill text-[11px] sm:text-[12px] font-mono transition-all duration-150 ease-out active:scale-[0.97] select-none ${
               activeEndpoint === "batch"
                 ? "bg-black text-white font-semibold shadow-xs"
                 : "bg-canvas-cream border border-hairline-light text-shade-60 hover:text-ink hover:bg-white"
@@ -181,7 +181,7 @@ console.log("Health Status:", data);`;
           </button>
           <button
             onClick={() => setActiveEndpoint("health")}
-            className={`px-3.5 py-1.5 rounded-pill text-[12px] font-mono transition-all duration-150 ease-out active:scale-[0.97] select-none ${
+            className={`px-2.5 sm:px-3.5 py-1.5 rounded-pill text-[11px] sm:text-[12px] font-mono transition-all duration-150 ease-out active:scale-[0.97] select-none ${
               activeEndpoint === "health"
                 ? "bg-black text-white font-semibold shadow-xs"
                 : "bg-canvas-cream border border-hairline-light text-shade-60 hover:text-ink hover:bg-white"
@@ -194,13 +194,13 @@ console.log("Health Status:", data);`;
 
       {/* Code Snippet Box */}
       <div className="bg-canvas-cream border border-hairline-light rounded-xl overflow-hidden shadow-inner">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-hairline-light bg-white">
-          <div className="flex items-center gap-1.5">
+        <div className="flex items-center justify-between px-3 sm:px-4 py-2 sm:py-3 border-b border-hairline-light bg-white gap-2">
+          <div className="flex items-center gap-1 sm:gap-1.5">
             {(["curl", "python", "typescript"] as const).map((lang) => (
               <button
                 key={lang}
                 onClick={() => setActiveLang(lang)}
-                className={`px-3 py-1 rounded-pill text-[11px] font-mono transition-all active:scale-95 select-none ${
+                className={`px-2.5 sm:px-3 py-1 rounded-pill text-[10px] sm:text-[11px] font-mono transition-all active:scale-95 select-none ${
                   activeLang === lang
                     ? "bg-black text-white font-semibold shadow-xs"
                     : "text-shade-60 hover:text-ink hover:bg-canvas-cream"
@@ -213,7 +213,7 @@ console.log("Health Status:", data);`;
 
           <button
             onClick={() => copyToClipboard(getCodeSnippet())}
-            className="flex items-center gap-1.5 px-3 py-1 rounded-pill border border-hairline-light bg-canvas-cream text-[11px] font-mono text-shade-60 hover:text-ink hover:bg-white transition-all active:scale-95 shadow-xs"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-pill border border-hairline-light bg-canvas-cream text-[10px] sm:text-[11px] font-mono text-shade-60 hover:text-ink hover:bg-white transition-all active:scale-95 shadow-xs shrink-0"
             title="Copy snippet to clipboard"
           >
             {copied ? (
@@ -242,8 +242,8 @@ console.log("Health Status:", data);`;
           </button>
         </div>
 
-        <div className="p-5 overflow-x-auto">
-          <pre className="text-[13px] font-mono text-ink leading-relaxed">
+        <div className="p-3.5 sm:p-5 overflow-x-auto">
+          <pre className="text-[12px] sm:text-[13px] font-mono text-ink leading-relaxed">
             <code>{getCodeSnippet()}</code>
           </pre>
         </div>
@@ -255,8 +255,8 @@ console.log("Health Status:", data);`;
           <span className="eyebrow-cap mb-3">
             Expected JSON Response Schema
           </span>
-          <div className="bg-canvas-cream border border-hairline-light rounded-xl p-5 overflow-x-auto shadow-inner">
-            <pre className="text-[12px] font-mono text-ink leading-relaxed">
+          <div className="bg-canvas-cream border border-hairline-light rounded-xl p-3.5 sm:p-5 overflow-x-auto shadow-inner">
+            <pre className="text-[11px] sm:text-[12px] font-mono text-ink leading-relaxed">
               <code>{sampleJsonResponse}</code>
             </pre>
           </div>
@@ -266,8 +266,8 @@ console.log("Health Status:", data);`;
           <span className="eyebrow-cap mb-3">
             Streaming CSV Output Schema
           </span>
-          <div className="bg-canvas-cream border border-hairline-light rounded-xl p-5 overflow-x-auto shadow-inner">
-            <pre className="text-[12px] font-mono text-ink leading-relaxed">
+          <div className="bg-canvas-cream border border-hairline-light rounded-xl p-3.5 sm:p-5 overflow-x-auto shadow-inner">
+            <pre className="text-[11px] sm:text-[12px] font-mono text-ink leading-relaxed">
               <code>{`ORIGINAL_COLUMNS...,INTENT,CONFIDENCE,SENTIMENT,SENTIMENT_SCORE,TONE,URGENCY,RECOMMENDED_ACTION
 "Your application crashed when exporting to PDF",Bug Report,0.96,NEGATIVE,0.94,Frustrated,High,Log Jira Ticket
 "Can we add automated weekly exports?",Feature Request,0.91,POSITIVE,0.85,Excited,Low,Add to Roadmap
@@ -280,8 +280,8 @@ console.log("Health Status:", data);`;
           <span className="eyebrow-cap mb-3">
             Health Check Response Schema
           </span>
-          <div className="bg-canvas-cream border border-hairline-light rounded-xl p-5 overflow-x-auto shadow-inner">
-            <pre className="text-[12px] font-mono text-ink leading-relaxed">
+          <div className="bg-canvas-cream border border-hairline-light rounded-xl p-3.5 sm:p-5 overflow-x-auto shadow-inner">
+            <pre className="text-[11px] sm:text-[12px] font-mono text-ink leading-relaxed">
               <code>{`{
   "status": "healthy",
   "service": "semantic_backend",

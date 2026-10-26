@@ -58,22 +58,22 @@
     max-width: 80rem;
     margin-left: auto;
     margin-right: auto;
-    padding-left: 1.25rem;
-    padding-right: 1.25rem;
-    padding-top: 3.5rem;
-    padding-bottom: 4rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-top: 1.5rem;
+    padding-bottom: 3rem;
     display: flex;
     flex-direction: column;
-    gap: 2.25rem;
+    gap: 1.75rem;
   }
 
   @media (min-width: 640px) {
     .page-container {
-      padding-left: 2rem;
-      padding-right: 2rem;
-      padding-top: 4.5rem;
+      padding-left: 1.75rem;
+      padding-right: 1.75rem;
+      padding-top: 3.5rem;
       padding-bottom: 5rem;
-      gap: 2.75rem;
+      gap: 2.5rem;
     }
   }
 
@@ -91,14 +91,20 @@
   .section-heading {
     font-family: var(--font-display);
     font-weight: 330;
-    font-size: 1.75rem;
+    font-size: 1.5rem;
     line-height: 1.2;
     letter-spacing: -0.015em;
     color: #000000;
   }
 
+  @media (min-width: 640px) {
+    .section-heading {
+      font-size: 1.75rem;
+    }
+  }
+
   .eyebrow-cap {
-    font-size: 12px;
+    font-size: 11px;
     font-family: var(--font-inter);
     text-transform: uppercase;
     letter-spacing: 0.72px;
@@ -107,6 +113,12 @@
     display: block;
     margin-bottom: 0.25rem;
     user-select: none;
+  }
+
+  @media (min-width: 640px) {
+    .eyebrow-cap {
+      font-size: 12px;
+    }
   }
 
   /* Fallback aliases for legacy tokens to preserve unified theme */
@@ -122,8 +134,14 @@
     background-color: #ffffff;
     border: 1px solid #e4e4e7;
     border-radius: 12px;
-    padding: 1.5rem;
+    padding: 1.25rem;
     box-shadow: 0 8px 8px rgba(0, 0, 0, 0.03), 0 4px 4px rgba(0, 0, 0, 0.03), 0 2px 2px rgba(0, 0, 0, 0.03), 0 0 0 1px rgba(0, 0, 0, 0.06);
+  }
+
+  @media (min-width: 640px) {
+    .surface-card-base {
+      padding: 1.5rem;
+    }
   }
 
   @media (min-width: 768px) {

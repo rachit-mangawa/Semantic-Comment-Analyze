@@ -150,7 +150,7 @@ export const BenchmarkComparison = () => {
 
       {/* Feature Matrix Table */}
       <div className="overflow-x-auto border border-hairline-light rounded-xl">
-        <table className="w-full text-left border-collapse text-[13px] font-sans">
+        <table className="w-full text-left border-collapse text-[12px] sm:text-[13px] font-sans whitespace-nowrap min-w-[620px]">
           <thead>
             <tr className="border-b border-hairline-light bg-canvas-cream/60 text-shade-50 font-mono uppercase text-[11px]">
               <th className="py-3 px-4">Evaluation Dimension</th>

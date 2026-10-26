@@ -262,7 +262,7 @@ export const BatchProcessingView = () => {
               Test with our curated 8-row benchmark dataset covering all 5 intent classes.
             </p>
           </div>
-          <div className="flex items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               variant="outline-light"
               size="sm"
@@ -289,7 +289,7 @@ export const BatchProcessingView = () => {
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
-          className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer transition-all duration-150 select-none ${
+          className={`border-2 border-dashed rounded-xl p-4 sm:p-8 flex flex-col items-center justify-center cursor-pointer transition-all duration-150 select-none overflow-hidden ${
             isDragOver
               ? "border-black bg-white"
               : file
@@ -306,14 +306,16 @@ export const BatchProcessingView = () => {
           />
 
           {file ? (
-            <div className="flex items-center gap-4 text-center">
-              <div className="w-12 h-12 rounded-pill bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center justify-center shrink-0">
-                <FileSpreadsheet size={24} strokeWidth={1.75} />
+            <div className="flex items-center gap-3 sm:gap-4 max-w-full min-w-0 px-2">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-pill bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center justify-center shrink-0 shadow-xs">
+                <FileSpreadsheet size={20} strokeWidth={1.75} className="sm:w-6 sm:h-6" />
               </div>
-              <div className="text-left">
-                <p className="text-[16px] font-sans font-semibold text-ink">{file.name}</p>
-                <p className="text-[12px] font-mono text-shade-50 tabular-nums">
-                  {(file.size / 1024).toFixed(1)} KB • Ready for streaming analysis
+              <div className="min-w-0 flex-1 text-left">
+                <p className="text-[14px] sm:text-[16px] font-sans font-semibold text-ink truncate max-w-full" title={file.name}>
+                  {file.name}
+                </p>
+                <p className="text-[11px] sm:text-[12px] font-mono text-shade-50 tabular-nums leading-tight mt-0.5 truncate max-w-full">
+                  {(file.size / 1024).toFixed(1)} KB <span className="text-shade-30">•</span> <span className="text-emerald-700 font-medium">Ready for streaming analysis</span>
                 </p>
               </div>
             </div>
@@ -409,12 +411,13 @@ export const BatchProcessingView = () => {
 
         {/* Action Button & Live Progress Telemetry */}
         <div className="pt-5 border-t border-hairline-light flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 w-full sm:w-auto">
             <Button
               variant="primary"
               size="md"
               onClick={handleProcess}
               disabled={!file || loading}
+              className="w-full sm:w-auto"
               icon={
                 loading ? (
                   <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
@@ -436,7 +439,7 @@ export const BatchProcessingView = () => {
                   setFile(null);
                   resetResults();
                 }}
-                className="p-2.5 rounded-pill border border-hairline-light text-shade-60 hover:text-ink hover:bg-canvas-cream transition-colors active:scale-95"
+                className="p-2.5 rounded-pill border border-hairline-light text-shade-60 hover:text-ink hover:bg-canvas-cream transition-colors active:scale-95 shrink-0"
                 title="Reset batch configuration"
               >
                 <RotateCcw size={15} />
@@ -559,7 +562,7 @@ export const BatchProcessingView = () => {
                 <a
                   href={downloadUrl}
                   download={`analyzed_${file?.name || "batch_results.csv"}`}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-pill text-[13px] font-sans font-semibold bg-aloe-10 text-ink hover:bg-[#aef5c5] transition-all duration-150 active:scale-95 shadow-sm self-start sm:self-auto"
+                  className="inline-flex items-center justify-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-pill text-[12px] sm:text-[13px] font-sans font-semibold bg-aloe-10 text-ink hover:bg-[#aef5c5] transition-all duration-150 active:scale-95 shadow-sm w-full sm:w-auto self-start sm:self-auto"
                 >
                   <Download size={14} strokeWidth={2} />
                   <span>Download Full CSV Output</span>
@@ -570,7 +573,7 @@ export const BatchProcessingView = () => {
             {/* Scrollable Data Table with Level 3 Elevation */}
             <div className="bg-white border border-hairline-light rounded-xl overflow-hidden shadow-level-3">
               <div className="overflow-x-auto max-h-[500px]">
-                <table className="w-full text-left text-[13px] font-sans whitespace-nowrap">
+                <table className="w-full text-left text-[12px] sm:text-[13px] font-sans whitespace-nowrap min-w-[500px]">
                   <thead className="sticky top-0 z-10 bg-canvas-cream/95 backdrop-blur-xs border-b border-hairline-light text-ink select-none">
                     <tr>
                       {headerRow.map((header, i) => (

@@ -257,9 +257,9 @@ export const Navbar: React.FC<NavbarProps> = ({ activeView, onViewChange }) => {
   return (
     <>
       {/* Floating White Pill Capsule Navbar */}
-      <header className="sticky top-4 sm:top-5 z-40 w-full flex justify-center px-3 sm:px-4 pointer-events-none select-none mb-1 sm:mb-2">
+      <header className="sticky top-2 sm:top-5 z-40 w-full flex justify-center px-2 sm:px-4 pointer-events-none select-none mb-1 sm:mb-2">
         <nav
-          className="pointer-events-auto flex items-center gap-1 sm:gap-1.5 p-1.5 bg-white/95 backdrop-blur-xl border border-hairline-light rounded-pill shadow-level-3 max-w-full overflow-x-auto no-scrollbar transition-all duration-200"
+          className="pointer-events-auto inline-flex flex-nowrap items-center gap-0.5 sm:gap-1.5 p-1 sm:p-1.5 bg-white/95 backdrop-blur-xl border border-hairline-light rounded-pill shadow-level-3 max-w-[calc(100vw-16px)] sm:max-w-full transition-all duration-200"
           aria-label="Main Navigation"
         >
           {navTabs.map((tab) => {
@@ -271,7 +271,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeView, onViewChange }) => {
                 key={tab.id}
                 onClick={() => handleTabClick(tab.id)}
                 aria-current={isActive ? "page" : undefined}
-                className={`relative flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-pill text-[13px] sm:text-[14px] font-sans font-medium whitespace-nowrap transition-all duration-150 ease-out active:scale-[0.97] ${
+                className={`relative flex flex-nowrap items-center gap-1 sm:gap-2 px-2 sm:px-3.5 md:px-4 py-1.5 sm:py-2 rounded-pill text-[11px] sm:text-[13px] md:text-[14px] font-sans font-medium whitespace-nowrap transition-all duration-150 ease-out active:scale-[0.97] shrink-0 ${
                   isActive
                     ? "text-white font-semibold"
                     : "text-shade-60 hover:text-black hover:bg-black/[0.04]"
@@ -286,29 +286,29 @@ export const Navbar: React.FC<NavbarProps> = ({ activeView, onViewChange }) => {
                   />
                 )}
 
-                <span className="relative z-10 flex items-center gap-2">
+                <span className="relative z-10 flex items-center gap-1 sm:gap-1.5">
                   <Icon
-                    size={15}
+                    size={14}
                     strokeWidth={isActive ? 2.25 : 1.75}
-                    className={`shrink-0 ${isActive ? "text-white" : "text-shade-50"}`}
+                    className={`shrink-0 w-3.5 h-3.5 sm:w-4 sm:h-4 ${isActive ? "text-white" : "text-shade-50"}`}
                   />
-                  <span className="hidden sm:inline">{tab.label}</span>
-                  <span className="sm:hidden">{tab.shortLabel}</span>
+                  <span className="hidden md:inline">{tab.label}</span>
+                  <span className="md:hidden">{tab.shortLabel}</span>
                 </span>
               </button>
             );
           })}
 
           {/* Quick Search & Command launcher */}
-          <div className="h-4 w-px bg-hairline-light mx-1 select-none hidden sm:block" />
+          <div className="h-4 w-px bg-hairline-light mx-0.5 select-none hidden sm:block" />
           <button
             onClick={() => setCommandPaletteOpen(true)}
-            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-pill text-[12px] font-sans text-shade-60 hover:text-black hover:bg-black/[0.04] transition-all active:scale-[0.97]"
+            className="flex items-center gap-1 px-1.5 sm:px-2.5 py-1.5 sm:py-2 rounded-pill text-[11px] sm:text-[12px] font-sans text-shade-60 hover:text-black hover:bg-black/[0.04] transition-all active:scale-[0.97] shrink-0"
             title="Jump to any view or spec (⌘K or keys 1-9)"
             aria-label="Search views"
           >
-            <Search size={14} className="text-shade-50" />
-            <kbd className="hidden md:inline-block px-1.5 py-0.5 rounded bg-canvas-cream border border-hairline-light text-[10px] font-mono text-shade-50">
+            <Search size={13} className="text-shade-50 w-3.5 h-3.5 sm:w-[14px] sm:h-[14px]" />
+            <kbd className="hidden lg:inline-block px-1.5 py-0.5 rounded bg-canvas-cream border border-hairline-light text-[10px] font-mono text-shade-50">
               ⌘K
             </kbd>
           </button>
@@ -318,7 +318,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeView, onViewChange }) => {
       {/* ⌘K Command Palette Modal */}
       <AnimatePresence>
         {commandPaletteOpen && (
-          <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 sm:pt-20 px-3 sm:px-6">
+          <div className="fixed inset-0 z-50 flex items-start justify-center pt-8 sm:pt-20 px-3 sm:px-6">
             {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
@@ -334,16 +334,16 @@ export const Navbar: React.FC<NavbarProps> = ({ activeView, onViewChange }) => {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: -8 }}
               transition={{ duration: 0.18, ease: "easeOut" }}
-              className="relative w-full max-w-xl bg-white border border-hairline-light rounded-2xl shadow-level-4 overflow-hidden z-10 text-ink flex flex-col"
+              className="relative w-full max-w-xl bg-white border border-hairline-light rounded-2xl shadow-level-4 overflow-hidden z-10 text-ink flex flex-col max-h-[85vh]"
             >
               {/* Search Bar Input */}
-              <div className="flex items-center gap-3 px-4 py-3.5 border-b border-hairline-light bg-canvas-cream/50">
+              <div className="flex items-center gap-3 px-3.5 sm:px-4 py-3 sm:py-3.5 border-b border-hairline-light bg-canvas-cream/50">
                 <Search size={18} className="text-shade-40 shrink-0" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Jump to a view or spec... (e.g. blueprint, pipeline, occlusion, api, batch)"
+                  placeholder="Jump to a view or spec..."
                   autoFocus
                   className="w-full bg-transparent text-[14px] sm:text-[15px] font-sans text-ink placeholder:text-shade-40 focus:outline-none"
                 />
@@ -357,14 +357,14 @@ export const Navbar: React.FC<NavbarProps> = ({ activeView, onViewChange }) => {
               </div>
 
               {/* Categorized Action List */}
-              <div className="p-2 max-h-[60vh] sm:max-h-[460px] overflow-y-auto divide-y divide-hairline-light/50">
+              <div className="p-1.5 sm:p-2 overflow-y-auto divide-y divide-hairline-light/50 flex-1">
                 {categories.map((category) => {
                   const categoryActions = filteredActions.filter((a) => a.category === category);
                   if (categoryActions.length === 0) return null;
 
                   return (
                     <div key={category} className="py-1">
-                      <div className="text-[11px] font-sans uppercase tracking-[0.72px] font-semibold text-shade-40 px-3 pt-2.5 pb-1 select-none">
+                      <div className="text-[10px] sm:text-[11px] font-sans uppercase tracking-[0.72px] font-semibold text-shade-40 px-3 pt-2.5 pb-1 select-none">
                         {category}
                       </div>
 
@@ -378,9 +378,9 @@ export const Navbar: React.FC<NavbarProps> = ({ activeView, onViewChange }) => {
                             <button
                               key={action.id}
                               onClick={() => handleCommandSelect(action)}
-                              className="w-full flex items-center justify-between p-2.5 sm:p-3 rounded-xl hover:bg-canvas-cream transition-colors text-left group"
+                              className="w-full flex items-center justify-between p-2 sm:p-3 rounded-xl hover:bg-canvas-cream transition-colors text-left group"
                             >
-                              <div className="flex items-center gap-3 min-w-0 pr-2">
+                              <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 pr-2">
                                 <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-pill bg-black/5 flex items-center justify-center text-ink group-hover:bg-black group-hover:text-white transition-colors shrink-0">
                                   <Icon size={16} />
                                 </div>
@@ -403,7 +403,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeView, onViewChange }) => {
 
                               <div className="flex items-center gap-2 shrink-0">
                                 {action.shortcut && (
-                                  <kbd className="px-1.5 py-0.5 rounded bg-canvas-cream border border-hairline-light text-[11px] font-mono text-shade-50">
+                                  <kbd className="hidden sm:inline-block px-1.5 py-0.5 rounded bg-canvas-cream border border-hairline-light text-[11px] font-mono text-shade-50">
                                     {action.shortcut}
                                   </kbd>
                                 )}
@@ -436,12 +436,12 @@ export const Navbar: React.FC<NavbarProps> = ({ activeView, onViewChange }) => {
 
               {/* Footer hint */}
               <div className="px-4 py-2.5 bg-canvas-cream border-t border-hairline-light flex items-center justify-between text-[11px] font-mono text-shade-50">
-                <span>Select to navigate • Keys 1-9 direct jump</span>
+                <span>Navigate <span className="hidden sm:inline">• Keys 1-9 direct jump</span></span>
                 <div className="flex items-center gap-1.5">
                   <kbd className="px-1.5 py-0.5 rounded bg-white border border-hairline-light text-[10px]">
                     ESC
                   </kbd>
-                  <span>to close</span>
+                  <span className="hidden sm:inline">to close</span>
                 </div>
               </div>
             </motion.div>

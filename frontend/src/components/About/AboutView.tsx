@@ -65,8 +65,8 @@ export const AboutView: React.FC<AboutViewProps> = ({ initialTab = "overview", o
         description="An explainable NLP architecture pairing a high-throughput logistic head over 384d all-MiniLM-L6-v2 embeddings, Leave-One-Out token occlusion attribution, and deterministic business routing on standard CPU."
       />
 
-      {/* Floating Pill Sub-navigation Dock */}
-      <div className="flex flex-wrap items-center gap-1.5 p-1.5 bg-white border border-hairline-light rounded-pill self-start shadow-level-3 my-1 sm:my-2">
+      {/* Floating Sub-navigation Dock: Responsive Segmented Grid on Mobile / Capsule Pill on Desktop */}
+      <div className="w-full lg:w-auto grid grid-cols-2 sm:grid-cols-3 lg:flex lg:flex-row lg:items-center gap-1 sm:gap-1.5 p-1 sm:p-1.5 bg-white border border-hairline-light rounded-2xl lg:rounded-pill shadow-level-3 my-1 sm:my-2 self-stretch lg:self-start">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -74,7 +74,7 @@ export const AboutView: React.FC<AboutViewProps> = ({ initialTab = "overview", o
             <button
               key={tab.id}
               onClick={() => handleTabSelect(tab.id)}
-              className={`relative flex items-center gap-2 px-4 py-2 rounded-pill text-[13px] font-sans font-medium transition-colors duration-150 ease-out active:scale-[0.97] select-none ${
+              className={`relative flex items-center justify-center lg:justify-start gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 lg:px-4 py-2 lg:py-2 rounded-xl lg:rounded-pill text-[12px] sm:text-[13px] font-sans font-medium whitespace-nowrap transition-colors duration-150 ease-out active:scale-[0.98] select-none ${
                 isActive
                   ? "text-white font-semibold"
                   : "text-shade-60 hover:text-black hover:bg-black/5"
@@ -83,18 +83,18 @@ export const AboutView: React.FC<AboutViewProps> = ({ initialTab = "overview", o
               {isActive && (
                 <motion.div
                   layoutId="about-subtab-pill"
-                  className="absolute inset-0 rounded-pill bg-black shadow-sm"
+                  className="absolute inset-0 rounded-xl lg:rounded-pill bg-black shadow-sm"
                   transition={{ type: "spring", stiffness: 480, damping: 38 }}
                 />
               )}
-              <span className="relative z-10 flex items-center gap-2">
+              <span className="relative z-10 flex items-center gap-1.5 sm:gap-2">
                 <Icon
                   size={14}
                   strokeWidth={isActive ? 2 : 1.75}
-                  className={isActive ? "text-white" : "text-shade-50"}
+                  className={`shrink-0 ${isActive ? "text-white" : "text-shade-50"}`}
                 />
-                <span className="hidden sm:inline">{tab.label}</span>
-                <span className="sm:hidden">{tab.shortLabel}</span>
+                <span className="hidden xl:inline">{tab.label}</span>
+                <span className="xl:hidden">{tab.shortLabel}</span>
               </span>
             </button>
           );

@@ -180,14 +180,14 @@ export const InteractivePipeline = () => {
       </div>
 
       {/* Pipeline Stage Buttons */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
+      <div className="flex overflow-x-auto no-scrollbar gap-2 pb-1 sm:grid sm:grid-cols-4 lg:grid-cols-7">
         {STAGES.map((stage) => {
           const isSelected = selectedStage.id === stage.id;
           return (
             <button
               key={stage.id}
               onClick={() => setSelectedStage(stage)}
-              className={`p-3 rounded-xl border text-left transition-all duration-150 ease-out active:scale-[0.97] relative overflow-hidden flex flex-col justify-between h-28 select-none ${
+              className={`p-3 rounded-xl border text-left transition-all duration-150 ease-out active:scale-[0.97] relative overflow-hidden flex flex-col justify-between h-28 select-none shrink-0 w-36 sm:w-auto ${
                 isSelected
                   ? "bg-black text-white border-black shadow-sm"
                   : "bg-canvas-cream border-hairline-light text-shade-60 hover:text-ink hover:bg-white"
@@ -222,34 +222,34 @@ export const InteractivePipeline = () => {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -8 }}
           transition={{ duration: 0.2 }}
-          className="bg-canvas-cream border border-hairline-light rounded-xl p-6 sm:p-7 shadow-inner"
+          className="bg-canvas-cream border border-hairline-light rounded-xl p-5 sm:p-7 shadow-inner"
         >
-          <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-5 mb-5 pb-5 border-b border-hairline-light">
+          <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4 sm:gap-5 mb-5 pb-5 border-b border-hairline-light">
             <div>
-              <div className="flex items-center gap-2.5 mb-1.5 flex-wrap">
-                <span className="text-lg font-mono font-bold text-shade-40">
+              <div className="flex items-center gap-2 sm:gap-2.5 mb-1.5 flex-wrap">
+                <span className="text-base sm:text-lg font-mono font-bold text-shade-40">
                   {selectedStage.number}
                 </span>
-                <h4 className="text-2xl font-display font-[330] text-ink">
+                <h4 className="text-xl sm:text-2xl font-display font-[330] text-ink">
                   {selectedStage.name}
                 </h4>
                 <span className="text-[11px] font-sans font-medium px-2.5 py-0.5 rounded-pill bg-white border border-hairline-light text-shade-70 shadow-xs">
                   {selectedStage.badge}
                 </span>
               </div>
-              <p className="text-[14px] text-shade-60 font-sans">
+              <p className="text-[13px] sm:text-[14px] text-shade-60 font-sans">
                 {selectedStage.subtitle}
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2.5 text-[12px] font-mono">
+            <div className="flex flex-wrap items-center gap-2 text-[11px] sm:text-[12px] font-mono">
               <div className="flex items-center gap-1.5 bg-white border border-hairline-light px-3 py-1 rounded-pill text-ink shadow-xs">
                 <Clock size={13} className="text-shade-40" />
                 <span>Latency: {selectedStage.latency}</span>
               </div>
-              <div className="flex items-center gap-1.5 bg-white border border-hairline-light px-3 py-1 rounded-pill text-ink shadow-xs">
-                <FileCode size={13} className="text-shade-40" />
-                <span>{selectedStage.file}</span>
+              <div className="flex items-center gap-1.5 bg-white border border-hairline-light px-3 py-1 rounded-pill text-ink shadow-xs max-w-full">
+                <FileCode size={13} className="text-shade-40 shrink-0" />
+                <span className="truncate max-w-[200px] sm:max-w-none">{selectedStage.file}</span>
               </div>
             </div>
           </div>

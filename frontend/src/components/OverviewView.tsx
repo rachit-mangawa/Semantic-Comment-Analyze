@@ -293,38 +293,38 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate }) => {
   return (
     <div className="page-container">
       {/* High-End Agency Editorial Split Hero (Double-Bezel Architecture) */}
-      <section className="relative overflow-hidden bg-white border border-hairline-light rounded-2xl p-6 sm:p-8 lg:p-10 shadow-level-3 transition-all duration-200">
+      <section className="relative overflow-hidden bg-white border border-hairline-light rounded-xl sm:rounded-2xl p-5 sm:p-8 lg:p-10 shadow-level-3 transition-all duration-200">
         {/* Soft radial ambient gradient accent */}
         <div className="absolute top-0 right-0 w-[420px] h-[420px] bg-gradient-to-bl from-canvas-cream/90 via-transparent to-transparent pointer-events-none rounded-full blur-2xl" />
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-12 items-center relative z-10">
           {/* Left Column: Display Headline, Narrative & Button-in-Button CTAs */}
           <div className="lg:col-span-7 flex flex-col justify-between">
             <div>
               {/* Micro-capsule eyebrow with live pulsing dot */}
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-pill bg-canvas-cream border border-hairline-light shadow-2xs mb-5 select-none">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-pill bg-canvas-cream border border-hairline-light shadow-2xs mb-4 sm:mb-5 select-none">
                 <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
-                <span className="text-[11px] font-mono uppercase tracking-[0.72px] font-semibold text-shade-60">
+                <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-[0.72px] font-semibold text-shade-60">
                   Deterministic In-Memory Engine • Zero LLM Cost
                 </span>
               </div>
 
               {/* Display Headline */}
-              <h1 className="font-display text-4xl sm:text-5xl lg:text-[50px] font-[330] text-ink tracking-[-0.025em] leading-[1.08] text-balance mb-4">
+              <h1 className="font-display text-3xl sm:text-5xl lg:text-[50px] font-[330] text-ink tracking-[-0.025em] leading-[1.12] sm:leading-[1.08] text-balance mb-3 sm:mb-4">
                 Explainable semantic intelligence for customer feedback.
               </h1>
 
               {/* Editorial Narrative */}
-              <p className="text-[16px] sm:text-[17px] font-sans text-shade-60 font-[420] leading-relaxed max-w-xl text-pretty mb-8">
+              <p className="text-[15px] sm:text-[17px] font-sans text-shade-60 font-[420] leading-relaxed max-w-xl text-pretty mb-6 sm:mb-8">
                 Continuous 384-dimensional dense embeddings paired with microsecond logistic classification and leave-one-out token attribution on commodity CPU. Zero cloud API calls, zero token invoices, 100% air-gapped data privacy.
               </p>
 
               {/* Action Buttons with Nested "Button-in-Button" Icon Architecture */}
-              <div className="flex flex-wrap items-center gap-3.5 mb-8">
+              <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2.5 sm:gap-3.5 mb-6 sm:mb-8">
                 {/* Primary Button */}
                 <button
                   onClick={() => onNavigate("single")}
-                  className="group inline-flex items-center gap-3 pl-5 pr-2 py-2 rounded-pill bg-black text-white text-[14px] font-sans font-medium hover:bg-shade-80 transition-all duration-150 active:scale-[0.98] shadow-sm select-none"
+                  className="group inline-flex items-center justify-between sm:justify-start gap-3 pl-4 sm:pl-5 pr-2 py-2 rounded-pill bg-black text-white text-[13px] sm:text-[14px] font-sans font-medium hover:bg-shade-80 transition-all duration-150 active:scale-[0.98] shadow-sm select-none"
                 >
                   <span>Analyze Single Comment</span>
                   <span className="w-7 h-7 rounded-pill bg-white/15 flex items-center justify-center transition-transform duration-150 group-hover:translate-x-0.5">
@@ -335,7 +335,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate }) => {
                 {/* Secondary Featured Button */}
                 <button
                   onClick={() => onNavigate("batch")}
-                  className="group inline-flex items-center gap-3 pl-5 pr-2 py-2 rounded-pill bg-aloe-10 text-ink text-[14px] font-sans font-semibold hover:bg-[#aef5c5] transition-all duration-150 active:scale-[0.98] shadow-sm select-none"
+                  className="group inline-flex items-center justify-between sm:justify-start gap-3 pl-4 sm:pl-5 pr-2 py-2 rounded-pill bg-aloe-10 text-ink text-[13px] sm:text-[14px] font-sans font-semibold hover:bg-[#aef5c5] transition-all duration-150 active:scale-[0.98] shadow-sm select-none"
                 >
                   <span>Stream Batch CSV</span>
                   <span className="w-7 h-7 rounded-pill bg-black/10 flex items-center justify-center transition-transform duration-150 group-hover:translate-x-0.5">
@@ -346,7 +346,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate }) => {
                 {/* Tertiary Blueprint Button */}
                 <button
                   onClick={() => onNavigate("architecture", "pipeline")}
-                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-pill border border-hairline-light bg-canvas-cream hover:bg-white text-shade-60 hover:text-ink text-[13px] font-sans font-medium transition-all active:scale-[0.98] select-none shadow-xs"
+                  className="inline-flex items-center justify-center gap-1.5 px-4 py-2 sm:py-2.5 rounded-pill border border-hairline-light bg-canvas-cream hover:bg-white text-shade-60 hover:text-ink text-[13px] font-sans font-medium transition-all active:scale-[0.98] select-none shadow-xs"
                 >
                   <span>Pipeline Specs</span>
                   <ArrowUpRight size={13} />
@@ -706,6 +706,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate }) => {
                         key={idx}
                         onMouseEnter={() => setHoveredTokenIdx(idx)}
                         onMouseLeave={() => setHoveredTokenIdx(null)}
+                        onClick={() => setHoveredTokenIdx(hoveredTokenIdx === idx ? null : idx)}
                         className={`relative px-1.5 py-0.5 rounded cursor-pointer transition-all duration-150 ${
                           isSignificant
                             ? "bg-amber-100/70 border border-amber-300/60 font-medium text-ink"
@@ -851,11 +852,11 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate }) => {
             </div>
 
             {/* Bottom Playground Action Bar */}
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-hairline-light text-[12px] font-sans">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-4 border-t border-hairline-light text-[12px] font-sans">
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleCopyJSON}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-pill bg-white border border-hairline-light text-shade-60 hover:text-ink active:scale-[0.96] transition-all shadow-xs"
+                  className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-pill bg-white border border-hairline-light text-shade-60 hover:text-ink active:scale-[0.96] transition-all shadow-xs w-full sm:w-auto"
                 >
                   <AnimatePresence mode="wait">
                     {copied ? (
@@ -887,16 +888,16 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate }) => {
                 </button>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3">
                 <button
                   onClick={() => onNavigate("architecture", "occlusion")}
-                  className="text-shade-50 hover:text-ink transition-colors underline-offset-4 hover:underline"
+                  className="text-shade-50 hover:text-ink transition-colors underline-offset-4 hover:underline text-center sm:text-left py-1"
                 >
                   View Occlusion Math →
                 </button>
                 <button
                   onClick={handleSendToWorkbench}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-pill bg-black text-white font-medium hover:bg-shade-80 active:scale-95 transition-all shadow-xs"
+                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-pill bg-black text-white font-medium hover:bg-shade-80 active:scale-95 transition-all shadow-xs w-full sm:w-auto"
                 >
                   <span>Open in Single Workbench</span>
                   <ArrowRight size={12} />

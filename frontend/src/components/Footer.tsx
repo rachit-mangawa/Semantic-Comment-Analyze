@@ -55,7 +55,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
           </div>
 
           {/* Core Navigation Links */}
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-[13px] font-sans text-shade-60">
+          <div className="flex flex-wrap items-center gap-x-4 sm:gap-x-6 gap-y-2 text-[12px] sm:text-[13px] font-sans text-shade-60">
             <button
               onClick={() => onNavigate("architecture", "overview")}
               className="hover:text-black transition-colors"
@@ -104,26 +104,26 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
         </div>
 
         {/* Row 2: Secondary Metadata, License & Back to Top */}
-        <div className="pt-5 border-t border-hairline-light flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-[12px] font-sans text-shade-50">
+        <div className="pt-5 border-t border-hairline-light flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 text-[11px] sm:text-[12px] font-sans text-shade-50">
           <div className="flex flex-wrap items-center gap-2">
             <span>Open-source software licensed under MIT</span>
             <span className="text-shade-30 hidden xs:inline">•</span>
             <span className="hidden xs:inline">Standard CPU execution with air-gapped data privacy</span>
           </div>
 
-          <div className="flex items-center gap-4 self-end sm:self-auto">
+          <div className="flex items-center justify-between w-full sm:w-auto gap-4">
             <a
               href="https://github.com/rachit-mangawa/Semantic-Comment-Analyze"
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-ink transition-colors font-mono text-[11px]"
+              className="hover:text-ink transition-colors font-mono text-[11px] truncate max-w-[220px] sm:max-w-none"
             >
               rachit-mangawa/Semantic-Comment-Analyze
             </a>
 
             <button
               onClick={scrollToTop}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-pill text-[12px] font-sans text-shade-60 hover:text-ink bg-canvas-cream hover:bg-white border border-hairline-light transition-all active:scale-95 select-none shadow-xs"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-pill text-[11px] sm:text-[12px] font-sans text-shade-60 hover:text-ink bg-canvas-cream hover:bg-white border border-hairline-light transition-all active:scale-95 select-none shadow-xs shrink-0"
               title="Scroll smoothly back to top"
             >
               <ArrowUp size={12} strokeWidth={2} />

@@ -172,10 +172,10 @@ export const OcclusionSimulator = () => {
 
       {/* Interactive Sentence Text Box */}
       <div>
-        <label className="text-[12px] font-sans text-shade-50 uppercase tracking-[0.72px] block mb-2.5 font-medium">
-          Hover over any word to occlude (mask) it in real time:
+        <label className="text-[11px] sm:text-[12px] font-sans text-shade-50 uppercase tracking-[0.72px] block mb-2 font-medium">
+          Tap or hover over any word to occlude (mask) it in real time:
         </label>
-        <div className="p-6 bg-canvas-cream border border-hairline-light rounded-lg flex flex-wrap gap-2 items-center text-[18px] leading-relaxed font-sans text-ink shadow-inner">
+        <div className="p-4 sm:p-6 bg-canvas-cream border border-hairline-light rounded-lg flex flex-wrap gap-1.5 sm:gap-2 items-center text-[15px] sm:text-[18px] leading-relaxed font-sans text-ink shadow-inner">
           {currentCase.words.map((item, idx) => {
             const isHovered = hoveredIdx === idx;
             const alpha = Math.min(item.drop / maxDrop, 1);
@@ -189,12 +189,13 @@ export const OcclusionSimulator = () => {
                 key={idx}
                 onMouseEnter={() => setHoveredIdx(idx)}
                 onMouseLeave={() => setHoveredIdx(null)}
+                onClick={() => setHoveredIdx(hoveredIdx === idx ? null : idx)}
                 style={{
                   backgroundColor: isHovered
                     ? "#000000"
                     : intensityBg
                 }}
-                className={`px-3 py-1 rounded-pill cursor-pointer transition-all duration-150 relative select-none ${
+                className={`px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-pill cursor-pointer transition-all duration-150 relative select-none ${
                   isHovered
                     ? "text-white font-mono shadow-sm scale-105"
                     : "text-ink hover:text-black"

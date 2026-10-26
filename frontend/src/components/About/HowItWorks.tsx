@@ -47,33 +47,33 @@ export const HowItWorks = () => {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
         {steps.map((step) => {
           const Icon = step.icon;
           return (
             <div
               key={step.num}
-              className="bg-canvas-cream/60 p-6 sm:p-7 rounded-xl border border-hairline-light hover:border-black/30 transition-all shadow-xs flex flex-col justify-between"
+              className="bg-canvas-cream/60 p-5 sm:p-7 rounded-xl border border-hairline-light hover:border-black/30 transition-all shadow-xs flex flex-col justify-between"
             >
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-2xl font-mono font-bold text-shade-40">
                     {step.num}
                   </span>
-                  <span className="p-2.5 rounded-pill bg-white border border-hairline-light text-ink shadow-xs">
+                  <span className="p-2 sm:p-2.5 rounded-pill bg-white border border-hairline-light text-ink shadow-xs">
                     <Icon size={18} />
                   </span>
                 </div>
-                <h4 className="text-xl font-display font-[330] text-ink mb-2.5">
+                <h4 className="text-lg sm:text-xl font-display font-[330] text-ink mb-2.5">
                   {step.title}
                 </h4>
-                <p className="text-[14px] font-sans text-shade-60 leading-relaxed mb-6">
+                <p className="text-[13px] sm:text-[14px] font-sans text-shade-60 leading-relaxed mb-5 sm:mb-6">
                   {step.desc}
                 </p>
               </div>
-              <div className="pt-4 border-t border-hairline-light flex items-center justify-between text-[12px] font-mono text-shade-50">
-                <span className="uppercase tracking-wider">Source file</span>
-                <code className="text-ink bg-white px-2 py-0.5 rounded border border-hairline-light shadow-2xs">
+              <div className="pt-3.5 sm:pt-4 border-t border-hairline-light flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-2 text-[11px] sm:text-[12px] font-mono text-shade-50">
+                <span className="uppercase tracking-wider shrink-0 text-[10px] sm:text-[11px]">Source file</span>
+                <code className="text-ink bg-white px-2 py-0.5 rounded border border-hairline-light shadow-2xs truncate max-w-full">
                   {step.tag}
                 </code>
               </div>
