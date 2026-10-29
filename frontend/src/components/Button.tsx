@@ -68,7 +68,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
         {...props}
       >
-        {icon && <span className="shrink-0">{icon}</span>}
+        {icon ? <span className="shrink-0">{icon}</span> : null}
         {children}
       </button>
     );

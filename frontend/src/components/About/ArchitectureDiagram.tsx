@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Maximize2, Minimize2, ExternalLink, ZoomIn, ZoomOut, RotateCcw, Download } from "lucide-react";
-import { ARCHITECTURE_SVG } from "@/assets/archSvg";
+
 
 export const ArchitectureDiagram: React.FC = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -140,9 +140,15 @@ export const ArchitectureDiagram: React.FC = () => {
               transformOrigin: "center center",
               transition: "transform 150ms cubic-bezier(0, 0, 0.2, 1)",
             }}
-            className="w-full max-w-[940px] flex items-center justify-center select-none min-w-[500px] sm:min-w-0 [&>svg]:w-full [&>svg]:h-auto [&>svg]:max-h-[300px] sm:[&>svg]:max-h-[520px] [&>svg]:drop-shadow-xs"
-            dangerouslySetInnerHTML={{ __html: ARCHITECTURE_SVG }}
-          />
+            className="w-full max-w-[940px] flex items-center justify-center select-none min-w-[500px] sm:min-w-0"
+          >
+            <img
+              src={rawSvgUrl}
+              alt="System architecture diagram"
+              className="w-full h-auto max-h-[300px] sm:max-h-[520px] drop-shadow-xs object-contain"
+            />
+          </div>
+
         </div>
 
         {/* Footer helper bar */}
@@ -222,9 +228,15 @@ export const ArchitectureDiagram: React.FC = () => {
                   transformOrigin: "center center",
                   transition: "transform 150ms cubic-bezier(0, 0, 0.2, 1)",
                 }}
-                className="w-full max-w-[1080px] flex items-center justify-center select-none [&>svg]:w-full [&>svg]:h-auto [&>svg]:max-h-[82vh] [&>svg]:drop-shadow-md"
-                dangerouslySetInnerHTML={{ __html: ARCHITECTURE_SVG }}
-              />
+                className="w-full max-w-[1080px] flex items-center justify-center select-none"
+              >
+                <img
+                  src={rawSvgUrl}
+                  alt="System architecture diagram fullscreen"
+                  className="w-full h-auto max-h-[82vh] drop-shadow-md object-contain"
+                />
+              </div>
+
             </div>
 
             {/* Bottom Bar Hint */}

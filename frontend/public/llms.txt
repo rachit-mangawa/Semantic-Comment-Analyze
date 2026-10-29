@@ -1,0 +1,11 @@
+# Semantic Comment Analysis
+
+> Deterministic sentiment classification and explainable token attribution for production NLP pipelines.
+
+## Documentation and Resources
+
+- [Platform Overview](/): Local CPU-native dense embedding triage and LOO occlusion showcase.
+- [Single Analysis](/): Interactive comment workbench with real-time Twitter-RoBERTa sentiment analysis.
+- [Batch Processing](/): Chunked streaming CSV inference pipeline.
+- [Architecture & Specs](/): Decoupled FastAPI ASGI ingestion and sentence transformer pipeline.
+- [API Reference](/): REST endpoints and JSON schemas for production integration.

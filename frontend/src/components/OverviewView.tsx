@@ -27,19 +27,6 @@ import {
   ArrowDownRight,
 } from "lucide-react";
 
-const getEmbeddingSparkline = (input: string) => {
-  const bars = 22;
-  const result: number[] = [];
-  let seed = 0;
-  for (let i = 0; i < input.length; i++) {
-    seed = (seed * 31 + input.charCodeAt(i)) & 0xffffffff;
-  }
-  for (let i = 0; i < bars; i++) {
-    const pseudo = Math.abs(Math.sin(seed + i * 1.618));
-    result.push(Math.max(0.18, Math.min(pseudo, 1)));
-  }
-  return result;
-};
 
 interface OverviewViewProps {
   onNavigate: (view: RouteView, subTab?: string) => void;
@@ -223,27 +210,10 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate }) => {
   const [showHeatmap, setShowHeatmap] = useState(true);
   const [hoveredTokenIdx, setHoveredTokenIdx] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
-
-  // Dedicated state for Live Engine Telemetry hero widget to auto-cycle
   const [heroIndex, setHeroIndex] = useState(0);
-  const [isHeroAutoPlaying, setIsHeroAutoPlaying] = useState(true);
-  const [isHeroHovered, setIsHeroHovered] = useState(false);
   const heroDemo = PRESET_DEMOS[heroIndex];
 
-  // Auto-stream realistic customer comments every 3.8s; pauses on mouse hover or manual toggle
-  useEffect(() => {
-    if (!isHeroAutoPlaying || isHeroHovered) return;
-    const timer = setInterval(() => {
-      setHeroIndex((prev) => (prev + 1) % PRESET_DEMOS.length);
-    }, 3800);
-    return () => clearInterval(timer);
-  }, [isHeroAutoPlaying, isHeroHovered]);
-
-  const handleCycleHero = () => {
-    setHeroIndex((prev) => (prev + 1) % PRESET_DEMOS.length);
-  };
-
-  const handleInspectInSandbox = () => {
+const handleInspectInSandbox = () => {
     handleSelectPreset(heroDemo);
     const sandboxEl = document.getElementById("benchmark-sandbox");
     if (sandboxEl) {
@@ -292,291 +262,266 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate }) => {
 
   return (
     <div className="page-container">
-      {/* High-End Agency Editorial Split Hero (Double-Bezel Architecture) */}
-      <section className="relative overflow-hidden bg-white border border-hairline-light rounded-xl sm:rounded-2xl p-5 sm:p-8 lg:p-10 shadow-level-3 transition-all duration-200">
-        {/* Soft radial ambient gradient accent */}
-        <div className="absolute top-0 right-0 w-[420px] h-[420px] bg-gradient-to-bl from-canvas-cream/90 via-transparent to-transparent pointer-events-none rounded-full blur-2xl" />
+      {/* Light Editorial Canvas Hero matching the website palette (canvas-cream, aloe-10 & pistachio-10) */}
+      <section className="relative overflow-hidden bg-white text-ink rounded-xl sm:rounded-2xl p-6 sm:p-10 lg:p-12 border border-hairline-light shadow-sm transition-all duration-200 mt-1 sm:mt-2">
+        {/* Soft ambient aloe & pistachio glow */}
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-aloe-10/50 via-pistachio-10/25 to-transparent pointer-events-none rounded-full blur-3xl -z-0" />
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-gradient-to-tr from-aloe-10/25 via-transparent to-transparent pointer-events-none rounded-full blur-2xl -z-0" />
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-12 items-center relative z-10">
-          {/* Left Column: Display Headline, Narrative & Button-in-Button CTAs */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-stretch relative z-10">
+          {/* Left Column: Spacious Display Headline, Narrative & Hardware Metrics */}
           <div className="lg:col-span-7 flex flex-col justify-between">
             <div>
-              {/* Micro-capsule eyebrow with live pulsing dot */}
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-pill bg-canvas-cream border border-hairline-light shadow-2xs mb-4 sm:mb-5 select-none">
-                <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
-                <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-[0.72px] font-semibold text-shade-60">
-                  Deterministic In-Memory Engine • Zero LLM Cost
+              {/* pill-tag-mint component per DESIGN.md */}
+              <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-pill bg-aloe-10 text-ink border border-emerald-300/50 shadow-xs mb-5 select-none">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-800" />
+                <span className="text-[12px] font-sans font-semibold uppercase tracking-[0.72px] text-emerald-950">
+                  Deterministic Local NLP • CPU-Native
                 </span>
               </div>
 
-              {/* Display Headline */}
-              <h1 className="font-display text-3xl sm:text-5xl lg:text-[50px] font-[330] text-ink tracking-[-0.025em] leading-[1.12] sm:leading-[1.08] text-balance mb-3 sm:mb-4">
-                Explainable semantic intelligence for customer feedback.
+              {/* Display Headline per DESIGN.md (Inter Tight, weight 330) */}
+              <h1 className="font-display text-3xl sm:text-5xl lg:text-[60px] font-[330] text-ink tracking-[-0.03em] leading-[1.08] text-balance mb-5">
+                Triage feedback, <br className="hidden sm:inline" />
+                <span className="text-shade-50">down to the token.</span>
               </h1>
 
-              {/* Editorial Narrative */}
-              <p className="text-[15px] sm:text-[17px] font-sans text-shade-60 font-[420] leading-relaxed max-w-xl text-pretty mb-6 sm:mb-8">
-                Continuous 384-dimensional dense embeddings paired with microsecond logistic classification and leave-one-out token attribution on commodity CPU. Zero cloud API calls, zero token invoices, 100% air-gapped data privacy.
+              {/* Editorial Narrative (body-lg, Inter 420) */}
+              <p className="text-[17px] sm:text-[18px] font-sans text-shade-60 font-[420] leading-relaxed max-w-xl text-pretty mb-8">
+                Continuous 384-dimensional dense embeddings paired with microsecond logistic classification and Leave-One-Out token attribution on commodity CPU. Zero cloud API calls, zero token invoices, and complete on-premise data privacy.
               </p>
 
-              {/* Action Buttons with Nested "Button-in-Button" Icon Architecture */}
-              <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2.5 sm:gap-3.5 mb-6 sm:mb-8">
-                {/* Primary Button */}
+              {/* Button components: Primary pill & Outline pill */}
+              <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3.5 mb-8">
+                {/* button-primary-pill: Primary Featured CTA */}
                 <button
                   onClick={() => onNavigate("single")}
-                  className="group inline-flex items-center justify-between sm:justify-start gap-3 pl-4 sm:pl-5 pr-2 py-2 rounded-pill bg-black text-white text-[13px] sm:text-[14px] font-sans font-medium hover:bg-shade-80 transition-all duration-150 active:scale-[0.98] shadow-sm select-none"
+                  className="inline-flex items-center justify-center gap-2.5 px-6 py-3 rounded-pill bg-ink text-white hover:bg-shade-70 text-[15px] font-sans font-medium transition-all duration-150 active:scale-[0.98] shadow-sm select-none"
                 >
                   <span>Analyze Single Comment</span>
-                  <span className="w-7 h-7 rounded-pill bg-white/15 flex items-center justify-center transition-transform duration-150 group-hover:translate-x-0.5">
-                    <ArrowRight size={13} strokeWidth={2.25} />
-                  </span>
+                  <ArrowRight size={15} strokeWidth={2.25} />
                 </button>
 
-                {/* Secondary Featured Button */}
+                {/* button-outline-on-light: Clean Secondary CTA */}
                 <button
                   onClick={() => onNavigate("batch")}
-                  className="group inline-flex items-center justify-between sm:justify-start gap-3 pl-4 sm:pl-5 pr-2 py-2 rounded-pill bg-aloe-10 text-ink text-[13px] sm:text-[14px] font-sans font-semibold hover:bg-[#aef5c5] transition-all duration-150 active:scale-[0.98] shadow-sm select-none"
+                  className="inline-flex items-center justify-center gap-2.5 px-6 py-3 rounded-pill bg-canvas-cream text-ink border border-hairline-light hover:border-shade-40 hover:bg-white text-[15px] font-sans font-medium transition-all duration-150 active:scale-[0.98] shadow-xs select-none"
                 >
                   <span>Stream Batch CSV</span>
-                  <span className="w-7 h-7 rounded-pill bg-black/10 flex items-center justify-center transition-transform duration-150 group-hover:translate-x-0.5">
-                    <FileSpreadsheet size={13} strokeWidth={2} />
-                  </span>
+                  <FileSpreadsheet size={15} strokeWidth={1.75} />
                 </button>
 
-                {/* Tertiary Blueprint Button */}
+                {/* Architecture Blueprint Navigation */}
                 <button
                   onClick={() => onNavigate("architecture", "pipeline")}
-                  className="inline-flex items-center justify-center gap-1.5 px-4 py-2 sm:py-2.5 rounded-pill border border-hairline-light bg-canvas-cream hover:bg-white text-shade-60 hover:text-ink text-[13px] font-sans font-medium transition-all active:scale-[0.98] select-none shadow-xs"
+                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-shade-60 hover:text-ink text-[14px] font-sans font-medium transition-colors select-none"
                 >
-                  <span>Pipeline Specs</span>
-                  <ArrowUpRight size={13} />
+                  <span>Architecture Specs</span>
+                  <ArrowUpRight size={14} />
                 </button>
               </div>
             </div>
 
-            {/* Performance Guarantees Metric Strip */}
-            <div className="pt-6 border-t border-hairline-light grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div className="flex flex-col">
-                <span className="text-[11px] font-mono text-shade-50 uppercase tracking-wider">Inference</span>
-                <span className="text-[15px] font-mono font-semibold text-emerald-800 tabular-nums">~12ms CPU</span>
+            {/* Hardware Guarantees Metric Strip on Light Canvas */}
+            <div className="pt-6 border-t border-hairline-light grid grid-cols-2 sm:grid-cols-4 gap-4 text-left">
+              <div>
+                <span className="text-[11px] font-mono text-shade-50 uppercase tracking-wider block mb-1">Inference</span>
+                <span className="text-[15px] sm:text-[16px] font-mono font-semibold text-emerald-800 bg-aloe-10/70 border border-emerald-300/50 px-2 py-0.5 rounded tabular-nums inline-block">
+                  ~12.4ms CPU
+                </span>
               </div>
-              <div className="flex flex-col">
-                <span className="text-[11px] font-mono text-shade-50 uppercase tracking-wider">Vector Space</span>
-                <span className="text-[15px] font-mono font-semibold text-ink tabular-nums">384d Dense</span>
+              <div>
+                <span className="text-[11px] font-mono text-shade-50 uppercase tracking-wider block mb-1">Vector Space</span>
+                <span className="text-[15px] sm:text-[16px] font-mono font-semibold text-ink tabular-nums">
+                  384d Dense
+                </span>
               </div>
-              <div className="flex flex-col">
-                <span className="text-[11px] font-mono text-shade-50 uppercase tracking-wider">Throughput</span>
-                <span className="text-[15px] font-mono font-semibold text-ink tabular-nums">280+ req/s</span>
+              <div>
+                <span className="text-[11px] font-mono text-shade-50 uppercase tracking-wider block mb-1">Throughput</span>
+                <span className="text-[15px] sm:text-[16px] font-mono font-semibold text-ink tabular-nums">
+                  280+ req/s
+                </span>
               </div>
-              <div className="flex flex-col">
-                <span className="text-[11px] font-mono text-shade-50 uppercase tracking-wider">Cloud Cost</span>
-                <span className="text-[15px] font-mono font-semibold text-ink tabular-nums">$0.00 Token</span>
+              <div>
+                <span className="text-[11px] font-mono text-shade-50 uppercase tracking-wider block mb-1">Privacy</span>
+                <span className="text-[15px] sm:text-[16px] font-mono font-semibold text-ink tabular-nums">
+                  100% Offline
+                </span>
               </div>
             </div>
           </div>
 
-          {/* Right Column: Machined Engine Telemetry & Auto-Cycling Live Vector Flow Widget */}
-          <div className="lg:col-span-5">
-            <div
-              onMouseEnter={() => setIsHeroHovered(true)}
-              onMouseLeave={() => setIsHeroHovered(false)}
-              className="p-2 sm:p-2.5 rounded-2xl bg-canvas-cream/80 border border-hairline-light shadow-inner transition-all"
-            >
-              <div className="bg-white rounded-xl border border-hairline-light p-5 shadow-xs flex flex-col gap-3.5 relative overflow-hidden">
-                {/* Telemetry Header */}
-                <div className="flex items-center justify-between pb-2.5 border-b border-hairline-light">
-                  <div className="flex items-center gap-2">
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-600" />
-                    </span>
-                    <span className="text-[11px] font-mono font-semibold text-ink uppercase tracking-wider">
-                      Live Engine Telemetry
-                    </span>
-                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-canvas-cream border border-hairline-light text-shade-60 hidden sm:inline-block">
-                      {isHeroHovered
-                        ? "Paused on hover"
-                        : isHeroAutoPlaying
-                        ? `Auto • ${heroIndex + 1}/${PRESET_DEMOS.length}`
-                        : "Paused"}
-                    </span>
-                  </div>
-
-                  {/* Playback Controls & Cycle Action */}
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      onClick={() => setIsHeroAutoPlaying((p) => !p)}
-                      className="p-1 rounded-pill bg-canvas-cream hover:bg-white border border-hairline-light text-shade-60 hover:text-ink transition-all active:scale-[0.96] shadow-2xs select-none"
-                      title={isHeroAutoPlaying ? "Pause auto-streaming" : "Resume auto-streaming"}
-                      aria-label={isHeroAutoPlaying ? "Pause auto-streaming" : "Resume auto-streaming"}
-                    >
-                      {isHeroAutoPlaying ? <Pause size={11} /> : <Play size={11} />}
-                    </button>
-                    <button
-                      onClick={handleCycleHero}
-                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-pill bg-canvas-cream hover:bg-white border border-hairline-light text-[11px] font-mono text-shade-60 hover:text-ink transition-all active:scale-[0.96] shadow-2xs select-none"
-                      title="Advance to next customer sample immediately"
-                    >
-                      <Shuffle size={11} className="text-shade-50" />
-                      <span>Next</span>
-                    </button>
-                  </div>
+          {/* Right Column: Clean, Proportionate XAI Showcase Console */}
+          <div className="lg:col-span-5 flex flex-col">
+            <div className="bg-canvas-cream/80 border border-hairline-light rounded-2xl p-5 sm:p-6 shadow-xs flex flex-col justify-between gap-4 relative overflow-hidden backdrop-blur-xs flex-1">
+              {/* Header: Title and Scenario Tabs */}
+              <div className="flex flex-col gap-2.5 pb-3 border-b border-hairline-light">
+                <div className="flex items-center justify-between text-[11px] font-mono uppercase tracking-wider">
+                  <span className="flex items-center gap-2 text-ink font-semibold">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span>Explainable XAI Showcase</span>
+                  </span>
+                  <span className="text-shade-50 font-medium">MiniLM-L6-v2</span>
                 </div>
 
-                {/* Micro Streaming Countdown Timeline Bar */}
-                <div className="h-0.5 w-full bg-hairline-light rounded-full overflow-hidden -mt-2">
+                {/* Scenario Tabs */}
+                <div className="grid grid-cols-4 gap-1 p-1 rounded-full bg-white border border-hairline-light shadow-2xs mt-1">
+                  {[
+                    { label: "Bug Report", short: "Bug", idx: 0 },
+                    { label: "Feature", short: "Feature", idx: 1 },
+                    { label: "Billing", short: "Billing", idx: 2 },
+                    { label: "Praise", short: "Praise", idx: 3 },
+                  ].map((item) => (
+                    <button
+                      key={item.label}
+                      onClick={() => setHeroIndex(item.idx)}
+                      className={`py-1 rounded-full text-[11px] font-sans text-center transition-all duration-150 select-none truncate ${
+                        heroIndex === item.idx
+                          ? "bg-ink text-white font-semibold shadow-xs"
+                          : "text-shade-60 hover:text-ink font-medium"
+                      }`}
+                    >
+                      <span className="hidden sm:inline">{item.label}</span>
+                      <span className="sm:hidden">{item.short}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Customer Comment with Interactive Token Heatmap Chips */}
+              <div className="bg-white border border-hairline-light rounded-xl p-4 sm:p-5 flex flex-col justify-between gap-3 shadow-2xs">
+                <div className="flex items-center justify-between text-[10px] font-mono text-shade-50 uppercase tracking-wider">
+                  <span className="flex items-center gap-1.5 font-medium text-ink">
+                    <Sparkles size={11} className="text-amber-600" />
+                    <span>Input Token Permutations</span>
+                  </span>
+                  <span>Hover for ΔP</span>
+                </div>
+
+                <AnimatePresence mode="wait">
                   <motion.div
-                    key={`${heroIndex}-${isHeroAutoPlaying}-${isHeroHovered}`}
-                    className="h-full bg-emerald-600 origin-left"
-                    initial={{ scaleX: 0 }}
-                    animate={{ scaleX: isHeroAutoPlaying && !isHeroHovered ? 1 : 0 }}
-                    transition={{
-                      duration: isHeroAutoPlaying && !isHeroHovered ? 3.8 : 0,
-                      ease: "linear",
-                    }}
-                  />
-                </div>
-
-                {/* Stage 1: Ingestion */}
-                <div className="bg-canvas-cream/60 border border-hairline-light rounded-lg p-3">
-                  <div className="flex items-center justify-between text-[10px] font-mono text-shade-50 uppercase tracking-wider mb-1.5">
-                    <span className="flex items-center gap-1 text-ink font-semibold">
-                      <Terminal size={11} className="text-shade-40" />
-                      <span>01. Ingestion Payload</span>
-                    </span>
-                    <span className="text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                      FastAPI 0.2ms
-                    </span>
-                  </div>
-                  <div className="min-h-[2.5rem] flex items-center">
-                    <AnimatePresence mode="wait">
-                      <motion.p
-                        key={heroDemo.id}
-                        initial={{ opacity: 0, y: 5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -5 }}
-                        transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
-                        className="text-[13px] font-sans text-ink leading-snug line-clamp-2 italic"
-                      >
-                        &ldquo;{heroDemo.text}&rdquo;
-                      </motion.p>
-                    </AnimatePresence>
-                  </div>
-                </div>
-
-                {/* Stage 2: 384d Dense Vector Representation */}
-                <div className="bg-canvas-cream/60 border border-hairline-light rounded-lg p-3">
-                  <div className="flex items-center justify-between text-[10px] font-mono text-shade-50 uppercase tracking-wider mb-1.5">
-                    <span className="flex items-center gap-1 text-ink font-semibold">
-                      <Cpu size={11} className="text-shade-40" />
-                      <span>02. Dense Embedding Projection</span>
-                    </span>
-                    <span className="text-shade-60">all-MiniLM-L6-v2</span>
-                  </div>
-
-                  {/* Dynamic Vector Sparkline Bars with animated wave transitions and scanning sweep */}
-                  <div className="relative flex items-end gap-1 h-6 w-full bg-white px-2 py-1 rounded border border-hairline-light overflow-hidden shadow-2xs">
-                    {getEmbeddingSparkline(heroDemo.text).map((val, idx) => (
-                      <motion.div
-                        key={idx}
-                        className="flex-1 bg-black rounded-xs origin-bottom"
-                        animate={{ height: `${val * 100}%` }}
-                        transition={{ duration: 0.32, ease: [0.23, 1, 0.32, 1], delay: idx * 0.007 }}
-                        title={`Dimension ${idx * 16}: ${(val * 2 - 1).toFixed(2)}`}
-                      />
-                    ))}
-                    {/* Subtle horizontal laser sweep scan across coordinates */}
-                    <motion.div
-                      className="absolute inset-y-0 w-12 bg-gradient-to-r from-transparent via-emerald-400/25 to-transparent pointer-events-none"
-                      animate={{ x: ["-100%", "450%"] }}
-                      transition={{ repeat: Infinity, duration: 2.8, ease: "linear" }}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between text-[10px] font-mono text-shade-50 mt-1.5">
-                    <span>Continuous 384d Float32</span>
-                    <span className="text-ink font-medium">Vector Time: ~3.2ms</span>
-                  </div>
-                </div>
-
-                {/* Stage 3: Logistic Head & Deterministic Heuristics Verdict */}
-                <div className="bg-canvas-cream/60 border border-hairline-light rounded-lg p-3">
-                  <div className="flex items-center justify-between text-[10px] font-mono text-shade-50 uppercase tracking-wider mb-2">
-                    <span className="flex items-center gap-1 text-ink font-semibold">
-                      <ShieldCheck size={11} className="text-emerald-700" />
-                      <span>03. Calibrated Output Verdict</span>
-                    </span>
-                    <span className="text-emerald-700 font-semibold font-mono">150μs Head</span>
-                  </div>
-
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={heroDemo.id}
-                      initial={{ opacity: 0, scale: 0.98 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.98 }}
-                      transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
-                      className="grid grid-cols-2 gap-2"
-                    >
-                      <div className="bg-white p-2.5 rounded border border-hairline-light shadow-2xs">
-                        <span className="text-[10px] font-sans uppercase tracking-wider text-shade-50 block mb-0.5">
-                          Intent Class
-                        </span>
-                        <div className="flex items-baseline gap-1.5">
-                          <span className="text-[13px] font-sans font-semibold text-ink">
-                            {heroDemo.intent}
-                          </span>
-                          <span className="text-[11px] font-mono text-emerald-700 tabular-nums font-semibold">
-                            {heroDemo.confidence}%
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="bg-white p-2.5 rounded border border-hairline-light shadow-2xs">
-                        <span className="text-[10px] font-sans uppercase tracking-wider text-shade-50 block mb-0.5">
-                          SOP Dispatch
-                        </span>
-                        <span className="text-[13px] font-sans font-semibold text-ink block truncate">
-                          {heroDemo.action}
-                        </span>
-                      </div>
-                    </motion.div>
-                  </AnimatePresence>
-
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={heroDemo.id}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.18 }}
-                      className="mt-2 flex items-center justify-between text-[11px] font-mono text-shade-60"
-                    >
-                      <span className="flex items-center gap-1.5">
+                    key={heroDemo.id}
+                    initial={{ opacity: 0, y: 3 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -3 }}
+                    transition={{ duration: 0.18 }}
+                    className="flex flex-wrap gap-1.5 sm:gap-2 leading-relaxed text-[14px]"
+                  >
+                    {heroDemo.tokens.map((token, tIdx) => {
+                      const isHigh = token.drop > 10;
+                      const isMedium = token.drop > 3.5;
+                      return (
                         <span
-                          className={`w-1.5 h-1.5 rounded-full ${
-                            heroDemo.urgency === "High" ? "bg-rose-600 animate-pulse" : "bg-emerald-600"
+                          key={tIdx}
+                          title={`${token.word}: marginal attribution drop ΔP -${token.drop.toFixed(1)}%`}
+                          className={`px-2 py-0.5 rounded cursor-default transition-all duration-150 relative group ${
+                            isHigh
+                              ? "bg-rose-50 text-rose-800 border border-rose-300 font-semibold shadow-2xs"
+                              : isMedium
+                              ? "bg-amber-50 text-amber-900 border border-amber-300 font-medium"
+                              : "text-shade-70 hover:bg-zinc-100"
+                          }`}
+                        >
+                          {token.word}
+                          {isHigh && (
+                            <span className="absolute -top-7 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity bg-ink text-white text-[10px] font-mono py-0.5 px-2 rounded shadow-sm whitespace-nowrap z-20 font-semibold">
+                              ΔP -{token.drop.toFixed(1)}%
+                            </span>
+                          )}
+                        </span>
+                      );
+                    })}
+                  </motion.div>
+                </AnimatePresence>
+
+                {/* Key Occlusion Insight Banner */}
+                {(() => {
+                  const topToken = [...heroDemo.tokens].sort((a, b) => b.drop - a.drop)[0];
+                  return (
+                    <div className="pt-2.5 border-t border-hairline-light/70 flex items-center justify-between text-[11px] font-mono text-shade-60">
+                      <span>Primary Feature Driver:</span>
+                      <span className="font-semibold text-rose-700 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded">
+                        "{topToken.word}" → -{topToken.drop.toFixed(1)}% ΔP
+                      </span>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* Verdict Summary Cards */}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={heroDemo.id}
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.98 }}
+                  transition={{ duration: 0.18 }}
+                  className="grid grid-cols-2 gap-2.5 text-left"
+                >
+                  {/* Card 1: Intent & Action */}
+                  <div className="bg-white border border-hairline-light rounded-xl p-3 shadow-2xs flex flex-col justify-between">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-shade-50 block mb-1">
+                      Intent &amp; Routing
+                    </span>
+                    <div>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-[14px] font-sans font-semibold text-ink">
+                          {heroDemo.intent}
+                        </span>
+                        <span className="text-[10px] font-mono text-emerald-800 bg-aloe-10 border border-emerald-200 font-semibold tabular-nums px-1.5 py-0.5 rounded-full">
+                          {heroDemo.confidence}%
+                        </span>
+                      </div>
+                      <span className="text-[11px] font-sans text-shade-60 flex items-center gap-1 mt-1 truncate">
+                        <span>→ {heroDemo.action}</span>
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Card 2: Urgency & Sentiment */}
+                  <div className="bg-white border border-hairline-light rounded-xl p-3 shadow-2xs flex flex-col justify-between">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-shade-50 block mb-1">
+                      Urgency &amp; Sentiment
+                    </span>
+                    <div>
+                      <div className="text-[14px] font-sans font-semibold text-ink flex items-center gap-1.5">
+                        <span
+                          className={`w-2 h-2 rounded-full shrink-0 ${
+                            heroDemo.urgency === "High" ? "bg-rose-500" : "bg-emerald-500"
                           }`}
                         />
-                        <span>{heroDemo.urgency} Urgency</span>
+                        <span>{heroDemo.urgency} Priority</span>
+                      </div>
+                      <span className="text-[11px] font-sans text-shade-60 flex items-center gap-1.5 mt-1 truncate">
+                        <span>{heroDemo.sentiment}</span>
+                        <span>•</span>
+                        <span>{heroDemo.tone}</span>
                       </span>
-                      <span>Tone: <strong className="font-semibold text-ink">{heroDemo.tone}</strong></span>
-                    </motion.div>
-                  </AnimatePresence>
-                </div>
+                    </div>
+                  </div>
+                </motion.div>
+              </AnimatePresence>
 
-                {/* Telemetry Hardware Specs Footer with Sandbox inspector action */}
-                <div className="flex items-center justify-between text-[11px] font-mono text-shade-50 pt-1.5 border-t border-hairline-light">
-                  <span>RAM: ~45MB bound</span>
-                  <button
-                    onClick={handleInspectInSandbox}
-                    className="inline-flex items-center gap-1 text-[11px] font-sans font-medium text-shade-60 hover:text-ink transition-colors active:scale-[0.97]"
-                    title="Load this comment into the interactive benchmark sandbox below"
-                  >
-                    <span>Inspect in Sandbox</span>
-                    <ArrowDownRight size={11} />
-                  </button>
-                </div>
+              {/* Footer Actions */}
+              <div className="pt-2 border-t border-hairline-light flex items-center justify-between text-[11px] font-mono">
+                <button
+                  onClick={() => {
+                    if (typeof window !== "undefined") {
+                      sessionStorage.setItem("analyze_prefill", heroDemo.text);
+                    }
+                    onNavigate("single");
+                  }}
+                  className="inline-flex items-center gap-1.5 text-ink hover:text-emerald-800 font-sans font-semibold transition-colors group select-none"
+                >
+                  <span>Test in Workbench</span>
+                  <ArrowRight size={12} className="transition-transform group-hover:translate-x-0.5" />
+                </button>
+                <button
+                  onClick={handleInspectInSandbox}
+                  className="text-shade-50 hover:text-ink transition-colors font-sans select-none"
+                >
+                  Full Sandbox ↘
+                </button>
               </div>
             </div>
           </div>
@@ -593,9 +538,9 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate }) => {
                 Interactive Benchmark Sandbox
               </span>
             </div>
-            <h3 className="section-heading text-2xl font-[330]">
+            <h2 className="section-heading text-2xl font-[330]">
               Real-Time Inference Playground
-            </h3>
+            </h2>
             <p className="text-[14px] font-sans text-shade-60 mt-1">
               Select a customer scenario, shuffle inputs, or type custom feedback to inspect live token attribution:
             </p>
@@ -913,9 +858,9 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate }) => {
           <span className="text-[12px] font-sans uppercase tracking-[0.72px] font-semibold text-shade-50 block mb-1 select-none">
             Architectural Blueprint
           </span>
-          <h3 className="font-display text-3xl sm:text-4xl font-[330] text-ink tracking-tight">
+          <h2 className="font-display text-3xl sm:text-4xl font-[330] text-ink tracking-tight">
             Engine Architecture at a Glance
-          </h3>
+          </h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -929,9 +874,9 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate }) => {
               <div className="w-11 h-11 rounded-pill bg-canvas-cream border border-hairline-light flex items-center justify-center text-ink mb-5 shadow-sm">
                 <Zap size={20} strokeWidth={2} />
               </div>
-              <h4 className="font-display text-2xl font-[330] text-ink mb-2.5">
+              <h3 className="font-display text-2xl font-[330] text-ink mb-2.5">
                 CPU-Native Inference
-              </h4>
+              </h3>
               <p className="text-[14px] text-shade-60 font-sans leading-relaxed">
                 Uses an <code className="text-xs font-mono bg-canvas-cream px-2 py-0.5 rounded-pill border border-hairline-light text-ink">all-MiniLM-L6-v2</code> transformer embedding backbone paired with an L2-regularized logistic classification head.
               </p>
@@ -952,9 +897,9 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate }) => {
               <div className="w-11 h-11 rounded-pill bg-canvas-cream border border-hairline-light flex items-center justify-center text-ink mb-5 shadow-sm">
                 <Layers size={20} strokeWidth={1.75} />
               </div>
-              <h4 className="font-display text-2xl font-[330] text-ink mb-2.5">
+              <h3 className="font-display text-2xl font-[330] text-ink mb-2.5">
                 Leave-One-Out Token XAI
-              </h4>
+              </h3>
               <p className="text-[14px] text-shade-60 font-sans leading-relaxed">
                 Evaluates exact word-level attribution without surrogate SHAP/LIME approximations by measuring marginal probability delta (<span className="font-mono text-xs text-ink font-bold">ΔP</span>) across masked token permutations.
               </p>
@@ -975,9 +920,9 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate }) => {
               <div className="w-11 h-11 rounded-pill bg-canvas-cream border border-hairline-light flex items-center justify-center text-ink mb-5 shadow-sm">
                 <Database size={20} strokeWidth={1.75} />
               </div>
-              <h4 className="font-display text-2xl font-[330] text-ink mb-2.5">
+              <h3 className="font-display text-2xl font-[330] text-ink mb-2.5">
                 Constant-Memory Streaming
-              </h4>
+              </h3>
               <p className="text-[14px] text-shade-60 font-sans leading-relaxed">
                 Processes massive CSV archives through chunked HTTP streaming generators in 32-sample batches, maintaining a constant ~45MB RAM footprint on standard server hardware.
               </p>
@@ -996,9 +941,9 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate }) => {
           <span className="text-[12px] font-sans uppercase tracking-[0.72px] font-semibold text-emerald-800 block mb-1">
             Production Ready
           </span>
-          <h4 className="font-display text-2xl sm:text-3xl font-[330] text-ink">
+          <h2 className="font-display text-2xl sm:text-3xl font-[330] text-ink">
             Ready to test live comments or batch streams?
-          </h4>
+          </h2>
           <p className="text-[14px] font-sans text-shade-60 mt-1">
             Access the real-time inference workbench or upload a customer ticket CSV.
           </p>

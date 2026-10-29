@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/Button";
@@ -17,14 +17,14 @@ import {
   PolarAngleAxis,
   PolarRadiusAxis,
 } from "recharts";
-import { 
-  Sparkles, 
-  Send, 
-  Trash2, 
-  AlertCircle, 
-  ArrowRight, 
-  CheckCircle2, 
-  Clock, 
+import {
+  Sparkles,
+  Send,
+  Trash2,
+  AlertCircle,
+  ArrowRight,
+  CheckCircle2,
+  Clock,
   SlidersHorizontal,
   Copy,
   Check,
@@ -84,9 +84,8 @@ const WordContributionHeatmap = ({ data }: { data: ExplainabilityData }) => {
             <span
               key={idx}
               style={{ backgroundColor: alpha > 0.04 ? bgColor : "transparent" }}
-              className={`px-2 py-0.5 rounded-pill transition-all cursor-default relative group ${
-                alpha > 0.25 ? "font-semibold underline decoration-dotted decoration-shade-40" : ""
-              }`}
+              className={`px-2 py-0.5 rounded-pill transition-all cursor-default relative group ${alpha > 0.25 ? "font-semibold underline decoration-dotted decoration-shade-40" : ""
+                }`}
               title={`${item.word} → ${item.primary_intent} (ΔP: +${(item.contribution * 100).toFixed(1)}%)`}
             >
               {item.word}
@@ -121,6 +120,15 @@ export const SingleAnalysisView = () => {
   const [error, setError] = useState("");
   const [latencyMs, setLatencyMs] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   useEffect(() => {
     let interval: ReturnType<typeof setInterval> | undefined;
@@ -149,6 +157,13 @@ export const SingleAnalysisView = () => {
 
   const handleAnalyze = async () => {
     if (!text.trim() || loading) return;
+
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     setLoading(true);
     setError("");
     setResult(null);
@@ -159,6 +174,7 @@ export const SingleAnalysisView = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text, threshold, include_explanation: true }),
+        signal: controller.signal,
       });
 
       if (!res.ok) {
@@ -182,6 +198,9 @@ export const SingleAnalysisView = () => {
       setLatencyMs(Math.round(performance.now() - startTime));
       setResult(data);
     } catch (e: unknown) {
+      if (e instanceof Error && e.name === "AbortError") {
+        return;
+      }
       if (e instanceof TypeError && e.message.toLowerCase().includes("fetch")) {
         setError(
           `Network / CORS Error: Failed to reach backend at ${API_BASE}/semantic/analyze. The server may be waking up, offline, or cross-origin headers may be missing.`
@@ -190,7 +209,9 @@ export const SingleAnalysisView = () => {
         setError(e instanceof Error ? e.message : "Failed to connect to API.");
       }
     } finally {
-      setLoading(false);
+      if (abortControllerRef.current === controller) {
+        setLoading(false);
+      }
     }
   };
 
@@ -276,11 +297,10 @@ export const SingleAnalysisView = () => {
                 <button
                   key={preset.label}
                   onClick={() => loadPreset(preset.text)}
-                  className={`relative px-3 sm:px-4 py-1.5 sm:py-2 rounded-pill text-[12px] sm:text-[13px] font-sans font-medium transition-colors duration-150 ease-out active:scale-[0.97] select-none ${
-                    isSelected
+                  className={`relative px-3 sm:px-4 py-1.5 sm:py-2 rounded-pill text-[12px] sm:text-[13px] font-sans font-medium transition-colors duration-150 ease-out active:scale-[0.97] select-none ${isSelected
                       ? "text-white shadow-sm"
                       : "bg-canvas-cream border border-hairline-light text-shade-60 hover:text-black hover:border-shade-40"
-                  }`}
+                    }`}
                 >
                   {isSelected && (
                     <motion.div
@@ -298,7 +318,13 @@ export const SingleAnalysisView = () => {
 
         {/* Textarea */}
         <div className="relative">
+          <label htmlFor="single-comment-input" className="sr-only">
+            Customer feedback comment text
+          </label>
           <textarea
+            id="single-comment-input"
+            name="comment_text"
+            aria-label="Customer feedback comment text"
             rows={4}
             value={text}
             onChange={(e) => setText(e.target.value)}
@@ -328,7 +354,13 @@ export const SingleAnalysisView = () => {
 
             {/* Slider track */}
             <div className="w-full sm:w-40 shrink-0">
+              <label htmlFor="single-threshold-slider" className="sr-only">
+                Confidence threshold
+              </label>
               <input
+                id="single-threshold-slider"
+                name="threshold"
+                aria-label="Confidence threshold"
                 type="range"
                 min="0.10"
                 max="0.90"
@@ -353,11 +385,10 @@ export const SingleAnalysisView = () => {
                     key={p.label}
                     type="button"
                     onClick={() => setThreshold(p.val)}
-                    className={`px-2.5 py-1 rounded-pill text-[11px] font-sans transition-all active:scale-95 ${
-                      isCurrent
+                    className={`px-2.5 py-1 rounded-pill text-[11px] font-sans transition-all active:scale-95 ${isCurrent
                         ? "bg-black text-white font-semibold shadow-xs"
                         : "bg-white border border-hairline-light text-shade-60 hover:text-black hover:border-shade-40"
-                    }`}
+                      }`}
                   >
                     {p.label} ({p.val})
                   </button>
@@ -578,13 +609,12 @@ export const SingleAnalysisView = () => {
                   </span>
                   <div className="flex items-center gap-2">
                     <span
-                      className={`w-2.5 h-2.5 rounded-full ${
-                        result.urgency === "High"
+                      className={`w-2.5 h-2.5 rounded-full ${result.urgency === "High"
                           ? "bg-rose-500 animate-pulse"
                           : result.urgency === "Medium"
-                          ? "bg-amber-500"
-                          : "bg-emerald-500"
-                      }`}
+                            ? "bg-amber-500"
+                            : "bg-emerald-500"
+                        }`}
                     />
                     <p className="text-xl font-display font-[330] text-ink">
                       {result.urgency || "Low"}

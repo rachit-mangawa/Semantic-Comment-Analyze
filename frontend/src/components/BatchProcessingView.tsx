@@ -79,6 +79,18 @@ export const BatchProcessingView = () => {
   const [elapsedMs, setElapsedMs] = useState<number | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (downloadUrl) {
+        URL.revokeObjectURL(downloadUrl);
+      }
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, [downloadUrl]);
 
   useEffect(() => {
     let interval: ReturnType<typeof setInterval> | undefined;
@@ -126,7 +138,10 @@ export const BatchProcessingView = () => {
   };
 
   const resetResults = () => {
-    setDownloadUrl(null);
+    setDownloadUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
     setPreviewRows([]);
     setHeaderRow([]);
     setProcessedCount(0);
@@ -156,6 +171,12 @@ export const BatchProcessingView = () => {
 
   const handleProcess = async () => {
     if (!file || loading) return;
+
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
     setLoading(true);
     resetResults();
     const t0 = performance.now();
@@ -171,6 +192,7 @@ export const BatchProcessingView = () => {
       const res = await fetch(`${API_BASE}/semantic/batch`, {
         method: "POST",
         body: formData,
+        signal: controller.signal,
       });
 
       if (!res.ok) {
@@ -221,8 +243,14 @@ export const BatchProcessingView = () => {
 
       setElapsedMs(Math.round(performance.now() - t0));
       const finalBlob = new Blob([csvAccumulator], { type: "text/csv;charset=utf-8;" });
-      setDownloadUrl(URL.createObjectURL(finalBlob));
+      setDownloadUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return URL.createObjectURL(finalBlob);
+      });
     } catch (e: unknown) {
+      if (e instanceof Error && e.name === "AbortError") {
+        return;
+      }
       if (e instanceof TypeError && e.message.toLowerCase().includes("fetch")) {
         setError(
           `Network / CORS Error: Failed to reach backend at ${API_BASE}/semantic/batch. The server may be waking up, offline, or cross-origin headers may be missing.`
@@ -231,7 +259,9 @@ export const BatchProcessingView = () => {
         setError(e instanceof Error ? e.message : "Batch streaming execution encountered an error.");
       }
     } finally {
-      setLoading(false);
+      if (abortControllerRef.current === controller) {
+        setLoading(false);
+      }
     }
   };
 
@@ -297,7 +327,13 @@ export const BatchProcessingView = () => {
               : "border-hairline-strong bg-canvas-cream hover:border-black/40 hover:bg-white"
           }`}
         >
+          <label htmlFor="batch-file-input" className="sr-only">
+            Upload CSV File
+          </label>
           <input
+            id="batch-file-input"
+            name="csvFile"
+            aria-label="Upload CSV File"
             ref={fileInputRef}
             type="file"
             accept=".csv"
@@ -339,13 +375,16 @@ export const BatchProcessingView = () => {
           {/* Target Column Input */}
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
-              <label className="text-[13px] font-sans font-medium text-ink">
+              <label htmlFor="target-column-input" className="text-[13px] font-sans font-medium text-ink">
                 Target Text Column
               </label>
               <span className="text-[11px] font-mono text-shade-50">Column header name</span>
             </div>
             <div className="relative">
               <input
+                id="target-column-input"
+                name="targetColumn"
+                aria-label="Target Text Column"
                 type="text"
                 value={targetColumn}
                 onChange={(e) => setTargetColumn(e.target.value)}
@@ -361,7 +400,7 @@ export const BatchProcessingView = () => {
           {/* Confidence Threshold Slider */}
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
-              <label className="text-[13px] font-sans font-medium text-ink flex items-center gap-2">
+              <label htmlFor="batch-threshold-slider" className="text-[13px] font-sans font-medium text-ink flex items-center gap-2">
                 <span>Confidence Threshold</span>
               </label>
               <span className="text-[12px] font-mono font-bold text-ink tabular-nums px-2 py-0.5 rounded bg-white border border-hairline-light shadow-xs">
@@ -369,6 +408,9 @@ export const BatchProcessingView = () => {
               </span>
             </div>
             <input
+              id="batch-threshold-slider"
+              name="threshold"
+              aria-label="Confidence Threshold"
               type="range"
               min="0.10"
               max="0.90"
@@ -409,7 +451,7 @@ export const BatchProcessingView = () => {
           </div>
         </div>
 
-        {/* Action Button & Live Progress Telemetry */}
+        {/* Action Button & Processing Progress */}
         <div className="pt-5 border-t border-hairline-light flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3 w-full sm:w-auto">
             <Button

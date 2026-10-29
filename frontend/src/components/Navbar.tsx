@@ -67,7 +67,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeView, onViewChange }) => {
       id: "overview",
       category: "Primary Views",
       title: "Platform Overview",
-      description: "Architecture summary, engine telemetry, and interactive triage playground",
+      description: "Architecture summary, model specifications, and interactive triage playground",
       view: "overview",
       icon: Sparkles,
       shortcut: "1",
@@ -305,7 +305,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeView, onViewChange }) => {
             onClick={() => setCommandPaletteOpen(true)}
             className="flex items-center gap-1 px-1.5 sm:px-2.5 py-1.5 sm:py-2 rounded-pill text-[11px] sm:text-[12px] font-sans text-shade-60 hover:text-black hover:bg-black/[0.04] transition-all active:scale-[0.97] shrink-0"
             title="Jump to any view or spec (⌘K or keys 1-9)"
-            aria-label="Search views"
+            aria-label="Search views (⌘K)"
           >
             <Search size={13} className="text-shade-50 w-3.5 h-3.5 sm:w-[14px] sm:h-[14px]" />
             <kbd className="hidden lg:inline-block px-1.5 py-0.5 rounded bg-canvas-cream border border-hairline-light text-[10px] font-mono text-shade-50">
@@ -340,6 +340,9 @@ export const Navbar: React.FC<NavbarProps> = ({ activeView, onViewChange }) => {
               <div className="flex items-center gap-3 px-3.5 sm:px-4 py-3 sm:py-3.5 border-b border-hairline-light bg-canvas-cream/50">
                 <Search size={18} className="text-shade-40 shrink-0" />
                 <input
+                  id="command-palette-search"
+                  name="searchQuery"
+                  aria-label="Search views or documentation"
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
