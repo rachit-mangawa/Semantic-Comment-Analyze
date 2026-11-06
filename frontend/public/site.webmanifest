@@ -1,0 +1,22 @@
+{
+  "name": "Semantic Comment Analysis",
+  "short_name": "Semantic NLP",
+  "description": "Local intent classification, sentiment scoring, and Leave-One-Out token attribution on standard CPU.",
+  "icons": [
+    {
+      "src": "./android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "./android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#fbfbf5",
+  "background_color": "#fbfbf5",
+  "display": "standalone",
+  "start_url": "./"
+}
+
