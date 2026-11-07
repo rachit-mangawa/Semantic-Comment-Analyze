@@ -10,7 +10,7 @@ if backend_dir not in sys.path:
 
 from semantic_backend.router import router
 
-app = FastAPI(title="Semantic Backend Dev Server")
+app = FastAPI(title="Semantic Backend Dev Server", docs_url=None, redoc_url=None)
 
 allowed_origins_env = os.getenv("ALLOWED_ORIGINS")
 allowed_origins = (
@@ -41,6 +41,16 @@ async def add_security_headers(request, call_next):
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline'; "
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+        "font-src 'self' https://fonts.gstatic.com data:; "
+        "img-src 'self' data: https:; "
+        "connect-src 'self' http://localhost:* http://127.0.0.1:* https:;"
+    )
     return response
 
 

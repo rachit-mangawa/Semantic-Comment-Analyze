@@ -26,7 +26,13 @@ def resolve_data_file(filename: str) -> Path:
     override = os.getenv(f"P2_{filename.upper().replace('.', '_')}")
     if override and Path(override).exists():
         return Path(override)
-    return _get_data_dir() / filename
+    data_dir = _get_data_dir().resolve()
+    resolved = (data_dir / filename).resolve()
+    try:
+        resolved.relative_to(data_dir)
+    except ValueError:
+        raise ValueError(f"Path traversal detected: {filename}")
+    return resolved
 
 
 def get_intent_labels():
@@ -154,10 +160,14 @@ def classify_intents_batch(texts: list[str], threshold: float = 0.5, embeddings=
     return results
 
 
-def explain_intent(text: str):
+def explain_intent(text: str, max_words: int = 100):
     words = text.split()
     if not words:
         return []
+
+    # Bound words to max_words to prevent CPU starvation DoS from leave-one-out passes
+    if len(words) > max_words:
+        words = words[:max_words]
 
     orig_res = classify_intents_batch([text])[0]
     orig_intents = orig_res.get("all_intents", {})

@@ -35,9 +35,11 @@ def analyze_text(request: AnalyzeRequest):
             **ml_results,
             **business_context,
         }
+    except HTTPException:
+        raise
     except Exception as e:
         logger.exception(f"Error during analysis: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/batch")
@@ -47,15 +49,22 @@ def process_batch(
     targetColumn: str = Form("text"),
 ):
     MAX_BYTES = 10 * 1024 * 1024
-    if file.size and file.size > MAX_BYTES:
+    if file.size is not None and file.size > MAX_BYTES:
         raise HTTPException(status_code=413, detail="File exceeds 10MB limit")
 
+    if not targetColumn or len(targetColumn) > 256:
+        raise HTTPException(status_code=400, detail="Invalid targetColumn name")
+
     try:
-        generator = data_handler.stream_csv(file.file, target_column=targetColumn)
+        generator = data_handler.stream_csv(
+            file.file, target_column=targetColumn, max_bytes=MAX_BYTES
+        )
         return StreamingResponse(generator, media_type="text/csv")
+    except HTTPException:
+        raise
     except Exception as e:
         logger.exception(f"Error during batch processing: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/health")
