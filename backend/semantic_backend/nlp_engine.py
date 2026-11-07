@@ -26,8 +26,14 @@ def resolve_data_file(filename: str) -> Path:
     override = os.getenv(f"P2_{filename.upper().replace('.', '_')}")
     if override and Path(override).exists():
         return Path(override)
+
+    # Normalize separators across platforms (POSIX & Windows) and block directory traversal
+    clean_name = filename.replace("\\", "/")
+    if ".." in clean_name.split("/"):
+        raise ValueError(f"Path traversal detected: {filename}")
+
     data_dir = _get_data_dir().resolve()
-    resolved = (data_dir / filename).resolve()
+    resolved = (data_dir / clean_name).resolve()
     try:
         resolved.relative_to(data_dir)
     except ValueError:
