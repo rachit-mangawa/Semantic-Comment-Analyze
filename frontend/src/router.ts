@@ -6,17 +6,43 @@ export interface RouteState {
 }
 
 /**
- * Parses the current URL hash or pathname into a structured RouteState.
- * Supports both hash routes (#/methodology, #/architecture/pipeline)
- * and pathname routes (/methodology, /architecture/pipeline).
+ * Returns the base path if deployed in a repository subfolder (e.g. GitHub Pages "/Semantic-Comment-Analyze").
+ */
+export function getBasePath(): string {
+  if (typeof window === "undefined") return "";
+  const pathname = window.location.pathname;
+  if (pathname.startsWith("/Semantic-Comment-Analyze")) {
+    return "/Semantic-Comment-Analyze";
+  }
+  return "";
+}
+
+/**
+ * Parses the current URL pathname into a structured RouteState.
+ * Automatically cleans up any legacy hash-based routes (e.g. #/single -> /single).
  */
 export function parseCurrentRoute(): RouteState {
   if (typeof window === "undefined") {
     return { view: "overview" };
   }
 
+  const basePath = getBasePath();
+  let pathname = window.location.pathname;
+
+  // Handle and clean up legacy hash links (e.g., #/single -> /single)
   const hash = window.location.hash.replace(/^#\/?/, "").trim();
-  const raw = hash || window.location.pathname.replace(/^\//, "").trim();
+  if (hash) {
+    const cleanSubPath = hash.startsWith("/") ? hash : `/${hash}`;
+    const cleanPath = `${basePath}${cleanSubPath}`.replace(/\/+/g, "/");
+    window.history.replaceState({}, "", cleanPath);
+    pathname = cleanPath;
+  }
+
+  if (basePath && pathname.startsWith(basePath)) {
+    pathname = pathname.slice(basePath.length);
+  }
+
+  const raw = pathname.replace(/^\//, "").trim();
 
   if (!raw) {
     return { view: "overview" };
@@ -49,16 +75,27 @@ export function parseCurrentRoute(): RouteState {
 }
 
 /**
- * Navigates to a specific view and optional sub-tab by updating window.location.hash.
- * This ensures page reloads, browser history, and direct linking work without server-side redirects.
+ * Navigates to a specific view and optional sub-tab using clean URLs (HTML5 History API).
+ * Updates window.history without hash symbols (#).
  */
 export function navigateTo(view: RouteView, subTab?: string): void {
   if (typeof window === "undefined") return;
 
-  const targetHash = subTab ? `#/${view}/${subTab}` : `#/${view}`;
-  if (window.location.hash !== targetHash) {
-    window.location.hash = targetHash;
+  const basePath = getBasePath();
+  const routePath =
+    view === "overview"
+      ? "/"
+      : subTab
+        ? `/${view}/${subTab}`
+        : `/${view}`;
+
+  const fullPath = `${basePath}${routePath}`.replace(/\/+/g, "/") || "/";
+
+  if (window.location.pathname !== fullPath || window.location.hash) {
+    window.history.pushState({}, "", fullPath);
+    window.dispatchEvent(new PopStateEvent("popstate"));
   }
+
   // Scroll to top on route change
   window.scrollTo({ top: 0, behavior: "smooth" });
 }

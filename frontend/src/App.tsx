@@ -32,11 +32,9 @@ export default function App() {
       window.scrollTo({ top: 0, behavior: "instant" });
     };
 
-    window.addEventListener("hashchange", handleRouteChange);
     window.addEventListener("popstate", handleRouteChange);
 
     return () => {
-      window.removeEventListener("hashchange", handleRouteChange);
       window.removeEventListener("popstate", handleRouteChange);
     };
   }, []);
